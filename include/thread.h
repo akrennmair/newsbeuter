@@ -17,9 +17,10 @@ namespace noos {
 		protected:
 			virtual void run() = 0;
 			void exit();
+			void detached_exit();
 
 		private:
-			static void * run_thread(void * p);
+			static void * run_thread(thread * p);
 			pthread_t pt;
 	};
 

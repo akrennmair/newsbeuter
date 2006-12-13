@@ -134,7 +134,7 @@ void view::run_feedlist() {
 				}
 				break;
 			case OP_RELOADALL:
-				ctrl->reload_all();
+				ctrl->start_reload_all_thread();
 				break;
 			case OP_MARKFEEDREAD: {
 					const char * feedposname = stfl_get(feedlist_form, "feedposname");

@@ -3,6 +3,7 @@
 #include <configparser.h>
 #include <configcontainer.h>
 #include <exceptions.h>
+#include <downloadthread.h>
 #include <sstream>
 #include <cstdlib>
 #include <iostream>
@@ -272,6 +273,11 @@ void controller::reload_all() {
 	for (unsigned int i=0;i<feeds.size();++i) {
 		this->reload(i,feeds.size());
 	}
+}
+
+void controller::start_reload_all_thread() {
+	downloadthread dlt(this);
+	dlt.start();	
 }
 
 void controller::usage(char * argv0) {
