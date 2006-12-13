@@ -57,42 +57,25 @@ void view::set_keymap(keymap * k) {
 	keys = k;
 }
 
-void view::feedlist_status(const char * msg) {
-	stfl_set(feedlist_form,"msg",msg);
-	stfl_run(feedlist_form,-1);
+void view::set_status(const char * msg) {
+	stfl_form * form = *(view_stack.begin());
+	if (form) {
+		stfl_set(form,"msg",msg);
+		stfl_run(form,-1);
+	}
 }
 
-void view::itemlist_status(const char * msg) {
-	stfl_set(itemlist_form,"msg",msg);
-	stfl_run(itemlist_form,-1);
-}
-
-void view::itemview_status(const char * msg) {
-	stfl_set(itemview_form,"msg",msg);
-	stfl_run(itemview_form,-1);
-}
-
-void view::feedlist_error(const char * msg) {
-	feedlist_status(msg);
+void view::show_error(const char * msg) {
+	set_status(msg);
 	::sleep(2);
-	feedlist_status("");
-}
-
-void view::itemlist_error(const char * msg) {
-	itemlist_status(msg);
-	::sleep(2);
-	itemlist_status("");
-}
-
-void view::itemview_error(const char * msg) {
-	itemview_status(msg);
-	::sleep(2);
-	itemview_status("");
+	set_status("");
 }
 
 void view::run_feedlist() {
 	bool quit = false;
 	bool update = false;
+	
+	view_stack.push_front(feedlist_form);
 	
 	set_feedlist_keymap_hint();
 
@@ -117,7 +100,7 @@ void view::run_feedlist() {
 						posname >> pos;
 						ctrl->open_feed(pos);
 					} else {
-						feedlist_error("Error: no feed selected!"); // should not happen
+						show_error("Error: no feed selected!"); // should not happen
 					}
 				}
 				break;
@@ -129,7 +112,7 @@ void view::run_feedlist() {
 						posname >> pos;
 						ctrl->reload(pos);
 					} else {
-						feedlist_error("Error: no feed selected!"); // should not happen
+						show_error("Error: no feed selected!"); // should not happen
 					}
 				}
 				break;
@@ -145,7 +128,7 @@ void view::run_feedlist() {
 						ctrl->mark_all_read(pos);
 						update = true;
 					} else {
-						feedlist_error("Error: no feed selected!"); // should not happen
+						show_error("Error: no feed selected!"); // should not happen
 					}
 				}
 				break;
@@ -163,6 +146,8 @@ void view::run_feedlist() {
 				break;
 		}
 	} while (!quit);
+	
+	view_stack.pop_front();
 
 	stfl_reset();
 }
@@ -172,6 +157,8 @@ void view::run_itemlist(rss_feed& feed) {
 	bool rebuild_list = true;
 	bool show_no_unread_error = false;
 	std::vector<rss_item>& items = feed.items();
+	
+	view_stack.push_front(itemlist_form);
 
 	stfl_set(itemlist_form,"itempos","0");
 	
@@ -214,7 +201,7 @@ void view::run_itemlist(rss_feed& feed) {
 		}
 		
 		if (show_no_unread_error) {
-			itemlist_error("No unread items.");
+			show_error("No unread items.");
 			show_no_unread_error = false;
 		}
 
@@ -235,7 +222,7 @@ void view::run_itemlist(rss_feed& feed) {
 							open_next_item = ctrl->open_item(items[pos]);
 							rebuild_list = true;
 						} else {
-							itemlist_error("Error: no item selected!"); // should not happen
+							show_error("Error: no item selected!"); // should not happen
 						}
 						if (open_next_item) {
 							if (!jump_to_next_unread_item(items)) {
@@ -256,23 +243,23 @@ void view::run_itemlist(rss_feed& feed) {
 						
 						std::string filename = filebrowser(FBT_SAVE,get_filename_suggestion(items[pos].title()));
 						if (filename == "") {
-							itemlist_error("Aborted saving.");	
+							show_error("Aborted saving.");	
 						} else {
 							// TODO: render and save
 							try {
 								write_item(items[pos], filename);
 								std::ostringstream msg;
 								msg << "Saved article to " << filename;
-								itemlist_error(msg.str().c_str());
+								show_error(msg.str().c_str());
 							
 							} catch (...) {
 								std::ostringstream msg;
 								msg << "Error: couldn't save article to " << filename;
-								itemlist_error(msg.str().c_str());	
+								show_error(msg.str().c_str());	
 							}
 						}
 					} else {
-						itemlist_error("Error: no item selected!");
+						show_error("Error: no item selected!");
 					}
 				}
 				break;
@@ -295,6 +282,8 @@ void view::run_itemlist(rss_feed& feed) {
 		}
 
 	} while (!quit);
+	
+	view_stack.pop_front();
 }
 
 std::string view::get_filename_suggestion(const std::string& s) {
@@ -467,6 +456,8 @@ std::string view::filebrowser(filebrowser_type type, const std::string& default_
 	::getcwd(cwdtmp,sizeof(cwdtmp));
 	std::string cwd = cwdtmp;
 	
+	view_stack.push_front(filebrowser_form);
+	
 	bool update_list = true;
 	bool quit = false;
 	
@@ -565,12 +556,14 @@ std::string view::filebrowser(filebrowser_type type, const std::string& default_
 							}
 						} else {
 							std::string retval(stfl_get(filebrowser_form,"filenametext"));
+							view_stack.pop_front();
 							return retval;
 						}
 					}
 				}
 				break;
 			case OP_QUIT:
+				view_stack.pop_front();
 				return std::string("");
 			default:
 				break;
@@ -578,6 +571,7 @@ std::string view::filebrowser(filebrowser_type type, const std::string& default_
 		
 		
 	} while (!quit);
+	view_stack.pop_front();
 	return std::string(""); // never reached
 }
 
@@ -607,7 +601,7 @@ bool view::jump_to_next_unread_item(std::vector<rss_item>& items) {
 			}
 		}
 	} else {
-		itemlist_error("Error: no item selected!"); // shouldn't happen
+		show_error("Error: no item selected!"); // shouldn't happen
 	}
 	return false;
 }
@@ -615,6 +609,8 @@ bool view::jump_to_next_unread_item(std::vector<rss_item>& items) {
 bool view::run_itemview(rss_item& item) {
 	bool quit = false;
 	bool retval = false;
+	
+	view_stack.push_front(itemview_form);
 	
 	set_itemview_keymap_hint();
 
@@ -695,25 +691,25 @@ bool view::run_itemview(rss_item& item) {
 				{
 					std::string filename = filebrowser(FBT_SAVE,get_filename_suggestion(item.title()));
 					if (filename == "") {
-						itemview_error("Aborted saving.");	
+						show_error("Aborted saving.");	
 					} else {
 						try {
 							write_item(item, filename);
 							std::ostringstream msg;
 							msg << "Saved article to " << filename;
-							itemview_error(msg.str().c_str());
+							show_error(msg.str().c_str());
 						} catch (...) {
 							std::ostringstream msg;
 							msg << "Error: couldn't write article to file " << filename;
-							itemview_error(msg.str().c_str());
+							show_error(msg.str().c_str());
 						}
 					}
 				}
 				break;
 			case OP_OPENINBROWSER:
-				itemview_status("Starting browser...");
+				set_status("Starting browser...");
 				open_in_browser(item.link());
-				itemview_status("");
+				set_status("");
 				break;
 			case OP_NEXTUNREAD:
 				retval = true;
@@ -728,11 +724,14 @@ bool view::run_itemview(rss_item& item) {
 		}
 
 	} while (!quit);
+	
+	view_stack.pop_front();
 
 	return retval;
 }
 
 void view::open_in_browser(const std::string& url) {
+	view_stack.push_front(NULL); // we don't want a thread to write over the browser
 	std::string cmdline;
 	std::string browser = cfg->get_configvalue("browser");
 	if (browser != "")
@@ -744,10 +743,13 @@ void view::open_in_browser(const std::string& url) {
 	cmdline.append("'");
 	stfl_reset();
 	::system(cmdline.c_str());
+	view_stack.pop_front();
 }
 
 void view::run_help() {
 	set_itemlist_keymap_hint();
+	
+	view_stack.push_front(help_form);
 	
 	std::vector<std::pair<std::string,std::string> > descs;
 	keys->get_keymap_descriptions(descs);
@@ -783,6 +785,8 @@ void view::run_help() {
 				break;
 		}
 	} while (!quit);
+	
+	view_stack.pop_front();
 }
 
 void view::set_feedlist(std::vector<rss_feed>& feeds) {
