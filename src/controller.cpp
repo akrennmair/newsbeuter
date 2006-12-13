@@ -276,8 +276,8 @@ void controller::reload_all() {
 }
 
 void controller::start_reload_all_thread() {
-	downloadthread dlt(this);
-	dlt.start();	
+	thread * dlt = new downloadthread(this);
+	dlt->start();
 }
 
 void controller::usage(char * argv0) {
