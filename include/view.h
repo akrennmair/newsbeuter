@@ -8,6 +8,7 @@
 #include <string>
 #include <rss.h>
 #include <keymap.h>
+#include <mutex.h>
 
 extern "C" {
 #include <stfl.h>
@@ -70,6 +71,7 @@ namespace noos {
 			
 			configcontainer * cfg;
 			keymap * keys;
+			mutex * mtx;
 	};
 
 }

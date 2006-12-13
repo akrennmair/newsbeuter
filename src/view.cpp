@@ -34,12 +34,13 @@ extern "C" {
 
 using namespace noos;
 
-view::view(controller * c) : ctrl(c), cfg(0), keys(0) { 
+view::view(controller * c) : ctrl(c), cfg(0), keys(0), mtx(0) { 
 	feedlist_form = stfl_create(feedlist_str);
 	itemlist_form = stfl_create(itemlist_str);
 	itemview_form = stfl_create(itemview_str);
 	help_form = stfl_create(help_str);
 	filebrowser_form = stfl_create(filebrowser_str);
+	mtx = new mutex();
 }
 
 view::~view() {
@@ -58,17 +59,19 @@ void view::set_keymap(keymap * k) {
 }
 
 void view::set_status(const char * msg) {
+	mtx->lock();
 	stfl_form * form = *(view_stack.begin());
 	if (form) {
 		stfl_set(form,"msg",msg);
 		stfl_run(form,-1);
 	}
+	mtx->unlock();
 }
 
 void view::show_error(const char * msg) {
 	set_status(msg);
-	::sleep(2);
-	set_status("");
+	//::sleep(2);
+	//set_status("");
 }
 
 void view::run_feedlist() {
@@ -709,7 +712,6 @@ bool view::run_itemview(rss_item& item) {
 			case OP_OPENINBROWSER:
 				set_status("Starting browser...");
 				open_in_browser(item.link());
-				set_status("");
 				break;
 			case OP_NEXTUNREAD:
 				retval = true;
