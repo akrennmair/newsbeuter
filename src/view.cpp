@@ -48,6 +48,9 @@ view::~view() {
 	stfl_free(feedlist_form);
 	stfl_free(itemlist_form);
 	stfl_free(itemview_form);
+	stfl_free(help_form);
+	stfl_free(filebrowser_form);
+	delete mtx;
 }
 
 void view::set_config_container(configcontainer * cfgcontainer) {
@@ -102,6 +105,7 @@ void view::run_feedlist() {
 						unsigned int pos = 0;
 						posname >> pos;
 						ctrl->open_feed(pos);
+						set_status("");
 					} else {
 						show_error("Error: no feed selected!"); // should not happen
 					}
@@ -144,6 +148,7 @@ void view::run_feedlist() {
 				break;
 			case OP_HELP:
 				run_help();
+				set_status("");
 				break;
 			default:
 				break;
@@ -166,6 +171,8 @@ void view::run_itemlist(rss_feed& feed) {
 	stfl_set(itemlist_form,"itempos","0");
 	
 	set_itemlist_keymap_hint();
+
+	set_status("");
 	
 	do {
 		if (rebuild_list) {
@@ -223,6 +230,7 @@ void view::run_itemlist(rss_feed& feed) {
 							unsigned int pos = 0;
 							posname >> pos;
 							open_next_item = ctrl->open_item(items[pos]);
+							set_status("");
 							rebuild_list = true;
 						} else {
 							show_error("Error: no item selected!"); // should not happen
@@ -268,6 +276,7 @@ void view::run_itemlist(rss_feed& feed) {
 				break;
 			case OP_HELP:
 				run_help();
+				set_status("");
 				break;
 			case OP_QUIT:
 				quit = true;
@@ -616,6 +625,7 @@ bool view::run_itemview(rss_item& item) {
 	view_stack.push_front(itemview_form);
 	
 	set_itemview_keymap_hint();
+	set_status("");
 
 	std::string code = "{list";
 
@@ -712,6 +722,7 @@ bool view::run_itemview(rss_item& item) {
 			case OP_OPENINBROWSER:
 				set_status("Starting browser...");
 				open_in_browser(item.link());
+				set_status("");
 				break;
 			case OP_NEXTUNREAD:
 				retval = true;
@@ -720,6 +731,7 @@ bool view::run_itemview(rss_item& item) {
 				break;
 			case OP_HELP:
 				run_help();
+				set_status("");
 				break;
 			default:
 				break;
@@ -749,9 +761,10 @@ void view::open_in_browser(const std::string& url) {
 }
 
 void view::run_help() {
-	set_itemlist_keymap_hint();
-	
+	set_help_keymap_hint();
+
 	view_stack.push_front(help_form);
+	set_status("");
 	
 	std::vector<std::pair<std::string,std::string> > descs;
 	keys->get_keymap_descriptions(descs);

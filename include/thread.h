@@ -21,6 +21,7 @@ namespace noos {
 
 		private:
 			static void * run_thread(thread * p);
+			static void cleanup(thread * p);
 			pthread_t pt;
 	};
 

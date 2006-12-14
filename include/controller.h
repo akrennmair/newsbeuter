@@ -21,6 +21,7 @@ namespace noos {
 			void reload(unsigned int pos, unsigned int max = 0);
 			void reload_all();
 			void start_reload_all_thread();
+			inline void unlock_reload_mutex() { reload_mutex->unlock(); }
 			void update_feedlist();
 			void mark_all_read(unsigned int pos);
 			void catchup_all();
@@ -38,6 +39,8 @@ namespace noos {
 			std::string url_file;
 			std::string cache_file;
 			std::string config_file;
+
+			mutex * reload_mutex;
 	};
 
 }

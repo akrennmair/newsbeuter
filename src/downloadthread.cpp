@@ -11,6 +11,7 @@ downloadthread::~downloadthread() {
 
 void downloadthread::run() {
 	ctrl->reload_all();
+	ctrl->unlock_reload_mutex();
 	this->detached_exit();
 }
 

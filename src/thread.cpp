@@ -3,9 +3,12 @@
 
 using namespace noos;
 
-thread::thread() { }
+thread::thread() {
+}
 
-thread::~thread() { }
+thread::~thread() { 
+
+}
 
 void thread::start() {
 	int rc = pthread_create(&pt, 0, (void *(*)(void*))thread::run_thread, this);
@@ -19,6 +22,7 @@ void thread::join() {
 }
 
 void thread::exit() {
+	delete this;
 	pthread_exit(NULL);
 }
 
@@ -31,4 +35,8 @@ void * thread::run_thread(thread * p) {
 	thread * t = p;
 	t->run();
 	return 0;
+}
+
+void thread::cleanup(thread * p) {
+	delete p;
 }

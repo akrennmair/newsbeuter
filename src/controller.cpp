@@ -43,11 +43,13 @@ controller::controller() : v(0), rsscache(0), url_file("urls"), cache_file("cach
 	url_file = config_dir + std::string(NOOS_PATH_SEP) + url_file;
 	cache_file = config_dir + std::string(NOOS_PATH_SEP) + cache_file;
 	config_file = config_dir + std::string(NOOS_PATH_SEP) + config_file;
+	reload_mutex = new mutex();
 }
 
 controller::~controller() {
 	if (rsscache)
 		delete rsscache;
+	delete reload_mutex;
 }
 
 void controller::set_view(view * vv) {
@@ -276,8 +278,10 @@ void controller::reload_all() {
 }
 
 void controller::start_reload_all_thread() {
-	thread * dlt = new downloadthread(this);
-	dlt->start();
+	if (reload_mutex->trylock()) {
+		thread * dlt = new downloadthread(this);
+		dlt->start();
+	}
 }
 
 void controller::usage(char * argv0) {
