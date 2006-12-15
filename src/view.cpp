@@ -172,7 +172,7 @@ void view::run_itemlist(rss_feed& feed) {
 	
 	set_itemlist_keymap_hint();
 
-	set_status("");
+	stfl_set(itemlist_form,"msg","");
 	
 	do {
 		if (rebuild_list) {
@@ -230,7 +230,6 @@ void view::run_itemlist(rss_feed& feed) {
 							unsigned int pos = 0;
 							posname >> pos;
 							open_next_item = ctrl->open_item(items[pos]);
-							set_status("");
 							rebuild_list = true;
 						} else {
 							show_error("Error: no item selected!"); // should not happen
@@ -242,6 +241,7 @@ void view::run_itemlist(rss_feed& feed) {
 							}
 						}
 					} while (open_next_item);
+					set_status("");
 				}
 				break;
 			case OP_SAVE: 
@@ -469,6 +469,8 @@ std::string view::filebrowser(filebrowser_type type, const std::string& default_
 	std::string cwd = cwdtmp;
 	
 	view_stack.push_front(filebrowser_form);
+
+	set_filebrowser_keymap_hint();
 	
 	bool update_list = true;
 	bool quit = false;
@@ -485,10 +487,14 @@ std::string view::filebrowser(filebrowser_type type, const std::string& default_
 	
 	stfl_set(filebrowser_form, "filenametext", default_filename.c_str());
 	
-	if (type == FBT_OPEN)
-		stfl_set(filebrowser_form, "head", "Open File");
-	else
-		stfl_set(filebrowser_form, "head", "Save File");
+	std::string head_str;
+	if (type == FBT_OPEN) {
+		head_str = "Open File - ";
+	} else {
+		head_str = "Save File - ";
+	}
+	head_str.append(dir);
+	stfl_set(filebrowser_form, "head", head_str.c_str());
 		
 	do {
 		
@@ -535,6 +541,13 @@ std::string view::filebrowser(filebrowser_type type, const std::string& default_
 							switch (filetype) {
 								case 'd':
 									// TODO: handle directory
+									if (type == FBT_OPEN) {
+										head_str = "Open File - ";
+									} else {
+										head_str = "Save File - ";
+									}
+									head_str.append(filename);
+									stfl_set(filebrowser_form, "head", head_str.c_str());
 									::chdir(filename.c_str());
 									stfl_set(filebrowser_form,"listpos","0");
 									if (type == FBT_SAVE) {
@@ -621,11 +634,12 @@ bool view::jump_to_next_unread_item(std::vector<rss_item>& items) {
 bool view::run_itemview(rss_item& item) {
 	bool quit = false;
 	bool retval = false;
+	static bool render_hack = false;
 	
 	view_stack.push_front(itemview_form);
 	
 	set_itemview_keymap_hint();
-	set_status("");
+	stfl_set(itemview_form,"msg","");
 
 	std::string code = "{list";
 
@@ -661,7 +675,11 @@ bool view::run_itemview(rss_item& item) {
 	
 	set_itemview_head(item.title());
 	
-	stfl_run(itemview_form,-1); // XXX HACK: render once so that we get a proper widget width
+	if (!render_hack) {
+		stfl_run(itemview_form,-1); // XXX HACK: render once so that we get a proper widget width
+		render_hack = true;
+	}
+
 	const char * widthstr = stfl_get(itemview_form,"article:w");
 	unsigned int render_width = 80;
 	if (widthstr) {
@@ -909,6 +927,16 @@ void view::set_feedlist_keymap_hint() {
 	};
 	std::string keymap_hint = prepare_keymaphint(hints);
 	stfl_set(feedlist_form,"help", keymap_hint.c_str());
+}
+
+void view::set_filebrowser_keymap_hint() {
+	keymap_hint_entry hints[] = {
+		{ OP_QUIT, "Cancel" },
+		{ OP_OPEN, "Save" },
+		{ OP_NIL, NULL }
+	};
+	std::string keymap_hint = prepare_keymaphint(hints);
+	stfl_set(filebrowser_form,"help", keymap_hint.c_str());
 }
 
 void view::set_itemlist_keymap_hint() {
