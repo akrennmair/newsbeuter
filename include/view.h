@@ -71,6 +71,7 @@ namespace newsbeuter {
 			stfl_form * filebrowser_form;
 			
 			std::list<stfl_form *> view_stack;
+			std::vector<std::pair<rss_feed *, unsigned int> > visible_feeds;
 			
 			configcontainer * cfg;
 			keymap * keys;
