@@ -4,14 +4,26 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <list>
 
 namespace noos
 {
 
+typedef std::pair<std::string,std::string> xmlattribute;
+
+enum event { START_DOCUMENT, END_DOCUMENT, START_TAG, END_TAG, TEXT };
+
+struct xmlnode {
+	std::vector<xmlattribute> attributes;
+	std::string text;
+	event ev;
+	void add_attribute(std::string s);
+	event determine_tag_type();
+};
+
 class xmlpullparser
 {
 public:
-	enum event { START_DOCUMENT, END_DOCUMENT, START_TAG, END_TAG, TEXT };
 	
 	xmlpullparser();
 	virtual ~xmlpullparser();
@@ -26,16 +38,13 @@ public:
 	event next();
 	
 private:
-	typedef std::pair<std::string,std::string> attribute;
-	std::vector<attribute> attributes;
-	std::string text;
 	std::istream * inputstream;
-	event current_event;
+	std::list<xmlnode> nodequeue;
+
+	void parse_next();
 	
 	int skip_whitespace();
-	void add_attribute(std::string s);
 	std::string read_tag();
-	event determine_tag_type();
 	std::string decode_attribute(const std::string& s);
 	std::string decode_entities(const std::string& s);
 	std::string decode_entity(std::string s);

@@ -129,11 +129,13 @@ void view::run_feedlist() {
 			case OP_MARKFEEDREAD: {
 					const char * feedposname = stfl_get(feedlist_form, "feedposname");
 					if (feedposname) {
+						set_status("Marking feed read...");
 						std::istringstream posname(feedposname);
 						unsigned int pos = 0;
 						posname >> pos;
 						ctrl->mark_all_read(pos);
 						update = true;
+						set_status("");
 					} else {
 						show_error("Error: no feed selected!"); // should not happen
 					}
@@ -143,7 +145,9 @@ void view::run_feedlist() {
 				jump_to_next_unread_feed();
 				break;
 			case OP_MARKALLFEEDSREAD:
+				set_status("Marking all feeds read...");
 				ctrl->catchup_all();
+				set_status("");
 				update = true;
 				break;
 			case OP_QUIT:
@@ -295,7 +299,9 @@ void view::run_itemlist(unsigned int pos) {
 					show_no_unread_error = true;
 				break;
 			case OP_MARKFEEDREAD:
+				set_status("Marking feed read...");
 				mark_all_read(items);
+				set_status("");
 				rebuild_list = true;
 				break;
 			default:
@@ -617,7 +623,7 @@ void view::jump_to_next_unread_feed() {
 		std::istringstream posname(feedposname);
 		unsigned int pos = 0;
 		posname >> pos;
-		for (unsigned int i=pos;i<feedcount;++i) {
+		for (unsigned int i=pos+1;i<feedcount;++i) {
 			if (ctrl->get_feed(i).unread_item_count() > 0) {
 				std::ostringstream posname;
 				posname << i;
@@ -625,7 +631,7 @@ void view::jump_to_next_unread_feed() {
 				return;
 			}
 		}
-		for (unsigned int i=0;i<pos;++i) {
+		for (unsigned int i=0;i<=pos;++i) {
 			if (ctrl->get_feed(i).unread_item_count() > 0) {
 				std::ostringstream posname;
 				posname << i;
@@ -881,6 +887,7 @@ void view::set_feedlist(std::vector<rss_feed>& feeds) {
 
 	unsigned int i = 0;
 	unsigned short feedlist_number = 1;
+	unsigned int unread_feeds = 0;
 	for (std::vector<rss_feed>::iterator it = feeds.begin(); it != feeds.end(); ++it, ++i, ++feedlist_number) {
 		rss_feed feed = *it;
 		std::string title = it->title();
@@ -901,6 +908,8 @@ void view::set_feedlist(std::vector<rss_feed>& feeds) {
 					++unread_count;
 			}
 		}
+		if (unread_count > 0)
+			++unread_feeds;
 
 		if (show_read_feeds || unread_count > 0) {
 			snprintf(buf,sizeof(buf),"(%u/%u) ",unread_count,static_cast<unsigned int>(it->items().size()));
@@ -924,6 +933,12 @@ void view::set_feedlist(std::vector<rss_feed>& feeds) {
 	code.append("}");
 
 	stfl_modify(feedlist_form,"feeds","replace_inner",code.c_str());
+
+	std::ostringstream titleos;
+
+	titleos << "Your feeds (" << unread_feeds << " unread, " << i << " total)";
+
+	stfl_set(feedlist_form, "head", titleos.str().c_str());
 }
 
 void view::mark_all_read(std::vector<rss_item>& items) {

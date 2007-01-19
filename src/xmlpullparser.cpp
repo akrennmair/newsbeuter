@@ -10,7 +10,7 @@
 namespace noos
 {
 
-xmlpullparser::xmlpullparser() : inputstream(0), current_event(START_DOCUMENT)
+xmlpullparser::xmlpullparser() : inputstream(0)
 {
 }
 
@@ -20,10 +20,9 @@ xmlpullparser::~xmlpullparser()
 
 void xmlpullparser::setInput(std::istream& is) {
 	inputstream = &is;	
-	current_event = START_DOCUMENT;
 }
 
-int xmlpullparser::getAttributeCount() const {
+int xmlnode::getAttributeCount() const {
 	if (START_TAG != current_event)
 		return -1;
 	return attributes.size();
@@ -68,15 +67,20 @@ bool xmlpullparser::isWhitespace() const {
 }
 
 xmlpullparser::event xmlpullparser::next() {
-	// TODO: refactor this
-	if (attributes.size() > 0) {
-		attributes.erase(attributes.begin(), attributes.end());	
-	}
-	text = "";
+	do {
+		if (nodequeue.size() == 0)
+			parse_next();
+		if (nodequeue[0].ev != END_DOCUMENT)
+			nodequeue.pop_front();
+	} while (nodequeue.size() == 0);
+	return nodequeue.begin()->ev;
+}
+
+void xmlpullparser::parse_next() {
+	xmlnode node;
 	
 	if (inputstream->eof()) {
-		current_event = END_DOCUMENT;
-		return current_event;	
+		xmlnode.ev = END_DOCUMENT;
 	}
 	
 	switch (current_event) {
@@ -84,58 +88,58 @@ xmlpullparser::event xmlpullparser::next() {
 			{
 				char c = skip_whitespace();
 				if (inputstream->eof()) {
-					current_event = END_DOCUMENT;
+					xmlnode.ev = END_DOCUMENT;
 					break;
 				}
 				if (c != '<') {
-					text.append(1,c);
+					node.text.append(1,c);
 					std::string tmp;
 					getline(*inputstream,tmp,'<');
 					remove_trailing_whitespace(tmp);
-					text.append(tmp);
-					text = decode_entities(text);
-					current_event = TEXT;
+					node.text.append(tmp);
+					node.text = decode_entities(node.text);
+					node.ev = TEXT;
 				} else {
 					std::string s;
 					try {
 						s = read_tag();
 					} catch (const xmlexception &) {
-						current_event = END_DOCUMENT;
+						node.ev = END_DOCUMENT;
 						break;
 					}
 					
 					if (s.find("?xml",0) == 0) {
 						c = skip_whitespace();
 						if (inputstream->eof()) {
-							current_event = END_DOCUMENT;
+							node.ev = END_DOCUMENT;
 							break;
 						}
 						try {
 							s = read_tag();
 						} catch (const xmlexception &) {
-							current_event = END_DOCUMENT;
+							node.ev = END_DOCUMENT;
 							break;
 						}
 					}
 					
 					std::vector<std::string> tokens = utils::tokenize(s);
 					if (tokens.size() > 0) {
-						text = tokens[0];
+						node.text = tokens[0];
 						if (tokens.size() > 1) {
 							std::vector<std::string>::iterator it = tokens.begin();
 							++it;
 							while (it != tokens.end()) {
-								add_attribute(*it);
+								node.add_attribute(*it);
 								++it;	
 							}
 						} else {
-							if (text.length() > 0 && text[text.length()-1] == '/')
-								text.erase(text.length()-1, 1);
+							if (node.text.length() > 0 && node.text[node.text.length()-1] == '/') // TODO: add closing node to queue
+								node.text.erase(node.text.length()-1, 1);
 						}
 					} else {
 						throw xmlexception("empty tag found");	
 					}
-					current_event = determine_tag_type();
+					node.ev = node.determine_tag_type();
 				}
 			}	
 			break;
@@ -154,28 +158,28 @@ xmlpullparser::event xmlpullparser::next() {
 								std::vector<std::string>::iterator it = tokens.begin();
 								++it;
 								while (it != tokens.end()) {
-									add_attribute(*it);
+									node.add_attribute(*it);
 									++it;	
 								}
 							} else {
-								if (text.length() > 0 && text[text.length()-1] == '/')
-									text.erase(text.length()-1, 1);
+								if (node.text.length() > 0 && node.text[node.text.length()-1] == '/') // TODO: add closing node to queue
+									node.text.erase(node.text.length()-1, 1);
 							}
 						} else {
 							throw xmlexception("empty tag found");	
 						}
-						current_event = determine_tag_type();
+						node.ev = node.determine_tag_type();
 					} else {
-						text.append(1,c);
+						node.text.append(1,c);
 						std::string tmp;
 						getline(*inputstream,tmp,'<');
 						remove_trailing_whitespace(tmp);
-						text.append(tmp);
-						text = decode_entities(text);
-						current_event = TEXT;
+						node.text.append(tmp);
+						node.text = decode_entities(node.text);
+						node.ev = TEXT;
 					}
 				} else {
-					current_event = END_DOCUMENT;
+					node.ev = END_DOCUMENT;
 				}
 			}
 			break;
@@ -185,34 +189,34 @@ xmlpullparser::event xmlpullparser::next() {
 				try {
 					s = read_tag();
 				} catch (const xmlexception &) {
-					current_event = END_DOCUMENT;
+					node.ev = END_DOCUMENT;
 					break;
 				}
 				std::vector<std::string> tokens = utils::tokenize(s);
 				if (tokens.size() > 0) {
-					text = tokens[0];
+					node.text = tokens[0];
 					if (tokens.size() > 1) {
 						std::vector<std::string>::iterator it = tokens.begin();
 						++it;
 						while (it != tokens.end()) {
-							add_attribute(*it);
+							node.add_attribute(*it);
 							++it;	
 						}
 					} else {
-						if (text.length() > 0 && text[text.length()-1] == '/')
-							text.erase(text.length()-1, 1);
+						if (node.text.length() > 0 && node.text[node.text.length()-1] == '/')
+							node.text.erase(node.text.length()-1, 1);
 					}
 				} else {
 					throw xmlexception("empty tag found");	
 				}
-				current_event = determine_tag_type();	
+				node.ev = determine_tag_type();	
 			}
 			break;
 		case END_DOCUMENT:	
 			// nothing
 			break;
 	}
-	return getEventType();	
+	nodequeue.push_back(node);
 }
 
 int xmlpullparser::skip_whitespace() {
@@ -225,7 +229,7 @@ int xmlpullparser::skip_whitespace() {
 	return c;
 }
 
-void xmlpullparser::add_attribute(std::string s) {
+void xmlnode::add_attribute(std::string s) {
 	if (s.length() > 0 && s[s.length()-1] == '/')
 		s.erase(s.length()-1,1);
 	if (s.length() == 0)
@@ -252,12 +256,12 @@ std::string xmlpullparser::read_tag() {
 	return s;
 }
 
-xmlpullparser::event xmlpullparser::determine_tag_type() {
+xmlpullparser::event xmlnode::determine_tag_type() {
 	if (text.length() > 0 && text[0] == '/') {
 		text.erase(0,1);
 		return END_TAG;
 	}
-	return START_TAG;	
+	return START_TAG;
 }
 
 std::string xmlpullparser::decode_attribute(const std::string& s) {
