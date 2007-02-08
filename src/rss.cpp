@@ -50,7 +50,26 @@ rss_feed rss_parser::parse() {
 			free(str);
 		}
 	}
-	if (mrss->description) {
+	
+	mrss_tag_t * content;
+
+	if (mrss_search_tag(mrss, "encoded", "http://purl.org/rss/1.0/modules/content/", &content) == MRSS_OK && content) {
+		/* RSS 2.0 content:encoded */
+		char * str = stringprep_convert(content->value, stringprep_locale_charset(), encoding);
+		if (str) {
+			feed.set_description(str);
+			free(str);
+		}
+		mrss_free(content);
+	} else if (mrss_search_tag(mrss, "content", NULL, &content) == MRSS_OK && content) {
+		/* Atom content */
+		char * str = stringprep_convert(content->value, stringprep_locale_charset(), encoding);
+		if (str) {
+			feed.set_description(str);
+			free(str);
+		}
+		mrss_free(content);
+	} else if (mrss->description) {
 		char * str = stringprep_convert(mrss->description, stringprep_locale_charset(), encoding);
 		if (str) {
 			feed.set_description(str);
