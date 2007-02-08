@@ -46,11 +46,25 @@ void colormanager::set_colors(view * v) {
 	std::map<std::string,std::vector<std::string> >::iterator attit = attributes.begin();
 
 	for (;fgcit != fg_colors.end(); ++fgcit, ++bgcit, ++attit) {
-		std::string colorattr = std::string("fg=") + fgcit->second + std::string(",bg=") + bgcit->second;
+		std::string colorattr;
+		if (fgcit->second != "default") {
+			colorattr.append("fg=");
+			colorattr.append(fgcit->second);
+		}
+		if (bgcit->second != "default") {
+			if (colorattr.length() > 0)
+				colorattr.append(",");
+			colorattr.append("bg=");
+			colorattr.append(bgcit->second);
+		}
 		for (std::vector<std::string>::iterator it=attit->second.begin(); it!= attit->second.end(); ++it) {
-			colorattr.append(",attr=");
+			if (colorattr.length() > 0)
+				colorattr.append(",");
+			colorattr.append("attr=");
 			colorattr.append(*it);
 		} 
+
+		GetLogger().log(LOG_DEBUG,"colormanager::set_colors: %s %s\n",fgcit->first.c_str(), colorattr.c_str());
 
 		v->feedlist_form.set(fgcit->first, colorattr);
 		v->itemlist_form.set(fgcit->first, colorattr);
@@ -61,9 +75,15 @@ void colormanager::set_colors(view * v) {
 		v->selecttag_form.set(fgcit->first, colorattr);
 
 		if (fgcit->first == "article") {
-			std::string styleend_str("fg=blue,bg=");
-			styleend_str.append(bgcit->second);
-			styleend_str.append(",attr=bold");
+			std::string styleend_str;
+			
+			if (bgcit->second != "default") {
+				styleend_str.append("bg=");
+				styleend_str.append(bgcit->second);
+			}
+			if (styleend_str.length() > 0)
+				styleend_str.append(",");
+			styleend_str.append("attr=bold");
 
 			v->help_form.set("styleend", styleend_str.c_str());
 			v->itemview_form.set("styleend", styleend_str.c_str());

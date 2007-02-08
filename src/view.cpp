@@ -7,6 +7,7 @@
 #include <selecttag.h>
 
 #include <logger.h>
+#include <reloadthread.h>
 
 #include <iostream>
 #include <iomanip>
@@ -59,10 +60,12 @@ void view::set_keymap(keymap * k) {
 
 void view::set_status(const char * msg) {
 	mtx->lock();
-	stfl::form * form = *(view_stack.begin());
-	if (form) {
-		form->set("msg",msg);
-		form->run(-1);
+	if (view_stack.size() > 0) {
+		stfl::form * form = *(view_stack.begin());
+		if (form) {
+			form->set("msg",msg);
+			form->run(-1);
+		}
 	}
 	mtx->unlock();
 }
@@ -74,6 +77,7 @@ void view::show_error(const char * msg) {
 void view::run_feedlist(const std::vector<std::string>& tags) {
 	bool quit = false;
 	bool update = false;
+	bool zero_feedpos = false;
 
 	view_stack.push_front(&feedlist_form);
 	
@@ -84,11 +88,21 @@ void view::run_feedlist(const std::vector<std::string>& tags) {
 		ctrl->start_reload_all_thread();
 	}
 
+	unsigned int reload_cycle = 60 * static_cast<unsigned int>(cfg->get_configvalue_as_int("reload-time"));
+	if (cfg->get_configvalue_as_bool("auto-reload") == true) {
+		reloadthread  * rt = new reloadthread(ctrl, reload_cycle);
+		rt->start();
+	}
+
 	do {
 
 		if (update) {
 			update = false;
 			ctrl->update_feedlist();
+			if (zero_feedpos) {
+				feedlist_form.set("feedpos","0");
+				zero_feedpos = false;
+			}
 		}
 
 		const char * event = feedlist_form.run(0);
@@ -181,7 +195,7 @@ void view::run_feedlist(const std::vector<std::string>& tags) {
 			case OP_CLEARTAG:
 				tag = "";
 				update = true;
-				feedlist_form.set("feedpos","0");
+				zero_feedpos = true;
 				break;
 			case OP_SETTAG: 
 				if (tags.size() > 0) {
@@ -189,7 +203,7 @@ void view::run_feedlist(const std::vector<std::string>& tags) {
 					if (newtag != "") {
 						tag = newtag;
 						update = true;
-						feedlist_form.set("feedpos","0");
+						zero_feedpos = true;
 					}
 				} else {
 					show_error("No tags defined.");
@@ -209,6 +223,8 @@ void view::run_feedlist(const std::vector<std::string>& tags) {
 	} while (!quit);
 	
 	view_stack.pop_front();
+
+	// delete rt; // is this allowed?
 
 	stfl::reset();
 }
@@ -1147,6 +1163,7 @@ void view::set_feedlist(std::vector<rss_feed>& feeds) {
 		}
 		if (unread_count > 0)
 			++unread_feeds;
+
 
 		if ((tag == "" || it->matches_tag(tag)) && (show_read_feeds || unread_count > 0)) {
 			visible_feeds.push_back(std::pair<rss_feed *, unsigned int>(&(*it),i));

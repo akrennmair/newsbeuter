@@ -5,8 +5,6 @@ TODO:
 	ignore comments
 	join two subsequent text nodes separated by a comment
 - improve configuration parser: support quoting
-- add color configuration support
-- add auto-reload feature
 
 longteam goals to reach:
 - support for atom (talk to mRss guy?) - implement by yourself?
@@ -47,3 +45,5 @@ DONE:
 - added "toggle item read" function
 - implemented an urlview-like interface
 - add proxy configuration support
+- add auto-reload feature
+- add color configuration support
