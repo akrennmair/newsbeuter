@@ -1,14 +1,13 @@
-
 PACKAGE=newsbeuter
 
 # important directories
-prefix=/usr/local
+prefix=@prefix@
 datadir=$(prefix)/share
 localedir=$(datadir)/locale
 docdir=$(datadir)/doc/$(PACKAGE)
 
 # compiler
-CXX=c++
+CXX=@CXX@
 
 # compiler and linker flags
 DEFINES=-D_ENABLE_NLS -DLOCALEDIR=\"$(localedir)\" -DPACKAGE=\"$(PACKAGE)\"
@@ -28,22 +27,22 @@ endif
 NEWSBEUTER=$(PACKAGE)
 NEWSBEUTER_SOURCES=$(shell cat newsbeuter.deps)
 NEWSBEUTER_OBJS=$(patsubst %.cpp,%.o,$(NEWSBEUTER_SOURCES))
-NEWSBEUTER_LIBS=-lstfl -lmrss -lnxml -lncursesw -lsqlite3 -lpthread
+NEWSBEUTER_LIBS=@LIBS@
 
 
 PODBEUTER=podbeuter
 PODBEUTER_SOURCES=$(shell cat podbeuter.deps)
 PODBEUTER_OBJS=$(patsubst %.cpp,%.o,$(PODBEUTER_SOURCES))
-PODBEUTER_LIBS=-lstfl -lncursesw -lpthread -lcurl
+PODBEUTER_LIBS=@LIBS@
 
-ifneq ($(shell uname -s),Linux)
-NEWSBEUTER_LIBS+=-lintl
-PODBEUTER_LIBS+=-lintl
-endif
+#ifneq ($(shell uname -s),Linux)
+#NEWSBEUTER_LIBS+=-lintl
+#PODBEUTER_LIBS+=-lintl
+#endif
 
 # additional commands
 MKDIR=mkdir -p
-INSTALL=install
+INSTALL=@install@
 A2X=a2x
 MSGFMT=msgfmt
 
@@ -82,7 +81,7 @@ clean: clean-newsbeuter clean-podbeuter
 	$(RM) $(STFLHDRS) core *.core core.*
 
 distclean: clean clean-mo
-	$(RM) Makefile.deps
+	$(RM) Makefile config.log sysconf.h
 
 doc:
 	$(MKDIR) doc/xhtml
