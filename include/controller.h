@@ -6,6 +6,7 @@
 #include <cache.h>
 #include <nxml.h>
 #include <configcontainer.h>
+#include <filtercontainer.h>
 
 namespace newsbeuter {
 
@@ -28,6 +29,7 @@ namespace newsbeuter {
 			inline unsigned int get_feedcount() { return feeds.size(); }
 
 			inline void unlock_reload_mutex() { reload_mutex->unlock(); }
+			bool trylock_reload_mutex();
 
 			void update_feedlist();
 			void mark_all_read(unsigned int pos);
@@ -36,15 +38,31 @@ namespace newsbeuter {
 			bool is_valid_podcast_type(const std::string& mimetype);
 			void enqueue_url(const std::string& url);
 			void set_itemlist_feed(unsigned int pos);
+			void notify(const std::string& msg);
+
+			void reload_urls_file();
+
+			inline std::vector<rss_feed>& get_all_feeds() { return feeds; }
+
+			// TODO: move somewhere else...
+			void set_feedptrs(rss_feed& feed);
+
+			inline filtercontainer& get_filters() { return filters; }
+
+			std::string bookmark(const std::string& url, const std::string& title, const std::string& description);
+
+			inline cache * get_cache() { return rsscache; }
 
 		private:
 			void usage(char * argv0);
+			void version_information();
 			void import_opml(const char * filename);
 			void export_opml();
 			void rec_find_rss_outlines(nxml_data_t * node, std::string tag);
+			void compute_unread_numbers(unsigned int&, unsigned int& );
 
 			view * v;
-			urlreader urlcfg;
+			urlreader * urlcfg;
 			cache * rsscache;
 			std::vector<rss_feed> feeds;
 			std::string config_dir;
@@ -54,6 +72,8 @@ namespace newsbeuter {
 			std::string queue_file;
 			bool refresh_on_start;
 			configcontainer * cfg;
+			rss_ignores ign;
+			filtercontainer filters;
 
 			mutex * reload_mutex;
 	};

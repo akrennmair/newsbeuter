@@ -26,16 +26,26 @@ void help_formaction::process_operation(operation op) {
 void help_formaction::prepare() {
 	if (do_redraw) {
 
-		f->set("head",_("Help"));
+		char buf[1024];
+		snprintf(buf,sizeof(buf),_("%s %s - Help"), PROGRAM_NAME, PROGRAM_VERSION);
+		f->set("head",buf);
 		
-		std::vector<std::pair<std::string,std::string> > descs;
+		std::vector<keymap_desc> descs;
 		v->get_keys()->get_keymap_descriptions(descs, KM_NEWSBEUTER);
 		
 		std::string code = "{list";
 		
-		for (std::vector<std::pair<std::string,std::string> >::iterator it=descs.begin();it!=descs.end();++it) {
+		for (std::vector<keymap_desc>::iterator it=descs.begin();it!=descs.end();++it) {
 			std::string line = "{listitem text:";
-			std::string descline = std::string("\t") + it->first + std::string("\t") + it->second;
+
+			std::string descline;
+			descline.append(it->key);
+			descline.append(1,'\t');
+			descline.append(it->cmd);
+			unsigned int how_often = 3 - (it->cmd.length() / 8);
+			descline.append(how_often,'\t');
+			descline.append(it->desc);
+
 			line.append(stfl::quote(descline));
 			line.append("}");
 			

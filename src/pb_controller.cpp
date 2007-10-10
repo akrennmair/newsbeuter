@@ -7,6 +7,7 @@
 #include <sstream>
 #include <cstdio>
 
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <signal.h>
@@ -55,7 +56,7 @@ pb_controller::pb_controller() : v(0), config_file("config"), queue_file("queue"
 
 	config_dir.append(NEWSBEUTER_PATH_SEP);
 	config_dir.append(NEWSBEUTER_CONFIG_SUBDIR);
-	mkdir(config_dir.c_str(),0700); // create configuration directory if it doesn't exist
+	::mkdir(config_dir.c_str(),0700); // create configuration directory if it doesn't exist
 
 	config_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + config_file;
 	queue_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + queue_file;
@@ -122,20 +123,19 @@ void pb_controller::run(int argc, char * argv[]) {
 	std::cout << _("Loading configuration...");
 	std::cout.flush();
 
-	configparser cfgparser(config_file.c_str());
+	configparser cfgparser;
 	cfg = new configcontainer();
 	cfg->register_commands(cfgparser);
 	colormanager * colorman = new colormanager();
 	colorman->register_commands(cfgparser);
 
-	keymap keys;
+	keymap keys(KM_PODBEUTER);
 	cfgparser.register_handler("bind-key", &keys);
 	cfgparser.register_handler("unbind-key", &keys);
 
-	v->set_keymap(&keys);
-
 	try {
-		cfgparser.parse();
+		cfgparser.parse("/etc/newsbeuter/config");
+		cfgparser.parse(config_file);
 	} catch (const configexception& ex) {
 		std::cout << ex.what() << std::endl;
 		return;	
@@ -151,8 +151,12 @@ void pb_controller::run(int argc, char * argv[]) {
 
 	ql = new queueloader(queue_file, this);
 	ql->reload(downloads_);
+
+	v->set_keymap(&keys);
 	
 	v->run();
+
+	stfl::reset();
 
 	std::cout <<  _("Cleaning up queue...");
 	std::cout.flush();

@@ -40,10 +40,16 @@ themselves depend on other libraries. These dependencies are not listed here.
 Please also be aware that you need a recent C++ compiler. Currently, newsbeuter
 has only been tested with GCC.
 
-- STFL: http://www.clifford.at/stfl/[]
+- STFL (version 0.14 or newer): http://www.clifford.at/stfl/[]
 - SQLite 3: http://www.sqlite.org/[]
-- libmRss: http://www2.autistici.org/bakunin/libmrss/[]
-- libnXml: http://www2.autistici.org/bakunin/libnxml/[]
+- libmRss (version 0.18.0 or newer): http://www2.autistici.org/bakunin/libmrss/[]
+- libnXml (version 0.18.0 or newer): http://www2.autistici.org/bakunin/libnxml/[]
+
+If you intend to modify the filter language parser, you will also need Coco/R for C++,
+which you can download from http://www.ssw.uni-linz.ac.at/coco/[]. The Coco/R binary
+must be installed as "coco-cpp" in your PATH. Debian users only need to install
+the package "coco-cpp".
+
 
 Compiling and Installing
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,53 +65,9 @@ binary to the directory /opt/newsbeuter/bin.
 
 First Steps
 -----------
-After you've installed newsbeuter, you can run it for the first time by typing
-"newsbeuter" on your command prompt. This will bring you the following message:
 
-	Error: no URLs configured. Please fill the file /Users/ak/.newsbeuter/urls with RSS feed URLs or import an OPML file.
+include::chapter-firststeps.txt[]
 
-	newsbeuter 0.4
-	usage: ./newsbeuter [-i <file>|-e] [-u <urlfile>] [-c <cachefile>] [-h]
-		-r              refresh feeds on start
-		-e              export OPML feed to stdout
-		-i <file>       import OPML file
-		-u <urlfile>    read RSS feed URLs from <urlfile>
-		-c <cachefile>  use <cachefile> as cache file
-		-C <configfile> read configuration from <configfile>
-		-h              this help
-
-
-This means that newsbeuter can't start without any configured feeds. To add
-feeds to newsbeuter, you can either add URLs to the configuration file
-$HOME/.newsbeuter/urls or you can import an OPML file by running "newsbeuter -i
-blogroll.opml".
-
-Now you can run newsbeuter again, and it will present you with a controllable
-list of the URLs that you configured previously. You can now start downloading
-the feeds, either by pressing "R" to download all feeds, or by pressing "r" to
-download the currently selected feed. You can then select a feed you want to
-read, and by pressing "Enter", you can go to the article list for this feed.
-This works even while the downloading is still in progress.  You can now see
-the list of available articles by their title. A "N" on the left indicates that
-an article wasn't read yet. Pressing Enter brings you to the content of the
-article. You can scroll through this text, and also run a browser (default:
-lynx) to view the complete article if the content is empty or just an abstract
-or a short description. Pressing "q" brings you back to the article list, and
-pressing "q" again brings you back to the feed list. Pressing "q" a third time
-then closes newsbeuter.
-
-Newsbeuter caches the article that it downloads. This means that when you start
-newsbeuter again and reload a feed, the old articles can still be read even if
-they aren't in the current RSS feeds anymore. Optionally you can configure how
-many articles shall be preserved by feed so that the article backlog doesn't
-grow endlessly (see below).
-
-Several aspects of newsbeuter's behaviour can be configured via a configuration
-file, by default $HOME/.newsbeuter/config. This configuration files contains
-lines in the form "<config-command> <arg1> ...".  The configuration file can
-also contain comments, which start with the '#' character and go as far as the
-end of line. If you need to enter a configuration argument that contains
-spaces, use quotes (") around the whole argument.
 
 
 .Configuration Commands
@@ -113,54 +75,67 @@ spaces, use quotes (") around the whole argument.
 `10`15`15`40`20~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Configuration Command|Argument(s)|Default|Description|Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-show-read-feeds|[yes/no]|yes|If yes, then all feeds, including those without unread articles, are listed. If no, then only feeds with one or more unread articles are list.|show-read-feeds no
-browser|<browser-command>|lynx|Set the browser command to use when opening an article in the browser.|browser w3m
-max-items|<number>|0|Set the number of articles to maximally keep per feed. If the number is set to 0, then all articles are kept.|max-items 100
-bind-key|<key> <operation>||Bind key <key> to <operation>. This means that whenever <key> is preseed, then <operation> is executed (if applicable in the current context). A list of available operations can be found below.|bind-key ^r reload-all
-unbind-key|<key>||Unbind key <key>. This means that no operation is called when <key> is pressed.|unbind-key R
-use-proxy|[yes/no]|no|If yes, then the configured proxy will be used for downloading the RSS feeds.|use-proxy yes
-proxy|<server:port>||Set the proxy to use for downloading RSS feeds.|proxy localhost:3128
-proxy-auth|<auth>||Set the proxy authentication string.|proxy-auth user:password
-color|<element> <fgcolor> <bgcolor> [<attr> ...]||Set the foreground color, background color and optional attributes for a certain element|color background white black
-auto-reload|[yes/no]|no|If enabled, all feeds will be automatically reloaded at start up and then continuously after a certain time has passed (see reload-time).|auto-reload yes
-reload-time|<number>|30|The number of minutes between automatic reloads.|reload-time 60
-save-path|<path>|~/|The default path where articles shall be saved to. If an invalid path is specified, the current directory is used.|save-path "~/Saved Articles"
-podcast-auto-enqueue|[yes/no]|no|If yes, then all podcast URLs that are found in articles are added to the podcast download queue. See below for more information on podcast support in newsbeuter.|podcast-auto-enqueue yes
+include::configcommands.dsv[]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Available Operations
-[frame="all", grid="all", format="dsv"]
+[frame="all", grid="all", format="dsv",separator="|"]
 `20`20`60~~~~~~~~~~~~~~~~~~~~~~~~
 Operation:Default key:Description
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-quit:q:Quit the program or return to the previous dialog (depending on the context).
-reload:r:Reload the currently selected feed.
-reload-all:R:Reload all feeds.
-mark-feed-read:A:Mark all articles in the currently selected feed read.
-mark-all-feeds-read:C:Mark articles in all feeds read.
-open:Enter:Open the currently selected feed or article.
-save:s:Save the currently selected article to a file.
-next-unread:n:Jump to the next unread article.
-open-in-browser:o:Opens the URL associated with the current article.
-toggle-source-view:^u:Toggles between the HTML view and the source view in the article view.
-toggle-article-read:N:Toggle the read flag for the currently selected article.
-toggle-show-read-feeds:l:Toggle whether read feeds should be shown in the feed list.
-show-urls:u:Show all URLs in the article in a list (similar to urlview).
-open-search:/:Opens the search dialog. When a search is done in the article list, then the search operation only applies to the articles of the current feed, otherwise to all articles.
-select-tag:t:Select tag.
-clear-tag:^t:Clear current tag.
-enqueue:e:Add the podcast download URL of the current article (if any is found) to the podcast download queue (see below for more information on podcast support).
-help:?:Runs the help screen.
+open|ENTER|Open the currently selected feed or article.
+quit|q|Quit the program or return to the previous dialog (depending on the context).
+reload|r|Reload the currently selected feed.
+reload-all|R|Reload all feeds.
+mark-feed-read|A|Mark all articles in the currently selected feed read.
+mark-all-feeds-read|C|Mark articles in all feeds read.
+save|s|Save the currently selected article to a file.
+next-unread|n|Jump to the next unread article.
+prev-unread|p|Jump to the previous unread article.
+open-in-browser|o|Opens the URL associated with the current article.
+help|?|Runs the help screen.
+toggle-source-view|^U|Toggles between the HTML view and the source view in the article view.
+toggle-article-read|N|Toggle the read flag for the currently selected article.
+toggle-show-read-feeds|l|Toggle whether read feeds should be shown in the feed list.
+show-urls|u|Show all URLs in the article in a list (similar to urlview).
+clear-tag|^T|Clear current tag.
+select-tag|t|Select tag.
+open-search|/|Opens the search dialog. When a search is done in the article list, then the search operation only applies to the articles of the current feed, otherwise to all articles.
+enqueue|e|Add the podcast download URL of the current article (if any is found) to the podcast download queue (see below for more information on podcast support).
+reload-urls|^R|Reload the URLs configuration file.
+redraw|^L|Redraw the screen.
+cmdline|:|Open the command line.
+set-filter|F|Set a filter.
+select-filter|f|Select a predefined filter.
+clear-filter|^F|Clear currently set filter.
+bookmark|^B|Bookmark currently selected article or URL.
+edit-flags|^E|Edit the flags of the currently selected article.
+next-unread-feed|^N|Go to the next feed with unread articles. This only works from the article list.
+prev-unread-feed|^P|Go to the previous feed with unread articles. This only works from the article list.
+up|UP|Goes up one item in the list.
+down|DOWN|Goes down one item in the list.
+pageup|PPAGE|Goes up one page in the list.
+pagedown|NPAGE|Goes down one page in the list.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 Keys, as used in the bind-key configuration command, use a special syntax.
 Lowercase keys, uppercase keys and special characters are written literally.
-The Enter key is written as "enter", while the ESC key is written as "esc". The
+The Enter key is written as "ENTER", while the Esc key is written as "ESC". The
 function keys F1 to F12 are written as "F1" to "F12". The Space key is written
-as "space". Key combinations with the Ctrl key, such as Ctrl-R, are written as
-^r. Please be aware that all Ctrl-related key combinations need to be written
-in lowercase ^R for Ctrl-Shift-R does not work.
+as "SPACE". Key combinations with the Ctrl key, such as Ctrl-R, are written as
+^R. Please be aware that all Ctrl-related key combinations need to be written
+in uppercase. The following identifiers for keys are supported:
+
+- ENTER (Enter key)
+- BACKSPACE (backspace key)
+- LEFT (left cursor)
+- RIGHT (right cursor)
+- UP (up cursor)
+- PPAGE (page up cursor)
+- NPAGE (page down cursor)
+- DOWN (down cursor)
+- ESC (Esc key)
+
 
 Example Configuration
 ~~~~~~~~~~~~~~~~~~~~~
@@ -171,7 +146,7 @@ Example Configuration
 	show-read-feeds  no
 
 	unbind-key       R
-	bind-key         ^r    reload-all
+	bind-key         ^R    reload-all
 
 Configuring Colors
 ~~~~~~~~~~~~~~~~~~
@@ -225,60 +200,366 @@ The default color configuration of newsbeuter looks like this:
 	info         yellow  blue   bold
 	article      white   black
 
+
+Migrating from other RSS Feed Readers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is very likely that you have used other RSS feed readers before. In this
+case, it is practical to migrate the previous configuration to newsbeuter. The
+vast amount of RSS feed readers allows the export of subscriptions via OPML
+files. OPML is an XML file format that was designed to save outlines, and has
+found its primary use in the import and export of feed subscriptions between
+different RSS feed readers.
+
+The best thing to start with is to export your subscriptions from the old
+reader.  Usually, RSS feed readers have appropriate menu itmes available to do
+so.
+
+Snownews provides a script to convert your current subscription file into an
+OPML file:
+
+	snow2opml > ~/blogroll.opml
+
+This command creates from your Snownews configuration a file blogroll.opml in
+your home directory. To export the subscription list from raggle, the
+following command is necessary:
+
+	raggle --export-opml ~/blogroll.opml
+
+When you have exported the subscriptions from your old RSS feed reader, you can
+import them into newsbeuter:
+
+	newsbeuter -i ~/blogroll.opml
+
+Don't worry, newsbeuter won't destroy your existing configuration, or add
+subscriptions more than once: every URL that is added to the subscription list
+is checked before whether it is already in the list, and is only added if not.
+This makes it possible to merge several OPML files into your subscription list.
+
+If your old RSS feed reader was able to structure your subscriptions in 
+hierarchies, and reflected this structure in the exported OPML file, newsbeuter
+doesn't throw away this information (although it doesn't support hierarchies), but
+generates tags from it. Tags are newsbeuter's way of organizing subscriptions
+in a non-hierarchical way. More information on the use of tags can be found below.
+
+Imagine the following folder hierarchy:
+
+	|- News
+	| |- Europe
+	| `- International
+	|- IT
+	| |- Linux
+	| |- Windows
+	| `- Programming
+	|   |- C++
+	|   |- Ruby
+	|   `- Erlang
+	`- Private
+
+Subscriptions found in the folder "Private" will be tagged with "Private",
+subscriptions in the folder "International" will be tagged with "News" and
+"News/International", subscriptions in the folder "Erlang" will be tagged ith
+"IT", "IT/Programming" and "IT/Programming/Erlang", and so on. This means that
+when you select the tag "Programming" in newsbeuter, you will see all
+subscriptions that were in the "Programming" folder or one of its subfolders
+before. This means that you will lose virtually nothing of your previously
+configured structure.
+
+
 Advanced Features
 -----------------
 
 Tagging
 ~~~~~~~
 
-Newsbeuter comes with the possibility to categorize or "tag", as well call it,
-RSS feeds. Every RSS feed can be assigned 0 or more tags. Within newsbeuter, you
-can then select to only show RSS feeds that match a certain tag. That makes it
-easy to categorize your feeds in a flexible and powerful way.
+include::chapter-tagging.txt[]
 
-Usually, the ~/.newsbeuter/urls file contains one RSS feed URL per line. To
-assign a tag to an RSS feed, simply attach it as a single word, separated by
-blanks such as space or tab. If the tag needs to contain spaces, you must use
-quotes (") around the tag (see example below). An example ~/.newsbeuter/urls
-file may look like this:
 
-	http://blog.fefe.de/rss.xml?html interesting conspiracy news "cool stuff"
-	http://rss.orf.at/news.xml news orf
-	http://www.heise.de/newsticker/heise.rdf news interesting
+Scripts and Filters (Snownews Extensions)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When you now start newsbeuter with this configuration, you can press "t" to select
-a tag. When you select the tag "news", you will see all three RSS feeds. Pressing
-"t" again and e.g. selecting the "conspiracy" tag, you will only see the
-http://blog.fefe.de/rss.xml?html RSS feed. Pressing "^t" clears the current tag,
-and again shows all RSS feeds, regardless of their assigned tags.
+include::chapter-snownews.txt[]
+
+Bookmarking
+~~~~~~~~~~~
+
+Since version 0.7, newsbeuter contains a plugin-based bookmarking system. When a user bookmarks a link (possible
+in the article list, in the article view, and in the URL view), he is asked for the URL to bookmark (already
+preset with the URL of the current selection), the bookmark title (in most cases preset with the 
+title of the current selection) and the bookmark description. After the question for the description, an
+external program, configured via the configuration command "bookmark-cmd", is executed with 3 commandline
+parameters. The plugin itself implements the actual bookmark saving (e.g. writing the bookmark to an
+external file, or storing it to a del.icio.us account). When everything went OK, the plugin simply exits.
+In case something goes wrong while saving the bookmark, it writes out an error message as a single line.
+This error message is then presented to the user from within newsbeuter.
+
+Newsbeuter comes with an example plugin, which implements a simple tab-separated bookmark file. This
+example can be found in the "doc" subdirectory.
+
+
+Command Line
+~~~~~~~~~~~~
+
+include::chapter-cmdline.txt[]
+
+.Available Commandline Commands
+[frame="all", grid="all", format="dsv"]
+`20`20`40`20~~~~~~~~~~~~~~~~~~~
+Command:Syntax:Description:Example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+quit:quit:Quit newsbeuter.:quit
+save:save <filename>:Save the currently select article to disk. This works in the article list and in the article view.:save ~/important.txt
+set:set <variable>[=<value>]:Set configuration variable <variable> to <value>. If no value is specified, the current value is printed out:set reload-time=15
+tag:tag <tagname>:Only display feeds with the tag <tagname>.:tag news
+n/a:<number>:Jump to the entry with the index <number> (usually seen at the left side of the list). This currently works for the feed list and the article list.:30
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Filter Language
+~~~~~~~~~~~~~~~
+
+Newsbeuter provides a powerful filter language that enables the user to
+filter the content of many dialogs, such as the feed list or the article
+list. The basic concept is that every feed and every article has a
+number of attributes which can then be compared with user-supplied
+values, and these comparisons and be logically AND'ed, OR'ed and
+grouped.
+
+Examples for simple filter expressions are:
+
+	unread_count > 0
+	rssurl =~ "^https:"
+
+Logically connecting and grouping such expressions looks like in the
+following examples:
+
+	( unread_count > 0 and unread_count < 10 ) or total_count > 100
+	( author =~ "Frank" or author =~ "John" ) and ( title =~ "Linux" or title =~ "FreeBSD" )
+
+The possibilities for combining such queries is endless, sky (actually:
+the available memory) is the limit.
+
+To filter your feeds, press "F" in the feed list, enter your filter expression,
+and press enter.  To clear the filter, press Ctrl-F. To filter the articles in the article list,
+press "F", enter your expression, and press enter. Clearing the filter works the same as before.
+Be aware that only certain attributes work in both dialogs. The table below lists all available
+attributes and their context, i.e. an attribute that belongs to a feed can only be matched
+in the feed list, while an attribute that belongs to an article can only be matched in the 
+article list.
+
+.Available Comparison Operators
+[frame="all", grid="all", format="dsv"]
+`30`70~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Operator:Meaning
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+=:test for equality ("==" works, too)
+!=:test for inequality; logical negation of = operator
+=~:test whether regular expression matches
+!~:logical negation of the =~ operator
+<:less than
+>:greater than
+<=:less than or equal
+>=:greater than or equal
+#:contains; this operator matches if a word is contained in a list of space-separated words (useful for matching tags, see below)
+!#:contains not; the negation of the # operator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.Available Attributes
+[frame="all", grid="all", format="dsv"]
+`30`30`40~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Attribute:Context:Meaning
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+title:article:article title
+link:article:article link
+author:article:article author
+content:article:article body
+date:article:publication date of the article
+guid:article:a unique identifier of the article
+unread:article:indicates whether the article has been read
+enclosure_url:article:the URL of a possible enclosure (e.g. podcast file)
+enclosure_type:article:the MIME type of the enclosure URL
+flags:article:The set of flags of the article
+feedtitle:feed, article:title of the feed
+description:feed, article:feed description
+feedlink:feed, article:link to the feed
+feeddate:feed, article:publication date of the feed
+rssurl:feed, article:RSS URL of the feed
+unread_count:feed, article:number of unread articles in the feed
+total_count:feed, article:total number of articles in the feed
+tags:feed, article:all tags that are associated with the feed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Note that it's also possible to filter for feed attributes when you query for
+article attributes. This is because every article is internally linked to the
+feed from which it was downloaded.
+
+
+Killfiles
+~~~~~~~~~
+
+Sometimes, a user is confronted with certain content he doesn't want to read,
+e.g. on topics the user is not interested in or articles from certain people he
+doesn't want to read. In Usenet, such functionality within software is
+traditionally called a "killfile", i.e. based on the content of this "killfile", 
+articles that match certain conditions do not get displayed and are not presented
+to the user at all.
+
+In newsbeuter, such a "killfile" can be implemented on a per-article basis via
+the configuration file. The most important configuration command for this
+is "ignore-article":
+
+	ignore-article "*" "title =~ \"Gentoo\""
+	ignore-article "http://synflood.at/blog/index.php?/feeds/index.rss2" "title =~ \"newsbeuter\""
+
+The basic format is that the user specifies an RSS feed for which the ignore
+shall be applied ("*" matches all RSS feeds), and then a filter expression (see
+previous section). If newsbeuter hits an article in the specified RSS feed that
+matches the specified filter expression, then this article is ignored and never
+presented to the user. The configuration itself can contain as many
+ignore-article commands as desired.
+
+
+Query Feeds
+~~~~~~~~~~~
+
+Query feeds are a mechanism of newsbeuter to define custom "meta feeds" by using 
+newsbeuter's built-in filter language. A query feed is a feed that is aggregated
+from all currently downloaded articles of all feeds. To narrow down the set of
+articles, the user has to specify a filter. Only articles that match this filter
+are added to the query feed. A query feed is updated whenever it is entered in
+the feed list. When you change the unread flag of an article, this is reflected
+in the feed where the article was originally fetched.
+
+To define a query feed, the user has to add a line to the file
+~/.newsbeuter/urls in the following format:
+
+	query:<name of feed>:<filter expression> [<tag> ...]
+
+The "query:" in the beginning tells newsbeuter that it's a query feed, "<name of
+feed>" specifies the name under which the query feed shall be displayed in the
+feed list, and "<filter expression>" is the filter expression that shall be
+used. Like every other feed, a query feed can be tagged to organize it like
+a regular feed.
+
+A good example for the user of this feature is a query feed that contains all
+unread articles:
+
+	"query:Unread Articles:unread = \"yes\""
+
+Note the quotes that are necessary around the complete query "URL" and the
+backslashes that are necessary the escape the quotes in the filter expression.
+
+If you want to combine several feeds to one single feed, a good solution is to
+tag the feeds that you want to combine with one certain tag, and then create a
+query feed that only displays articles from feeds with that certain tag:
+
+	http://domain1.tld/feed.xml fun news tag1
+	http://domain2.tld/?feed.rss private jokes tag1
+	http://domain3.tld/feeds.rss news
+	"query:tag1 Articles:tags # \"tag1\""
+
+In this example, the feeds http://domain1.tld/feed.xml and
+http://domain2.tld/?feed.rss are aggregated into the query feed named "tag1
+Articles", but the feed http://domain3.tld/feeds.rss is not.
+
+Basically, the possibility of what can be realized with query feeds is only
+limited by what can be queried from articles and feeds with the filter language
+and by your creativity.
+
+
+Bloglines Synchronization
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+http://www.bloglines.com[Bloglines] is a web-based RSS feed reader. Newsbeuter
+provides a synchronization feature that makes it possible to download unread
+articles from Bloglines (which can then be optionally be marked as read). This
+is useful in cases where you want to use the web frontend e.g. at work, and use
+newsbeuter e.g. when you're at home. It is also possible to use newsbeuter as
+an offline reader for Bloglines.
+
+To enable Bloglines support, you first need to set the following configuration
+variable:
+
+	urls-source "bloglines"
+
+By default, this is set to "local", which means that the list of configured
+URLs is retrieved from ~/.newsbeuter/urls. By setting it to "bloglines",
+newsbeuter will retrieve the list of retrieved URLs directly from Bloglines.
+This means that you can only either use the locally configured URLs or the URLs
+from Bloglines. Combination of both is not possible.
+
+After setting the URLs source, you also need to set the Bloglines authentication configuration:
+
+	bloglines-auth "username@emailaddress.com:yourpassword"
+
+In the configuration variable "bloglines-auth", you provide your Bloglines
+login (i.e. your email address) and your password, separated by a colon (":"). Optionally, you can configure that all messages that are downloaded are marked as read in the Bloglines web frontend:
+
+	bloglines-mark-read "yes"
+
+After you've configured newsbeuter for Bloglines, you can start it up. Newsbeuter
+will then download the RSS feed URLs subscribed in Bloglines, which you can then
+reload.
+
+In this configuration, you need the possibility to connect to Bloglines. In
+case you don't have access to Bloglines (e.g. a temporary network outage, or
+you sit in a location without connectivity, e.g. a train), you can start
+newsbeuter in offline mode:
+
+	newsbeuter -o
+
+With this commandline switch, you can read the articles that you have already
+downloaded without any network connectivity. This functionality makes
+newsbeuter a true offline client for Bloglines.
+
+OPML Online Subscription Mode
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The OPML online subscription mode works similar to the Bloglines
+synchronization mode, except that no information about read articles in
+synchronized back. When enabled, all feeds that are listed in the feed list
+will be taken from an OPML that is downloaded from a freely configurable URL.
+
+To enable this mode, the following configuration needs to be done:
+
+	urls-source "opml"
+	opml-url "<opml url>"
+
+"opml" must be specified as source for the feed URLs, and the URL of the OPML
+file needs to be specified, too. As with Bloglines synchronization mode, the offline
+mode via "newsbeuter -o" also works with OPML online subscription mode.
+
+
+Flagging Articles
+~~~~~~~~~~~~~~~~~
+
+To support custom categorization of articles by the user, it is possible to
+flag an article. A valid flag is any character from 'A' to 'Z' and from 'a' to
+'z'. Every article can be flagged with up to 52 different flags, i.e. every
+letter from the Roman alphabet in upper and lower case. Flagging is easy: just
+select an article in the article list, or enter the article view, and press ^B.
+This will start the flag editor. By pressing enter, the new flags are saved.
+You can cancel by pressing the ESC key.
+
+The flags of an article can be used in every filter expression. The flags of an
+article are always ordered, and when new flags are added, ordering is
+immediately restored. This behaviour can also be relied upon when querying
+articles via the filter language.
+
+If an article contains one or more flags, it is marked with an "!" in the
+article list. In the article view, all flags (if available) are listed.
 
 Podcast Support
 ~~~~~~~~~~~~~~~
 
-A podcast is a media file distributed over the internet using syndication feeds
-such as RSS, for later playback on portable players or computers.  Newsbeuter
-contains support for downloading and saving podcasts. This support differs a bit
-from other podcast aggregators or "podcatchers" in how it is done.
-
-Podcast content is transported in RSS feeds via special tags called
-"enclosures". Newsbeuter recognizes these enclosures and stores the relevant
-information for every podcast item it finds in an RSS feed. What the user then
-can do is to add the podcast download URL to a download queue. Alternatively,
-newsbeuter can be configured to automatically do that. This queue is stored in
-the file $HOME/.newsbeuter/queue.
-
-The user can then use the download manager "podbeuter" to download these files
-to a directory on the local filesystem. Podbeuter comes with the newsbeuter
-package, and features a look and feel very close to the one of newsbeuter. It
-also shares the same configuration file.
+include::chapter-podcasts.txt[]
 
 .Podbeuter Configuration Commands
 [frame="all", grid="all",format="dsv",separator="|"]
 `10`15`15`40`20~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Configuration Command|Argument(s)|Default|Description|Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-download-path|<path>|~/|Specifies the directory where podbeuter shall download the files to.|download-path "~/Downloads"
-max-downloads|<number>|1|Specifies the maximum number of parallel downloads when automatic download is enabled.|max-downloads 3
+include::podbeuter-cmds.dsv[]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Available Operations in Podbeuter

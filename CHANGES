@@ -1,9 +1,44 @@
 Changes for newsbeuter:
 
-0.4:
-	refactored view (work in progress)
+0.8:
+	implemented custom configurability of feed list and article list format
 
-0.3: (2007-03-36)
+0.7 (2007-09-18):
+	implemented the possibility to predefine filters
+	implemented bloglines synchronization support
+	implemented OPML online subscription support
+	implemented plugin-based bookmarking support
+	implemented custom flagging of articles
+	redesigned search function
+	implemented more key commands to ease navigation even more
+	added the possibility to optionally use an external HTML renderer
+
+0.6 (2007-08-14):
+	implemented support for reloading the urls file
+	implemented query feeds
+	implemented history for the most important input fields
+	fixed a major bug with filtering in the item list
+	bugfix in the OPML import functionality
+	implemented additional commandline commands
+
+0.5 (2007-08-02):
+	improved HTML rendering
+	improved lock file handling
+	added Unicode compatibility
+	added support for notifications
+	implemented filter language
+	it is now possible to freely configure e.g. the up/down-keys
+
+0.4 (2007-05-08):
+	refactored view (work in progress)
+	significant speed improvement for reload and cache cleanup (by Jürgen Jung)
+	added Italian translation (by Andrea Marchesini)
+	added unit tests
+	added an "include" configuration command to make it possible to separate the configuration into several files
+	introduced global configuration file /etc/newsbeuter/config
+	added support for Snownews/Liferea extension scripts
+
+0.3 (2007-03-26):
 	added gettext support
 	added podcast support
 	changed handling of encoding - now, everything is stored as UTF-8 internally, and gets converted on-the-fly

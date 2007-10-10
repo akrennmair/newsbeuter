@@ -6,6 +6,12 @@
 
 namespace newsbeuter {
 
+/*
+ * The urlview_formaction is probably the simplest dialog of all. It
+ * displays a list of URLs, and makes it possible to open the URLs
+ * in a browser or to bookmark them.
+ */
+
 urlview_formaction::urlview_formaction(view * vv, std::string formstr)
 	: formaction(vv, formstr), quit(false) { }
 
@@ -24,6 +30,20 @@ void urlview_formaction::process_operation(operation op) {
 					v->set_status(_("Starting browser..."));
 					v->open_in_browser(links[idx].first);
 					v->set_status("");
+				} else {
+					v->show_error(_("No link selected!"));
+				}
+			}
+			break;
+		case OP_BOOKMARK: {
+				std::string posstr = f->get("feedpos");
+				if (posstr.length() > 0) {
+					std::istringstream is(posstr);
+					unsigned int idx;
+					is >> idx;
+
+					this->start_bookmark_qna("", links[idx].first, "");
+
 				} else {
 					v->show_error(_("No link selected!"));
 				}
@@ -59,15 +79,19 @@ void urlview_formaction::prepare() {
 
 void urlview_formaction::init() {
 	v->set_status("");
-	f->set("head",_("URLs"));
+	char buf[1024];
+	snprintf(buf,sizeof(buf),_("%s %s - URLs"), PROGRAM_NAME, PROGRAM_VERSION);
+	f->set("head", buf);
 	do_redraw = true;
 	quit = false;
+	set_keymap_hints();
 }
 
 keymap_hint_entry * urlview_formaction::get_keymap_hint() {
 	static keymap_hint_entry hints[] = {
 		{ OP_QUIT, _("Quit") },
 		{ OP_OPEN, _("Open in Browser") },
+		{ OP_BOOKMARK, _("Save Bookmark") },
 		{ OP_NIL, NULL }
 	};
 	return hints;

@@ -28,20 +28,25 @@ void filebrowser_formaction::process_operation(operation op) {
 	switch (op) {
 		case OP_OPEN: 
 			{
+				/*
+				 * whenever "ENTER" is hit, we need to distinguish two different cases:
+				 *   - the focus is in the list of files, then we need to set the filename field to the currently selected entry
+				 *   - the focus is in the filename field, then the filename needs to be returned.
+				 */
 				GetLogger().log(LOG_DEBUG,"filebrowser_formaction: 'opening' item");
 				std::string focus = f->get_focus();
 				if (focus.length() > 0) {
 					if (focus == "files") {
-						std::string selection = fancy_unquote(f->get("listposname"));
+						std::string selection = f->get("listposname");
 						char filetype = selection[0];
 						selection.erase(0,1);
 						std::string filename(selection);
 						switch (filetype) {
 							case 'd':
 								if (type == FBT_OPEN) {
-									snprintf(buf, sizeof(buf), _("Open File - %s"), filename.c_str());
+									snprintf(buf, sizeof(buf), _("%s %s - Open File - %s"), PROGRAM_NAME, PROGRAM_VERSION, filename.c_str());
 								} else {
-									snprintf(buf, sizeof(buf), _("Save File - %s"), filename.c_str());
+									snprintf(buf, sizeof(buf), _("%s %s - Save File - %s"), PROGRAM_NAME, PROGRAM_VERSION, filename.c_str());
 								}
 								f->set("head", buf);
 								::chdir(filename.c_str());
@@ -76,7 +81,24 @@ void filebrowser_formaction::process_operation(operation op) {
 								break;
 						}
 					} else {
-						v->pop_current_formaction();
+						bool do_pop = true;
+						std::string fn = f->get("filenametext");
+						struct stat sbuf;
+						/*
+						 * this check is very important, as people will kill us if they accidentaly overwrote their files
+						 * with no further warning...
+						 */
+						if (::stat(fn.c_str(), &sbuf)!=-1 && type == FBT_SAVE) {
+							char lbuf[2048];
+							snprintf(lbuf,sizeof(lbuf), _("Do you really want to overwrite `%s' (y:Yes n:No)? "), fn.c_str());
+							f->set_focus("files");
+							if (v->confirm(lbuf, _("yn")) == *_("n")) {
+								do_pop = false;
+							}
+							f->set_focus("filenametext");
+						}
+						if (do_pop)
+							v->pop_current_formaction();
 					}
 				}
 			}
@@ -91,20 +113,25 @@ void filebrowser_formaction::process_operation(operation op) {
 }
 
 void filebrowser_formaction::prepare() {
+	/* 
+	 * prepare is always called before an operation is processed,
+	 * and if a redraw is necessary, it updates the list of files
+	 * in the current directory.
+	 */
 	if (do_redraw) {
 		char cwdtmp[MAXPATHLEN];
 		std::string code = "{list";
 		::getcwd(cwdtmp,sizeof(cwdtmp));
 		
-		DIR * dir = ::opendir(cwdtmp);
-		if (dir) {
-			struct dirent * de = ::readdir(dir);
+		DIR * dirp = ::opendir(cwdtmp);
+		if (dirp) {
+			struct dirent * de = ::readdir(dirp);
 			while (de) {
 				if (strcmp(de->d_name,".")!=0)
 					code.append(add_file(de->d_name));
-				de = ::readdir(dir);
+				de = ::readdir(dirp);
 			}
-			::closedir(dir);
+			::closedir(dirp);
 		}
 		
 		code.append("}");
@@ -119,7 +146,8 @@ void filebrowser_formaction::prepare() {
 void filebrowser_formaction::init() {
 	char cwdtmp[MAXPATHLEN];
 	::getcwd(cwdtmp,sizeof(cwdtmp));
-	std::string cwd = cwdtmp;
+
+	set_keymap_hints();
 
 	f->set("fileprompt", _("File: "));
 
@@ -128,18 +156,7 @@ void filebrowser_formaction::init() {
 
 		GetLogger().log(LOG_DEBUG,"view::filebrowser: save-path is '%s'",save_path.c_str());
 
-		if (save_path.substr(0,2) == "~/") {
-			char * homedir = ::getenv("HOME");
-			if (homedir) {
-				dir.append(homedir);
-				dir.append(NEWSBEUTER_PATH_SEP);
-				dir.append(save_path.substr(2,save_path.length()-2));
-			} else {
-				dir = ".";
-			}
-		} else {
-			dir = save_path;
-		}
+		dir = save_path;
 	}
 
 	GetLogger().log(LOG_DEBUG, "view::filebrowser: chdir(%s)", dir.c_str());
@@ -151,9 +168,9 @@ void filebrowser_formaction::init() {
 	
 	char buf[1024];
 	if (type == FBT_OPEN) {
-		snprintf(buf, sizeof(buf), _("Open File - %s"), cwdtmp);
+		snprintf(buf, sizeof(buf), _("%s %s - Open File - %s"), PROGRAM_NAME, PROGRAM_VERSION, cwdtmp);
 	} else {
-		snprintf(buf, sizeof(buf), _("Save File - %s"), cwdtmp);
+		snprintf(buf, sizeof(buf), _("%s %s - Save File - %s"), PROGRAM_NAME, PROGRAM_VERSION, cwdtmp);
 	}
 	f->set("head", buf);
 }
@@ -167,35 +184,23 @@ keymap_hint_entry * filebrowser_formaction::get_keymap_hint() {
 	return hints;
 }
 
-std::string filebrowser_formaction::fancy_quote(const std::string& s) {
-	std::string x;
-	for (unsigned int i=0;i<s.length();++i) {
-		if (s[i] != ' ') {
-			x.append(1,s[i]);
-		} else {
-			x.append(1,'/');
-		}	
-	}	
-	return x;
-}
-
 std::string filebrowser_formaction::add_file(std::string filename) {
 	std::string retval;
 	struct stat sb;
 	if (::stat(filename.c_str(),&sb)==0) {
-		char type = '?';
+		char ftype = '?';
 		if (sb.st_mode & S_IFREG)
-			type = '-';
+			ftype = '-';
 		else if (sb.st_mode & S_IFDIR)
-			type = 'd';
+			ftype = 'd';
 		else if (sb.st_mode & S_IFBLK)
-			type = 'b';
+			ftype = 'b';
 		else if (sb.st_mode & S_IFCHR)
-			type = 'c';
+			ftype = 'c';
 		else if (sb.st_mode & S_IFIFO)
-			type = 'p';
+			ftype = 'p';
 		else if (sb.st_mode & S_IFLNK)
-			type = 'l';
+			ftype = 'l';
 			
 		std::string rwxbits = get_rwx(sb.st_mode & 0777);
 		std::string owner = "????????", group = "????????";
@@ -220,7 +225,7 @@ std::string filebrowser_formaction::add_file(std::string filename) {
 		std::string sizestr = os.str();
 		
 		std::string line;
-		line.append(1,type);
+		line.append(1,ftype);
 		line.append(rwxbits);
 		line.append(" ");
 		line.append(owner);
@@ -232,8 +237,8 @@ std::string filebrowser_formaction::add_file(std::string filename) {
 		line.append(filename);
 		
 		retval = "{listitem[";
-		retval.append(1,type);
-		retval.append(fancy_quote(filename));
+		retval.append(1,ftype);
+		retval.append(stfl::quote(filename));
 		retval.append("] text:");
 		retval.append(stfl::quote(line));
 		retval.append("}");
@@ -241,48 +246,13 @@ std::string filebrowser_formaction::add_file(std::string filename) {
 	return retval;
 }
 
-std::string filebrowser_formaction::fancy_unquote(const std::string& s) {
-	std::string x;
-	for (unsigned int i=0;i<s.length();++i) {
-		if (s[i] != '/') {
-			x.append(1,s[i]);
-		} else {
-			x.append(1,' ');
-		}	
-	}	
-	return x;	
-}
-
 std::string filebrowser_formaction::get_rwx(unsigned short val) {
 	std::string str;
+	const char * bitstrs[] = { "---", "--x", "-w-", "-wx", "r--", "r-x", "rw-", "rwx" };
 	for (int i=0;i<3;++i) {
 		unsigned char bits = val % 8;
 		val /= 8;
-		switch (bits) {
-			case 0:
-				str = std::string("---") + str;
-				break;
-			case 1:
-				str = std::string("--x") + str;
-				break;
-			case 2:
-				str = std::string("-w-") + str;
-				break;
-			case 3:
-				str = std::string("-wx") + str;
-				break;
-			case 4:
-				str = std::string("r--") + str;
-				break;
-			case 5:
-				str = std::string("r-x") + str;
-				break;
-			case 6:
-				str = std::string("rw-") + str;
-				break;
-			case 7:
-				str = std::string("rwx") + str;
-		}	
+		str.insert(0, bitstrs[bits]);
 	}
 	return str;
 }

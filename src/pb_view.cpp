@@ -11,8 +11,9 @@
 #include <sstream>
 #include <iostream>
 
-using namespace podbeuter;
 using namespace newsbeuter;
+
+namespace podbeuter {
 
 pb_view::pb_view(pb_controller * c) : ctrl(c), dllist_form(dllist_str), help_form(help_str), keys(0) { 
 }
@@ -40,7 +41,8 @@ void pb_view::run() {
 
 			char buf[1024];
 			snprintf(buf, sizeof(buf), _("Queue (%u downloads in progress, %u total) - %.2f kb/s total%s"), 
-				ctrl->downloads_in_progress(), ctrl->downloads().size(), total_kbps, parbuf);
+				static_cast<unsigned int>(ctrl->downloads_in_progress()), 
+				static_cast<unsigned int>(ctrl->downloads().size()), total_kbps, parbuf);
 
 			dllist_form.set("head", buf);
 
@@ -52,10 +54,10 @@ void pb_view::run() {
 				
 				unsigned int i = 0;
 				for (std::vector<download>::iterator it=ctrl->downloads().begin();it!=ctrl->downloads().end();++it,++i) {
-					char buf[1024];
+					char lbuf[1024];
 					std::ostringstream os;
-					snprintf(buf, sizeof(buf), " %4u [%6.1fMB/%6.1fMB] [%5.1f %%] [%7.2f kb/s] %-20s %s -> %s", i+1, it->current_size()/(1024*1024), it->total_size()/(1024*1024), it->percents_finished(), it->kbps(), it->status_text(), it->url(), it->filename());
-					os << "{listitem[" << i << "] text:" << stfl::quote(buf) << "}";
+					snprintf(lbuf, sizeof(lbuf), " %4u [%6.1fMB/%6.1fMB] [%5.1f %%] [%7.2f kb/s] %-20s %s -> %s", i+1, it->current_size()/(1024*1024), it->total_size()/(1024*1024), it->percents_finished(), it->kbps(), it->status_text(), it->url(), it->filename());
+					os << "{listitem[" << i << "] text:" << stfl::quote(lbuf) << "}";
 					code.append(os.str());
 				}
 
@@ -167,19 +169,51 @@ void pb_view::run() {
 	} while (!quit);
 }
 
+
+
+void pb_view::set_bindings() {
+	if (keys) {
+		std::string upkey("** "); upkey.append(keys->getkey(OP_SK_UP));
+		std::string downkey("** "); downkey.append(keys->getkey(OP_SK_DOWN));
+		std::string pgupkey("** "); pgupkey.append(keys->getkey(OP_SK_PGUP));
+		std::string pgdownkey("** "); pgdownkey.append(keys->getkey(OP_SK_PGDOWN));
+
+		dllist_form.set("bind_up", upkey);
+		dllist_form.set("bind_down", downkey);
+		dllist_form.set("bind_page_up", pgupkey);
+		dllist_form.set("bind_page_down", pgdownkey);
+
+		help_form.set("bind_up", upkey);
+		help_form.set("bind_down", downkey);
+		help_form.set("bind_page_up", pgupkey);
+		help_form.set("bind_page_down", pgdownkey);
+
+	}
+}
+
+
+
+
 void pb_view::run_help() {
 	set_help_keymap_hint();
 
 	help_form.set("head",_("Help"));
 	
-	std::vector<std::pair<std::string,std::string> > descs;
+	std::vector<keymap_desc> descs;
 	keys->get_keymap_descriptions(descs, KM_PODBEUTER);
 	
 	std::string code = "{list";
 	
-	for (std::vector<std::pair<std::string,std::string> >::iterator it=descs.begin();it!=descs.end();++it) {
+	for (std::vector<keymap_desc>::iterator it=descs.begin();it!=descs.end();++it) {
 		std::string line = "{listitem text:";
-		std::string descline = it->first + std::string("\t") + it->second;
+
+		std::string descline;
+		descline.append(it->key);
+		descline.append(1,'\t');
+		descline.append(it->cmd);
+		unsigned int how_often = 3 - (it->cmd.length() / 8);
+		descline.append(how_often,'\t');
+		descline.append(it->desc);
 		line.append(stfl::quote(descline));
 		line.append("}");
 		
@@ -243,4 +277,6 @@ void pb_view::set_dllist_keymap_hint() {
 
 	std::string keymap_hint = prepare_keymaphint(hints);
 	dllist_form.set("help", keymap_hint);
+}
+
 }

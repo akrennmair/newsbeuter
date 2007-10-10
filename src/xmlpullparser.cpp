@@ -13,6 +13,12 @@
 namespace newsbeuter
 {
 
+/*
+ * This method implements an "XML" pull parser. In reality, it's more liberal
+ * than any XML pull parser, as it basically accepts everything that even only
+ * remotely looks like XML. We use this parser for the HTML renderer.
+ */
+
 xmlpullparser::xmlpullparser() : inputstream(0), current_event(START_DOCUMENT)
 {
 }
@@ -72,6 +78,13 @@ bool xmlpullparser::isWhitespace() const {
 
 xmlpullparser::event xmlpullparser::next() {
 	// TODO: refactor this
+	/*
+	 * the next() method returns the next event by parsing the
+	 * next element of the XML stream, depending on the current
+	 * event. This is pretty messy, and contains quite a few
+	 * code duplications, so always watch out when modifying
+	 * anything here.
+	 */
 	if (attributes.size() > 0) {
 		attributes.erase(attributes.begin(), attributes.end());	
 	}
@@ -136,7 +149,7 @@ xmlpullparser::event xmlpullparser::next() {
 								text.erase(text.length()-1, 1);
 						}
 					} else {
-						throw xmlexception(_("empty tag found"));
+						// throw xmlexception(_("empty tag found"));
 					}
 					current_event = determine_tag_type();
 				}
@@ -151,7 +164,13 @@ xmlpullparser::event xmlpullparser::next() {
 				c = skip_whitespace(ws);
 				if (!inputstream->eof()) {
 					if (c == '<') {
-						std::string s = read_tag();
+						std::string s;
+						try {
+							s = read_tag();
+						} catch (const xmlexception &) {
+							current_event = END_DOCUMENT;
+							break;
+						}
 						std::vector<std::string> tokens = utils::tokenize(s);
 						if (tokens.size() > 0) {
 							text = tokens[0];
@@ -167,7 +186,7 @@ xmlpullparser::event xmlpullparser::next() {
 									text.erase(text.length()-1, 1);
 							}
 						} else {
-							throw xmlexception(_("empty tag found"));
+							// throw xmlexception(_("empty tag found"));
 						}
 						current_event = determine_tag_type();
 					} else {
@@ -208,9 +227,9 @@ xmlpullparser::event xmlpullparser::next() {
 							text.erase(text.length()-1, 1);
 					}
 				} else {
-					throw xmlexception(_("empty tag found"));
+					// throw xmlexception(_("empty tag found"));
 				}
-				current_event = determine_tag_type();	
+				current_event = determine_tag_type();
 			}
 			break;
 		case END_DOCUMENT:	
@@ -295,7 +314,7 @@ std::string xmlpullparser::decode_entities(const std::string& s) {
 }
 
 static struct {
-	char * entity;
+	const char * entity;
 	unsigned int value;
 } entity_table[] = {
 	// this table was created with some vim regex magic from the this list: http://www.ramsch.org/martin/uni/fmi-hp/iso8859-1.html
