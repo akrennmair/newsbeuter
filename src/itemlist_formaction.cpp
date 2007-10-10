@@ -384,7 +384,10 @@ void itemlist_formaction::prepare() {
 			}
 			fmt.register_fmt('t', it->first->title());
 
-			std::string quoted_title = stfl::quote(fmt.do_format(itemlist_format, width));
+			std::string finalline = fmt.do_format(itemlist_format, width);
+			finalline = utils::makebidi(finalline);
+
+			std::string quoted_title = stfl::quote(finalline);
 			line.append(quoted_title);
 			line.append("}");
 			GetLogger().log(LOG_INFO, "prepare: line = %s", line.c_str());

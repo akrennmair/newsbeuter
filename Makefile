@@ -14,7 +14,7 @@ CXX=c++
 # compiler and linker flags
 DEFINES=-D_ENABLE_NLS -DLOCALEDIR=\"$(localedir)\" -DPACKAGE=\"$(PACKAGE)\"
 WARNFLAGS=-Wall -W
-CXXFLAGS+=-ggdb -I./include -I./stfl -I./filter -I. -I/usr/local/include -I/sw/include $(WARNFLAGS) $(DEFINES)
+CXXFLAGS+=-ggdb -I./include -I./stfl -I./filter -I. -I/usr/local/include -I/sw/include $(WARNFLAGS) $(DEFINES) `fribidi-config --cflags`
 LDFLAGS+=-L. -L/usr/local/lib -L/sw/lib
 
 # libraries to link with
@@ -38,13 +38,13 @@ FILTERLIB_OUTPUT=libfilter.a
 NEWSBEUTER=$(PACKAGE)
 NEWSBEUTER_SOURCES=$(shell cat newsbeuter.deps)
 NEWSBEUTER_OBJS=$(patsubst %.cpp,%.o,$(NEWSBEUTER_SOURCES))
-NEWSBEUTER_LIBS=-lbeuter -lfilter -lstfl -lmrss -lnxml -lncursesw -lsqlite3 -lpthread -lcurl
+NEWSBEUTER_LIBS=`fribidi-config --libs` -lbeuter -lfilter -lstfl -lmrss -lnxml -lncursesw -lsqlite3 -lpthread -lcurl
 
 
 PODBEUTER=podbeuter
 PODBEUTER_SOURCES=$(shell cat podbeuter.deps)
 PODBEUTER_OBJS=$(patsubst %.cpp,%.o,$(PODBEUTER_SOURCES))
-PODBEUTER_LIBS=-lbeuter -lstfl -lncursesw -lpthread -lcurl
+PODBEUTER_LIBS=`fribidi-config --libs` -lbeuter -lstfl -lncursesw -lpthread -lcurl
 
 ifneq ($(shell uname -s),Linux)
 NEWSBEUTER_LIBS+=-liconv -lintl

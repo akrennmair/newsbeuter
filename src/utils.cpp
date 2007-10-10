@@ -1,5 +1,6 @@
 #include <utils.h>
 #include <logger.h>
+#include <fribidi/fribidi.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -528,5 +529,33 @@ std::string utils::to_s(unsigned int u) {
 	os << u;
 	return os.str();
 }
+
+std::string utils::makebidi(const std::string& buf) {
+	FriBidiChar * us, * out_us;
+	FriBidiCharType base;
+	std::string r;
+	char * out;
+
+	us = new FriBidiChar[buf.size()+1];
+	out_us = new FriBidiChar[buf.size()+1];
+
+	unsigned int len = fribidi_charset_to_unicode(FRIBIDI_CHAR_SET_UTF8, const_cast<char *>(buf.c_str()), buf.length(), us);
+
+	base = FRIBIDI_TYPE_N;
+	fribidi_log2vis(us, len, &base, out_us, NULL, NULL, NULL);
+
+	out = new char[4*buf.size()+1];
+
+	fribidi_unicode_to_charset(FRIBIDI_CHAR_SET_UTF8, out_us, len, out);
+
+	r = out;
+
+	delete[] out_us;
+	delete[] us;
+	delete[] out;
+
+	return r;
+}
+
 
 }
