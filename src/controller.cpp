@@ -436,8 +436,8 @@ void controller::catchup_all() {
 	}
 	for (std::vector<rss_feed>::iterator it=feeds.begin();it!=feeds.end();++it) {
 		if (it->items().size() > 0) {
-			for (std::vector<rss_item>::iterator jt=it->items().begin();jt!=it->items().end();++jt) {
-				jt->set_unread_nowrite(false);
+			for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator jt=it->items().begin();jt!=it->items().end();++jt) {
+				(*jt)->set_unread_nowrite(false);
 			}
 		}
 	}
@@ -453,13 +453,13 @@ void controller::mark_all_read(unsigned int pos) {
 			rsscache->catchup_all(feed.rssurl());
 		}
 		m.stopover("after rsscache->catchup_all, before iteration over items");
-		std::vector<rss_item>& items = feed.items();
-		std::vector<rss_item>::iterator begin = items.begin(), end = items.end();
+		std::vector<std::tr1::shared_ptr<rss_item> >& items = feed.items();
+		std::vector<std::tr1::shared_ptr<rss_item> >::iterator begin = items.begin(), end = items.end();
 		if (items.size() > 0) {
-			bool notify = items[0].feedurl() != feed.rssurl();
+			bool notify = items[0]->feedurl() != feed.rssurl();
 			GetLogger().log(LOG_DEBUG, "controller::mark_all_read: notify = %s", notify ? "yes" : "no");
-			for (std::vector<rss_item>::iterator it=begin;it!=end;++it) {
-				it->set_unread_nowrite_notify(false, notify);
+			for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=begin;it!=end;++it) {
+				(*it)->set_unread_nowrite_notify(false, notify);
 			}
 		}
 	}
@@ -738,11 +738,11 @@ void controller::rec_find_rss_outlines(nxml_data_t * node, std::string tag) {
 
 
 
-std::vector<rss_item> controller::search_for_items(const std::string& query, const std::string& feedurl) {
-	std::vector<rss_item> items = rsscache->search_for_items(query, feedurl);
+std::vector<std::tr1::shared_ptr<rss_item> > controller::search_for_items(const std::string& query, const std::string& feedurl) {
+	std::vector<std::tr1::shared_ptr<rss_item> > items = rsscache->search_for_items(query, feedurl);
 	GetLogger().log(LOG_DEBUG, "controller::search_for_items: setting feed pointers");
-	for (std::vector<rss_item>::iterator it=items.begin();it!=items.end();++it) {
-		it->set_feedptr(get_feed_by_url(it->feedurl()));
+	for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=items.begin();it!=items.end();++it) {
+		(*it)->set_feedptr(get_feed_by_url((*it)->feedurl()));
 	}
 	return items;
 }
@@ -816,8 +816,8 @@ void controller::reload_urls_file() {
 }
 
 void controller::set_feedptrs(rss_feed& feed) {
-	for (std::vector<rss_item>::iterator it=feed.items().begin();it!=feed.items().end();++it) {
-		it->set_feedptr(&feed);
+	for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=feed.items().begin();it!=feed.items().end();++it) {
+		(*it)->set_feedptr(&feed);
 	}
 }
 
@@ -921,14 +921,14 @@ void controller::save_feed(rss_feed& feed, unsigned int pos) {
 void controller::enqueue_items(rss_feed& feed) {
 	if (!cfg->get_configvalue_as_bool("podcast-auto-enqueue"))
 		return;
-	for (std::vector<rss_item>::iterator it=feed.items().begin();it!=feed.items().end();++it) {
-		if (!it->enqueued() && it->enclosure_url().length() > 0) {
-			GetLogger().log(LOG_DEBUG, "controller::reload: enclosure_url = `%s' enclosure_type = `%s'", it->enclosure_url().c_str(), it->enclosure_type().c_str());
-			if (is_valid_podcast_type(it->enclosure_type())) {
-				GetLogger().log(LOG_INFO, "controller::reload: enqueuing `%s'", it->enclosure_url().c_str());
-				enqueue_url(it->enclosure_url());
-				it->set_enqueued(true);
-				rsscache->update_rssitem_unread_and_enqueued(*it, feed.rssurl());
+	for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=feed.items().begin();it!=feed.items().end();++it) {
+		if (!(*it)->enqueued() && (*it)->enclosure_url().length() > 0) {
+			GetLogger().log(LOG_DEBUG, "controller::reload: enclosure_url = `%s' enclosure_type = `%s'", (*it)->enclosure_url().c_str(), (*it)->enclosure_type().c_str());
+			if (is_valid_podcast_type((*it)->enclosure_type())) {
+				GetLogger().log(LOG_INFO, "controller::reload: enqueuing `%s'", (*it)->enclosure_url().c_str());
+				enqueue_url((*it)->enclosure_url());
+				(*it)->set_enqueued(true);
+				rsscache->update_rssitem_unread_and_enqueued(**it, feed.rssurl());
 			}
 		}
 	}

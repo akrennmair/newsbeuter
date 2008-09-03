@@ -7,6 +7,7 @@
 #include <configcontainer.h>
 #include <matcher.h>
 
+#include <tr1/memory>
 
 extern "C" {
 #include <_mrss.h>
@@ -121,7 +122,7 @@ namespace newsbeuter {
 			inline std::string pubDate() const { return "TODO"; }
 			inline void set_pubDate(time_t t) { pubDate_ = t; }
 			
-			inline std::vector<rss_item>& items() { return items_; }
+			inline std::vector<std::tr1::shared_ptr<rss_item> >& items() { return items_; }
 
 			rss_item& get_item_by_guid(const std::string& guid);
 			
@@ -159,7 +160,7 @@ namespace newsbeuter {
 			std::string link_;
 			time_t pubDate_;
 			std::string rssurl_;
-			std::vector<rss_item> items_;
+			std::vector<std::tr1::shared_ptr<rss_item> > items_;
 			std::vector<std::string> tags_;
 			std::string query;
 			

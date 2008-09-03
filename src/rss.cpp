@@ -84,8 +84,8 @@ std::string rss_item::pubDate() const {
 
 unsigned int rss_feed::unread_item_count() const {
 	unsigned int count = 0;
-	for (std::vector<rss_item>::const_iterator it=items_.begin();it!=items_.end();++it) {
-		if (it->unread())
+	for (std::vector<std::tr1::shared_ptr<rss_item> >::const_iterator it=items_.begin();it!=items_.end();++it) {
+		if ((*it)->unread())
 			++count;
 	}
 	return count;
@@ -161,9 +161,9 @@ std::string rss_feed::description() const {
 }
 
 rss_item& rss_feed::get_item_by_guid(const std::string& guid) {
-	for (std::vector<rss_item>::iterator it=items_.begin();it!=items_.end();++it) {
-		if (it->guid() == guid) {
-			return *it;
+	for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=items_.begin();it!=items_.end();++it) {
+		if ((*it)->guid() == guid) {
+			return **it;
 		}
 	}
 	GetLogger().log(LOG_DEBUG, "rss_feed::get_item_by_guid: hit dummy item!");
@@ -362,10 +362,10 @@ void rss_feed::update_items(std::vector<rss_feed>& feeds) {
 
 	for (std::vector<rss_feed>::iterator it=feeds.begin();it!=feeds.end();++it) {
 		if (it->rssurl().substr(0,6) != "query:") { // don't fetch items from other query feeds!
-			for (std::vector<rss_item>::iterator jt=it->items().begin();jt!=it->items().end();++jt) {
-				if (m.matches(&(*jt))) {
+			for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator jt=it->items().begin();jt!=it->items().end();++jt) {
+				if (m.matches(&(**jt))) {
 					GetLogger().log(LOG_DEBUG, "rss_feed::update_items: matcher matches!");
-					jt->set_feedptr(&(*it));
+					(*jt)->set_feedptr(&(*it));
 					items_.push_back(*jt);
 				}
 			}
@@ -393,38 +393,38 @@ void rss_feed::set_rssurl(const std::string& u) {
 	}
 }
 
-struct sort_item_by_title : public std::binary_function<const rss_item&, const rss_item&, bool> {
+struct sort_item_by_title : public std::binary_function<const std::tr1::shared_ptr<rss_item>&, const std::tr1::shared_ptr<rss_item>&, bool> {
 	sort_item_by_title() { }
-	bool operator()(const rss_item& a, const rss_item& b) {
-		return strcasecmp(a.title().c_str(), b.title().c_str()) < 0;
+	bool operator()(const std::tr1::shared_ptr<rss_item>& a, const std::tr1::shared_ptr<rss_item>& b) {
+		return strcasecmp(a->title().c_str(), b->title().c_str()) < 0;
 	}
 };
 
-struct sort_item_by_flags : public std::binary_function<const rss_item&, const rss_item&, bool> {
+struct sort_item_by_flags : public std::binary_function<const std::tr1::shared_ptr<rss_item>&, const std::tr1::shared_ptr<rss_item>&, bool> {
 	sort_item_by_flags() { }
-	bool operator()(const rss_item& a, const rss_item& b) {
-		return strcmp(a.flags().c_str(), b.flags().c_str()) < 0;
+	bool operator()(const std::tr1::shared_ptr<rss_item>& a, const std::tr1::shared_ptr<rss_item>& b) {
+		return strcmp(a->flags().c_str(), b->flags().c_str()) < 0;
 	}
 };
 
-struct sort_item_by_author : public std::binary_function<const rss_item&, const rss_item&, bool> {
+struct sort_item_by_author : public std::binary_function<const std::tr1::shared_ptr<rss_item>&, const std::tr1::shared_ptr<rss_item>&, bool> {
 	sort_item_by_author() { }
-	bool operator()(const rss_item& a, const rss_item& b) {
-		return strcmp(a.author().c_str(), b.author().c_str()) < 0;
+	bool operator()(const std::tr1::shared_ptr<rss_item>& a, const std::tr1::shared_ptr<rss_item>& b) {
+		return strcmp(a->author().c_str(), b->author().c_str()) < 0;
 	}
 };
 
-struct sort_item_by_link : public std::binary_function<const rss_item&, const rss_item&, bool> {
+struct sort_item_by_link : public std::binary_function<const std::tr1::shared_ptr<rss_item>&, const std::tr1::shared_ptr<rss_item>&, bool> {
 	sort_item_by_link() { }
-	bool operator()(const rss_item& a, const rss_item& b) {
-		return strcmp(a.link().c_str(), b.link().c_str()) < 0;
+	bool operator()(const std::tr1::shared_ptr<rss_item>& a, const std::tr1::shared_ptr<rss_item>& b) {
+		return strcmp(a->link().c_str(), b->link().c_str()) < 0;
 	}
 };
 
-struct sort_item_by_guid : public std::binary_function<const rss_item&, const rss_item&, bool> {
+struct sort_item_by_guid : public std::binary_function<const std::tr1::shared_ptr<rss_item>&, const std::tr1::shared_ptr<rss_item>&, bool> {
 	sort_item_by_guid() { }
-	bool operator()(const rss_item& a, const rss_item& b) {
-		return strcmp(a.guid().c_str(), b.guid().c_str()) < 0;
+	bool operator()(const std::tr1::shared_ptr<rss_item>& a, const std::tr1::shared_ptr<rss_item>& b) {
+		return strcmp(a->guid().c_str(), b->guid().c_str()) < 0;
 	}
 };
 
@@ -463,17 +463,17 @@ void rss_feed::sort(const std::string& method) {
 
 void rss_feed::remove_old_deleted_items() {
 	std::vector<std::string> guids;
-	for (std::vector<rss_item>::iterator it=items_.begin();it!=items_.end();++it) {
-		guids.push_back(it->guid());
+	for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=items_.begin();it!=items_.end();++it) {
+		guids.push_back((*it)->guid());
 	}
 	ch->remove_old_deleted_items(rssurl_, guids);
 }
 
 void rss_feed::purge_deleted_items() {
 	scope_measure m1("rss_feed::purge_deleted_items");
-	std::vector<rss_item>::iterator it=items_.begin();
+	std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=items_.begin();
 	while (it!=items_.end()) {
-		if (it->deleted()) {
+		if ((*it)->deleted()) {
 			items_.erase(it);
 			it = items_.begin(); // items_ modified -> iterator invalidated
 		} else {

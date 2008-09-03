@@ -36,17 +36,17 @@ namespace newsbeuter {
 			void fill_feed_fields(rss_feed& feed, const char * encoding);
 			void fill_feed_items(rss_feed& feed, const char * encoding);
 
-			void set_item_title(rss_feed& feed, rss_item& x, mrss_item_t * item, const char * encoding);
-			void set_item_author(rss_item& x, mrss_item_t * item, const char * encoding);
-			void set_item_content(rss_item& x, mrss_item_t * item, const char * encoding);
-			void set_item_enclosure(rss_item& x, mrss_item_t * item);
+			void set_item_title(rss_feed& feed, std::tr1::shared_ptr<rss_item>& x, mrss_item_t * item, const char * encoding);
+			void set_item_author(std::tr1::shared_ptr<rss_item>& x, mrss_item_t * item, const char * encoding);
+			void set_item_content(std::tr1::shared_ptr<rss_item>& x, mrss_item_t * item, const char * encoding);
+			void set_item_enclosure(std::tr1::shared_ptr<rss_item>& x, mrss_item_t * item);
 			std::string get_guid(mrss_item_t * item);
 
-			void add_item_to_feed(rss_feed& feed, rss_item& item);
+			void add_item_to_feed(rss_feed& feed, std::tr1::shared_ptr<rss_item>& item);
 
-			void handle_content_encoded(rss_item& x, mrss_item_t * item, const char * encoding);
-			void handle_atom_content(rss_item& x, mrss_item_t * item, const char * encoding);
-			void handle_itunes_summary(rss_item& x, mrss_item_t * item, const char * encoding);
+			void handle_content_encoded(std::tr1::shared_ptr<rss_item>& x, mrss_item_t * item, const char * encoding);
+			void handle_atom_content(std::tr1::shared_ptr<rss_item>& x, mrss_item_t * item, const char * encoding);
+			void handle_itunes_summary(std::tr1::shared_ptr<rss_item>& x, mrss_item_t * item, const char * encoding);
 
 			std::string my_uri;
 			cache * ch;

@@ -8,7 +8,7 @@
 
 namespace newsbeuter {
 
-typedef std::pair<rss_item *, unsigned int> itemptr_pos_pair;
+typedef std::pair<std::tr1::shared_ptr<rss_item>, unsigned int> itemptr_pos_pair;
 
 class itemlist_formaction : public formaction {
 	public:
@@ -63,7 +63,7 @@ class itemlist_formaction : public formaction {
 
 		void handle_cmdline_num(unsigned int idx);
 
-		std::string gen_flags(rss_item * item);
+		std::string gen_flags(std::tr1::shared_ptr<rss_item> item);
 		std::string gen_datestr(time_t t, const char * datetimeformat);
 
 		void prepare_set_filterpos();

@@ -84,83 +84,83 @@ static int vectorofstring_callback(void * vp, int argc, char ** argv, char ** /*
 static int rssitem_callback(void * myfeed, int argc, char ** argv, char ** /* azColName */) {
 	rss_feed * feed = static_cast<rss_feed *>(myfeed);
 	assert (argc == 12);
-	rss_item item(NULL);
-	item.set_guid(argv[0]);
-	item.set_title(argv[1]);
+	std::tr1::shared_ptr<rss_item> item(new rss_item(NULL));
+	item->set_guid(argv[0]);
+	item->set_title(argv[1]);
 	GetLogger().log(LOG_DEBUG, "rssitem_callback: title = %s", argv[1]);
-	item.set_author(argv[2]);
-	item.set_link(argv[3]);
+	item->set_author(argv[2]);
+	item->set_link(argv[3]);
 	
 	std::istringstream is(argv[4]);
 	time_t t;
 	is >> t;
-	item.set_pubDate(t);
+	item->set_pubDate(t);
 	
-	item.set_description(argv[5]);
-	item.set_unread((std::string("1") == argv[6]));
+	item->set_description(argv[5]);
+	item->set_unread((std::string("1") == argv[6]));
 
-	item.set_feedurl(argv[7]);
+	item->set_feedurl(argv[7]);
 
-	item.set_enclosure_url(argv[8] ? argv[8] : "");
-	item.set_enclosure_type(argv[9] ? argv[9] : "");
-	item.set_enqueued((std::string("1") == (argv[10] ? argv[10] : "")));
-	item.set_flags(argv[11] ? argv[11] : "");
+	item->set_enclosure_url(argv[8] ? argv[8] : "");
+	item->set_enclosure_type(argv[9] ? argv[9] : "");
+	item->set_enqueued((std::string("1") == (argv[10] ? argv[10] : "")));
+	item->set_flags(argv[11] ? argv[11] : "");
 
 	feed->items().push_back(item);
 	return 0;
 }
 
 static int rssitemvector_callback(void * vector, int argc, char ** argv, char ** /* azColName */) {
-	std::vector<rss_item> * items = static_cast<std::vector<rss_item> *>(vector);
+	std::vector<std::tr1::shared_ptr<rss_item> >* items = static_cast<std::vector<std::tr1::shared_ptr<rss_item> > *>(vector);
 
 	assert (argc == 12);
-	rss_item item(NULL);
-	item.set_guid(argv[0]);
-	item.set_title(argv[1]);
-	item.set_author(argv[2]);
-	item.set_link(argv[3]);
+	std::tr1::shared_ptr<rss_item> item(new rss_item(NULL));
+	item->set_guid(argv[0]);
+	item->set_title(argv[1]);
+	item->set_author(argv[2]);
+	item->set_link(argv[3]);
 	
 	std::istringstream is(argv[4]);
 	time_t t;
 	is >> t;
-	item.set_pubDate(t);
+	item->set_pubDate(t);
 	
-	item.set_description(argv[5]);
-	item.set_unread((std::string("1") == argv[6]));
+	item->set_description(argv[5]);
+	item->set_unread((std::string("1") == argv[6]));
 
-	item.set_feedurl(argv[7]);
+	item->set_feedurl(argv[7]);
 
-	item.set_enclosure_url(argv[8] ? argv[8] : "");
-	item.set_enclosure_type(argv[9] ? argv[9] : "");
-	item.set_enqueued((std::string("1") == (argv[10] ? argv[10] : "")));
-	item.set_flags(argv[11] ? argv[11] : "");
+	item->set_enclosure_url(argv[8] ? argv[8] : "");
+	item->set_enclosure_type(argv[9] ? argv[9] : "");
+	item->set_enqueued((std::string("1") == (argv[10] ? argv[10] : "")));
+	item->set_flags(argv[11] ? argv[11] : "");
 
 	items->push_back(item);
 	return 0;
 }
 
 static int search_item_callback(void * myfeed, int argc, char ** argv, char ** /* azColName */) {
-	std::vector<rss_item> * items = static_cast<std::vector<rss_item> *>(myfeed);
+	std::vector<std::tr1::shared_ptr<rss_item> > * items = static_cast<std::vector<std::tr1::shared_ptr<rss_item> > *>(myfeed);
 	assert (argc == 12);
-	rss_item item(NULL);
-	item.set_guid(argv[0]);
-	item.set_title(argv[1]);
-	item.set_author(argv[2]);
-	item.set_link(argv[3]);
+	std::tr1::shared_ptr<rss_item> item(new rss_item(NULL));
+	item->set_guid(argv[0]);
+	item->set_title(argv[1]);
+	item->set_author(argv[2]);
+	item->set_link(argv[3]);
 	
 	std::istringstream is(argv[4]);
 	time_t t;
 	is >> t;
-	item.set_pubDate(t);
+	item->set_pubDate(t);
 	
-	item.set_description(argv[5]);
-	item.set_unread((std::string("1") == argv[6]));
-	item.set_feedurl(argv[7]);
+	item->set_description(argv[5]);
+	item->set_unread((std::string("1") == argv[6]));
+	item->set_feedurl(argv[7]);
 
-	item.set_enclosure_url(argv[8] ? argv[8] : "");
-	item.set_enclosure_type(argv[9] ? argv[9] : "");
-	item.set_enqueued((std::string("1") == argv[10]));
-	item.set_flags(argv[11] ? argv[11] : "");
+	item->set_enclosure_url(argv[8] ? argv[8] : "");
+	item->set_enclosure_type(argv[9] ? argv[9] : "");
+	item->set_enqueued((std::string("1") == argv[10]));
+	item->set_flags(argv[11] ? argv[11] : "");
 
 	items->push_back(item);
 	return 0;
@@ -357,7 +357,7 @@ void cache::externalize_rssfeed(rss_feed& feed, bool reset_unread) {
 	GetLogger().log(LOG_INFO, "cache::externalize_feed: max_items = %u feed.items().size() = %u", max_items, feed.items().size());
 	
 	if (max_items > 0 && feed.items().size() > max_items) {
-		std::vector<rss_item>::iterator it=feed.items().begin();
+		std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=feed.items().begin();
 		for (unsigned int i=0;i<max_items;++i)
 			++it;	
 		if (it != feed.items().end())
@@ -365,8 +365,8 @@ void cache::externalize_rssfeed(rss_feed& feed, bool reset_unread) {
 	}
 
 	// the reverse iterator is there for the sorting foo below (think about it)
-	for (std::vector<rss_item>::reverse_iterator it=feed.items().rbegin(); it != feed.items().rend(); ++it) {
-		update_rssitem(*it, feed.rssurl(), reset_unread);
+	for (std::vector<std::tr1::shared_ptr<rss_item> >::reverse_iterator it=feed.items().rbegin(); it != feed.items().rend(); ++it) {
+		update_rssitem(**it, feed.rssurl(), reset_unread);
 	}
 	sqlite3_exec(db, "END;", NULL, NULL, NULL);
 }
@@ -414,21 +414,21 @@ void cache::internalize_rssfeed(rss_feed& feed) {
 		throw dbexception(db);
 	}
 
-	for (std::vector<rss_item>::iterator it=feed.items().begin(); it != feed.items().end(); ++it) {
-		it->set_cache(this);
-		it->set_feedptr(&feed);
-		it->set_feedurl(feed.rssurl());
+	for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=feed.items().begin(); it != feed.items().end(); ++it) {
+		(*it)->set_cache(this);
+		(*it)->set_feedptr(&feed);
+		(*it)->set_feedurl(feed.rssurl());
 	}
 	
 	unsigned int max_items = cfg->get_configvalue_as_int("max-items");
 	
 	if (max_items > 0 && feed.items().size() > max_items) {
-		std::vector<rss_item> flagged_items;
-		std::vector<rss_item>::iterator it=feed.items().begin();
+		std::vector<std::tr1::shared_ptr<rss_item> > flagged_items;
+		std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=feed.items().begin();
 		for (unsigned int i=0;i<max_items;++i)
 			++it;
 		for (unsigned int i=max_items;i<feed.items().size();++i) {
-			if (feed.items()[i].flags().length() == 0) {
+			if (feed.items()[i]->flags().length() == 0) {
 				delete_item(feed.items()[i]);
 			} else {
 				flagged_items.push_back(feed.items()[i]);
@@ -442,7 +442,7 @@ void cache::internalize_rssfeed(rss_feed& feed) {
 	feed.sort(cfg->get_configvalue("article-sort-order"));
 }
 
-void cache::get_latest_items(std::vector<rss_item>& items, unsigned int limit) {
+void cache::get_latest_items(std::vector<std::tr1::shared_ptr<rss_item> >& items, unsigned int limit) {
 	scope_mutex lock(mtx);
 	std::string query = prepare_query("SELECT guid,title,author,url,pubDate,content,unread,feedurl,enclosure_url,enclosure_type,enqueued,flags "
 									"FROM rss_item WHERE deleted = 0 ORDER BY pubDate DESC, id DESC LIMIT %d;", limit);
@@ -473,9 +473,9 @@ rss_feed cache::get_feed_by_url(const std::string& feedurl) {
 	return feed;
 }
 
-std::vector<rss_item> cache::search_for_items(const std::string& querystr, const std::string& feedurl) {
+std::vector<std::tr1::shared_ptr<rss_item> > cache::search_for_items(const std::string& querystr, const std::string& feedurl) {
 	std::string query;
-	std::vector<rss_item> items;
+	std::vector<std::tr1::shared_ptr<rss_item> > items;
 	int rc;
 
 	scope_mutex lock(mtx);
@@ -496,8 +496,8 @@ std::vector<rss_item> cache::search_for_items(const std::string& querystr, const
 	return items;
 }
 
-void cache::delete_item(const rss_item& item) {
-	std::string query = prepare_query("DELETE FROM rss_item WHERE guid = '%q';",item.guid().c_str());
+void cache::delete_item(const std::tr1::shared_ptr<rss_item>& item) {
+	std::string query = prepare_query("DELETE FROM rss_item WHERE guid = '%q';",item->guid().c_str());
 	GetLogger().log(LOG_DEBUG,"running query: %s",query.c_str());
 	int rc = sqlite3_exec(db,query.c_str(),NULL,NULL,NULL);
 	if (rc != SQLITE_OK) {
@@ -636,8 +636,8 @@ void cache::catchup_all(rss_feed& feed) {
 	scope_mutex lock(mtx);
 	std::string query = "UPDATE rss_item SET unread = '0' WHERE unread != '0' AND guid IN (";
 
-	for (std::vector<rss_item>::iterator it=feed.items().begin();it!=feed.items().end();++it) {
-		query.append(prepare_query("'%q',", it->guid().c_str()));
+	for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=feed.items().begin();it!=feed.items().end();++it) {
+		query.append(prepare_query("'%q',", (*it)->guid().c_str()));
 	}
 	query.append("'');");
 

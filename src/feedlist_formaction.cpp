@@ -538,7 +538,7 @@ void feedlist_formaction::op_start_search() {
 	if (searchphrase.length() > 0) {
 		v->set_status(_("Searching..."));
 		searchhistory.add_line(searchphrase);
-		std::vector<rss_item> items;
+		std::vector<std::tr1::shared_ptr<rss_item> > items;
 		try {
 			std::string utf8searchphrase = utils::convert_text(searchphrase, "utf-8", nl_langinfo(CODESET));
 			items = v->get_ctrl()->search_for_items(utf8searchphrase, "");

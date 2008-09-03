@@ -18,8 +18,8 @@ class cache {
 		void update_rssitem_unread_and_enqueued(rss_item& item, const std::string& feedurl);
 		void cleanup_cache(std::vector<rss_feed>& feeds);
 		void do_vacuum();
-		void get_latest_items(std::vector<rss_item>& items, unsigned int limit);
-		std::vector<rss_item> search_for_items(const std::string& querystr, const std::string& feedurl);
+		void get_latest_items(std::vector<std::tr1::shared_ptr<rss_item> >& items, unsigned int limit);
+		std::vector<std::tr1::shared_ptr<rss_item> > search_for_items(const std::string& querystr, const std::string& feedurl);
 		rss_feed get_feed_by_url(const std::string& feedurl);
 		void catchup_all(const std::string& feedurl = "");
 		void catchup_all(rss_feed& feed);
@@ -33,7 +33,7 @@ class cache {
 	private:
 		void populate_tables();
 		void set_pragmas();
-		void delete_item(const rss_item& item);
+		void delete_item(const std::tr1::shared_ptr<rss_item>& item);
 
 		std::string prepare_query(const char * format, ...);
 			

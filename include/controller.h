@@ -28,7 +28,7 @@ namespace newsbeuter {
 
 			rss_feed * get_feed(unsigned int pos);
 			rss_feed * get_feed_by_url(const std::string& feedurl);
-			std::vector<rss_item> search_for_items(const std::string& query, const std::string& feedurl);
+			std::vector<std::tr1::shared_ptr<rss_item> > search_for_items(const std::string& query, const std::string& feedurl);
 			inline unsigned int get_feedcount() { return feeds.size(); }
 
 			inline void unlock_reload_mutex() { reload_mutex->unlock(); }

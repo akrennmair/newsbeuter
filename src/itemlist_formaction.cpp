@@ -189,8 +189,8 @@ void itemlist_formaction::process_operation(operation op, bool automatic, std::v
 					v->get_ctrl()->mark_all_read(pos);
 				} else {
 					GetLogger().log(LOG_DEBUG, "itemlist_formaction: oh, it looks like I'm in a pseudo-feed (search result, query feed)");
-					for (std::vector<rss_item>::iterator it=feed->items().begin();it!=feed->items().end();++it) {
-						it->set_unread_nowrite_notify(false, true);
+					for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=feed->items().begin();it!=feed->items().end();++it) {
+						(*it)->set_unread_nowrite_notify(false, true);
 					}
 					v->get_ctrl()->catchup_all(*feed);
 				}
@@ -375,7 +375,7 @@ void itemlist_formaction::qna_start_search() {
 
 	v->set_status(_("Searching..."));
 	searchhistory.add_line(searchphrase);
-	std::vector<rss_item> items;
+	std::vector<std::tr1::shared_ptr<rss_item> > items;
 	try {
 		std::string utf8searchphrase = utils::convert_text(searchphrase, "utf-8", nl_langinfo(CODESET));
 		if (show_searchresult) {
@@ -406,7 +406,7 @@ void itemlist_formaction::do_update_visible_items() {
 
 	update_visible_items = false;
 
-	std::vector<rss_item>& items = feed->items();
+	std::vector<std::tr1::shared_ptr<rss_item> >& items = feed->items();
 
 	visible_items.clear();
 
@@ -417,9 +417,9 @@ void itemlist_formaction::do_update_visible_items() {
 	 */
 
 	unsigned int i=0;
-	for (std::vector<rss_item>::iterator it = items.begin(); it != items.end(); ++it, ++i) {
-		if (!apply_filter || m.matches(&(*it))) {
-			visible_items.push_back(itemptr_pos_pair(&(*it), i));
+	for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it = items.begin(); it != items.end(); ++it, ++i) {
+		if (!apply_filter || m.matches(&(**it))) {
+			visible_items.push_back(itemptr_pos_pair(*it, i));
 		}
 	}
 
@@ -660,7 +660,7 @@ void itemlist_formaction::set_regexmanager(regexmanager * r) {
 	f->modify("items", "replace", textview);
 }
 
-std::string itemlist_formaction::gen_flags(rss_item * item) {
+std::string itemlist_formaction::gen_flags(std::tr1::shared_ptr<rss_item> item) {
 	std::string flags;
 	if (item->deleted()) {
 		flags.append("D");
