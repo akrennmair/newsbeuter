@@ -67,7 +67,7 @@ void rss_item::set_unread(bool u) {
 		if (feedptr)
 			feedptr->get_item_by_guid(guid_).set_unread_nowrite(unread_); // notify parent feed
 		try {
-			if (ch) ch->update_rssitem_unread_and_enqueued(*this, feedurl_); 
+			if (ch) ch->update_rssitem_unread_and_enqueued(this, feedurl_); 
 		} catch (const dbexception& e) {
 			// if the update failed, restore the old unread flag and rethrow the exception
 			unread_ = old_u; 
@@ -224,7 +224,7 @@ std::string rss_item::get_attribute(const std::string& attribname) {
 
 void rss_item::update_flags() {
 	if (ch) {
-		ch->update_rssitem_flags(*this);
+		ch->update_rssitem_flags(this);
 	}
 }
 
@@ -317,7 +317,7 @@ rss_ignores::~rss_ignores() {
 	}
 }
 
-bool rss_ignores::matches(rss_item* item) {
+bool rss_ignores::matches(std::tr1::shared_ptr<rss_item> item) {
 	for (std::vector<feedurl_expr_pair>::iterator it=ignores.begin();it!=ignores.end();++it) {
 		GetLogger().log(LOG_DEBUG, "rss_ignores::matches: it->first = `%s' item->feedurl = `%s'", it->first.c_str(), item->feedurl().c_str());
 		if (it->first == "*" || item->feedurl() == it->first) {
@@ -346,7 +346,7 @@ bool rss_ignores::matches_resetunread(const std::string& url) {
 	return false;
 }
 
-void rss_feed::update_items(std::vector<rss_feed>& feeds) {
+void rss_feed::update_items(std::vector<std::tr1::shared_ptr<rss_feed> >& feeds) {
 	if (query.length() == 0)
 		return;
 
@@ -360,12 +360,12 @@ void rss_feed::update_items(std::vector<rss_feed>& feeds) {
 
 	items_.clear();
 
-	for (std::vector<rss_feed>::iterator it=feeds.begin();it!=feeds.end();++it) {
-		if (it->rssurl().substr(0,6) != "query:") { // don't fetch items from other query feeds!
-			for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator jt=it->items().begin();jt!=it->items().end();++jt) {
-				if (m.matches(&(**jt))) {
+	for (std::vector<std::tr1::shared_ptr<rss_feed> >::iterator it=feeds.begin();it!=feeds.end();++it) {
+		if ((*it)->rssurl().substr(0,6) != "query:") { // don't fetch items from other query feeds!
+			for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator jt=(*it)->items().begin();jt!=(*it)->items().end();++jt) {
+				if (m.matches(*jt)) {
 					GetLogger().log(LOG_DEBUG, "rss_feed::update_items: matcher matches!");
-					(*jt)->set_feedptr(&(*it));
+					(*jt)->set_feedptr(*it);
 					items_.push_back(*jt);
 				}
 			}
@@ -482,7 +482,7 @@ void rss_feed::purge_deleted_items() {
 	}
 }
 
-void rss_item::set_feedptr(rss_feed * ptr) {
+void rss_item::set_feedptr(std::tr1::shared_ptr<rss_feed> ptr) {
 	feedptr = ptr;
 }
 

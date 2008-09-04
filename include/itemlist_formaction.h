@@ -17,7 +17,7 @@ class itemlist_formaction : public formaction {
 		virtual void prepare();
 		virtual void init();
 
-		inline void set_feed(rss_feed * fd) { 
+		inline void set_feed(std::tr1::shared_ptr<rss_feed> fd) { 
 			feed = fd; 
 			update_visible_items = true; 
 			do_update_visible_items();
@@ -26,7 +26,7 @@ class itemlist_formaction : public formaction {
 
 		virtual std::string id() const { return "articlelist"; }
 
-		inline rss_feed * get_feed() { return feed; }
+		inline std::tr1::shared_ptr<rss_feed> get_feed() { return feed; }
 		inline void set_pos(unsigned int p) { pos = p; }
 		std::string get_guid();
 		virtual keymap_hint_entry * get_keymap_hint();
@@ -69,7 +69,7 @@ class itemlist_formaction : public formaction {
 		void prepare_set_filterpos();
 
 		unsigned int pos;
-		rss_feed * feed;
+		std::tr1::shared_ptr<rss_feed> feed;
 		bool rebuild_list;
 		bool apply_filter;
 		matcher m;
@@ -79,7 +79,7 @@ class itemlist_formaction : public formaction {
 
 		history filterhistory;
 
-		rss_feed search_dummy_feed;
+		std::tr1::shared_ptr<rss_feed> search_dummy_feed;
 
 		mutex redraw_mtx;
 

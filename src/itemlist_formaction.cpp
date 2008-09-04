@@ -1,3 +1,4 @@
+#include <controller.h>
 #include <itemlist_formaction.h>
 #include <view.h>
 #include <config.h>
@@ -17,7 +18,7 @@
 namespace newsbeuter {
 
 itemlist_formaction::itemlist_formaction(view * vv, std::string formstr)
-	: formaction(vv,formstr), feed(0), apply_filter(false), update_visible_items(true), search_dummy_feed(v->get_ctrl()->get_cache()),
+	: formaction(vv,formstr), apply_filter(false), update_visible_items(true), search_dummy_feed(new rss_feed(v->get_ctrl()->get_cache())),
 		set_filterpos(false), filterpos(0), rxman(0), old_width(0) {
 	assert(true==m.parse(FILTER_UNREAD_ITEMS));
 }
@@ -192,7 +193,7 @@ void itemlist_formaction::process_operation(operation op, bool automatic, std::v
 					for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=feed->items().begin();it!=feed->items().end();++it) {
 						(*it)->set_unread_nowrite_notify(false, true);
 					}
-					v->get_ctrl()->catchup_all(*feed);
+					v->get_ctrl()->catchup_all(feed);
 				}
 				do_redraw = true;
 				v->set_status("");
@@ -393,11 +394,11 @@ void itemlist_formaction::qna_start_search() {
 		return;
 	}
 
-	search_dummy_feed.items() = items;
+	search_dummy_feed->items() = items;
 	if (show_searchresult) {
 		v->pop_current_formaction();
 	}
-	v->push_searchresult(&search_dummy_feed);
+	v->push_searchresult(search_dummy_feed);
 }
 
 void itemlist_formaction::do_update_visible_items() {
@@ -418,7 +419,7 @@ void itemlist_formaction::do_update_visible_items() {
 
 	unsigned int i=0;
 	for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it = items.begin(); it != items.end(); ++it, ++i) {
-		if (!apply_filter || m.matches(&(**it))) {
+		if (!apply_filter || m.matches(*it)) {
 			visible_items.push_back(itemptr_pos_pair(*it, i));
 		}
 	}
