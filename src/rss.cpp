@@ -317,7 +317,7 @@ rss_ignores::~rss_ignores() {
 	}
 }
 
-bool rss_ignores::matches(std::tr1::shared_ptr<rss_item> item) {
+bool rss_ignores::matches(rss_item* item) {
 	for (std::vector<feedurl_expr_pair>::iterator it=ignores.begin();it!=ignores.end();++it) {
 		GetLogger().log(LOG_DEBUG, "rss_ignores::matches: it->first = `%s' item->feedurl = `%s'", it->first.c_str(), item->feedurl().c_str());
 		if (it->first == "*" || item->feedurl() == it->first) {
@@ -363,7 +363,7 @@ void rss_feed::update_items(std::vector<std::tr1::shared_ptr<rss_feed> >& feeds)
 	for (std::vector<std::tr1::shared_ptr<rss_feed> >::iterator it=feeds.begin();it!=feeds.end();++it) {
 		if ((*it)->rssurl().substr(0,6) != "query:") { // don't fetch items from other query feeds!
 			for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator jt=(*it)->items().begin();jt!=(*it)->items().end();++jt) {
-				if (m.matches(*jt)) {
+				if (m.matches(jt->get())) {
 					GetLogger().log(LOG_DEBUG, "rss_feed::update_items: matcher matches!");
 					(*jt)->set_feedptr(*it);
 					items_.push_back(*jt);

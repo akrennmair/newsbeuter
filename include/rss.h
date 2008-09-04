@@ -175,7 +175,7 @@ namespace newsbeuter {
 			rss_ignores() { }
 			virtual ~rss_ignores();
 			virtual action_handler_status handle_action(const std::string& action, const std::vector<std::string>& params);
-			bool matches(std::tr1::shared_ptr<rss_item> item);
+			bool matches(rss_item * item);
 			bool matches_lastmodified(const std::string& url);
 			bool matches_resetunread(const std::string& url);
 		private:
