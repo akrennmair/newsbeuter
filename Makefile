@@ -13,7 +13,7 @@ CXX=c++
 # compiler and linker flags
 DEFINES=-D_ENABLE_NLS -DLOCALEDIR=\"$(localedir)\" -DPACKAGE=\"$(PACKAGE)\"
 WARNFLAGS=-Wall
-CXXFLAGS=-ggdb -I./include -I./stfl -I./filter -I. -I/usr/local/include -I/sw/include $(WARNFLAGS) $(DEFINES)
+CXXFLAGS=-ggdb -I./include -I./stfl -I./filter -I. -I/usr/local/include -I/sw/include $(WARNFLAGS) $(DEFINES) `pkg-config libxml-2.0`
 LDFLAGS=-L. -L/usr/local/lib -L/sw/lib
 
 # libraries to link with
@@ -29,6 +29,10 @@ endif
 LIB_SOURCES=$(shell cat libbeuter.deps)
 LIB_OBJS=$(patsubst %.cpp,%.o,$(LIB_SOURCES))
 LIB_OUTPUT=libbeuter.a
+
+RSS_SOURCES=$(wildcard rsslib/*.cpp)
+RSS_OBJS=$(patsubst %.cpp,%.o,$(RSS_SOURCES))
+RSS_OUTPUT=librss.a
 
 FILTERLIB_SOURCES=filter/Scanner.cpp filter/Parser.cpp filter/FilterParser.cpp
 FILTERLIB_OBJS=$(patsubst %.cpp,%.o,$(FILTERLIB_SOURCES))
@@ -78,6 +82,11 @@ $(LIB_OUTPUT): $(LIB_OBJS)
 	$(RM) $@
 	$(AR) qc $@ $^
 	$(RANLIB) $@
+
+$(RSS_OUTPUT): $(RSS_OBJS)
+	$(RM) $@
+	$(AR) qc $@ $^
+	$(RANLIB $@
 
 $(FILTERLIB_OUTPUT): $(FILTERLIB_OBJS)
 	$(RM) $@
