@@ -44,6 +44,11 @@ has only been tested with GCC.
 - SQLite 3: http://www.sqlite.org/[]
 - libmRss: http://www2.autistici.org/bakunin/libmrss/[]
 - libnXml: http://www2.autistici.org/bakunin/libnxml/[]
+- Coco/R for C++: http://www.ssw.uni-linz.ac.at/coco/
+
+In the case of Coco/R, you need to install the resulting binary under the name
+"coco-cpp" somewhere in your $PATH. If you use Debian and the corresponding
+package of Coco/R, then this is already correct.
 
 Compiling and Installing
 ~~~~~~~~~~~~~~~~~~~~~~~~
