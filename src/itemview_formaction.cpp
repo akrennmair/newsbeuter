@@ -125,7 +125,7 @@ void itemview_formaction::prepare() {
 
 		for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); ++it) {
 			std::string line("{listitem text:");
-			line.append(stfl::quote(*it));
+			line.append(utils::makebidi(stfl::quote(*it)));
 			line.append(1,'}');
 			code.append(line);
 		}
