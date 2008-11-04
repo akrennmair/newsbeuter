@@ -9,10 +9,11 @@ namespace podbeuter {
 	class pb_view;
 }
 
-class view;
 
 namespace newsbeuter
 {
+
+class view;
 
 
 class colormanager : public config_action_handler {
@@ -23,6 +24,7 @@ class colormanager : public config_action_handler {
 		void register_commands(configparser& cfgparser);
 		virtual action_handler_status handle_action(const std::string& action, const std::vector<std::string>& params);
 		inline bool colors_loaded() { return colors_loaded_; }
+		void set_colors(newsbeuter::view * v);
 		void set_pb_colors(podbeuter::pb_view * v);
 	private:
 		friend class view;

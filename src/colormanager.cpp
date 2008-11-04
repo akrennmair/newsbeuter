@@ -157,3 +157,5 @@ void colormanager::set_colors(view * v) {
 		}
 	}
 }
+
+}

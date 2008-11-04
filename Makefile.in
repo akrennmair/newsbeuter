@@ -8,11 +8,14 @@ docdir=$(datadir)/doc/$(PACKAGE)
 
 # compiler
 CXX=@CXX@
+RANLIB=@RANLIB@
+COCOCPP=@cococpp@
+PERL=@PERL@
 
 # compiler and linker flags
 DEFINES=-D_ENABLE_NLS -DLOCALEDIR=\"$(localedir)\" -DPACKAGE=\"$(PACKAGE)\"
-CXXFLAGS=-ggdb -I./include -I./stfl -I. -I/usr/local/include -I/sw/include -Wall $(DEFINES)
-LDFLAGS=-L/usr/local/lib -L/sw/lib
+CXXFLAGS=-ggdb -I./include -I./stfl -I./filter -I. -I/usr/local/include -I/sw/include -Wall $(DEFINES)
+LDFLAGS=-L/usr/local/lib -L/sw/lib -L.
 
 # libraries to link with
 # LIBS=-lstfl -lmrss -lnxml -lncurses -lsqlite3 -lidn -lpthread
@@ -24,16 +27,24 @@ endif
 #SRC=$(wildcard *.cpp) $(wildcard src/*.cpp)
 #OBJS=$(patsubst %.cpp,%.o,$(SRC))
 
+LIB_SOURCES=$(shell cat libbeuter.deps)
+LIB_OBJS=$(patsubst %.cpp,%.o,$(LIB_SOURCES))
+LIB_OUTPUT=libbeuter.a
+
+FILTERLIB_SOURCES=filter/Scanner.cpp filter/Parser.cpp filter/FilterParser.cpp
+FILTERLIB_OBJS=$(patsubst %.cpp,%.o,$(FILTERLIB_SOURCES))
+FILTERLIB_OUTPUT=libfilter.a
+
 NEWSBEUTER=$(PACKAGE)
 NEWSBEUTER_SOURCES=$(shell cat newsbeuter.deps)
 NEWSBEUTER_OBJS=$(patsubst %.cpp,%.o,$(NEWSBEUTER_SOURCES))
-NEWSBEUTER_LIBS=@LIBS@
+NEWSBEUTER_LIBS=-lfilter -lbeuter @LIBS@
 
 
 PODBEUTER=podbeuter
 PODBEUTER_SOURCES=$(shell cat podbeuter.deps)
 PODBEUTER_OBJS=$(patsubst %.cpp,%.o,$(PODBEUTER_SOURCES))
-PODBEUTER_LIBS=@LIBS@
+PODBEUTER_LIBS=-lfilter -lbeuter @LIBS@
 
 #ifneq ($(shell uname -s),Linux)
 #NEWSBEUTER_LIBS+=-lintl
@@ -51,16 +62,30 @@ POFILES=$(wildcard po/*.po)
 MOFILES=$(patsubst %.po,%.mo,$(POFILES))
 POTFILE=po/$(PACKAGE).pot
 
-STFLCONV=./stfl2h.pl
+STFLCONV=$(PERL) ./stfl2h.pl
 RM=rm -f
 
-all: $(NEWSBEUTER) $(PODBEUTER)
+all: $(LIB_OUTPUT) $(FILTERLIB_OUTPUT) $(NEWSBEUTER) $(PODBEUTER)
 
-$(NEWSBEUTER): $(MOFILES) $(STFLHDRS) $(NEWSBEUTER_OBJS)
+$(NEWSBEUTER): $(MOFILES) $(STFLHDRS) $(LIB_OUTPUT) $(FILTERLIB_OUTPUT) $(NEWSBEUTER_OBJS)
 	$(CXX) $(LDFLAGS) $(CXXFLAGS) -o $(NEWSBEUTER) $(NEWSBEUTER_OBJS) $(NEWSBEUTER_LIBS)
 
 $(PODBEUTER): $(MOFILES) $(STFLHDRS) $(PODBEUTER_OBJS)
 	$(CXX) $(LDFLAGS) $(CXXFLAGS) -o $(PODBEUTER) $(PODBEUTER_OBJS) $(PODBEUTER_LIBS)
+
+$(LIB_OUTPUT): $(LIB_OBJS)
+	$(RM) $@
+	$(AR) qc $@ $^
+	$(RANLIB) $@
+
+$(FILTERLIB_OUTPUT): $(FILTERLIB_OBJS)
+	$(RM) $@
+	$(AR) qc $@ $^
+	$(RANLIB) $@
+
+filter/Scanner.cpp filter/Parser.cpp: filter/filter.atg filter/Scanner.frame filter/Parser.frame
+	$(RM) filter/Scanner.cpp filter/Parser.cpp filter/Scanner.h filter/Parser.h
+	$(COCOCPP) -frames filter $<
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<

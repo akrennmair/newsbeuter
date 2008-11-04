@@ -8,6 +8,7 @@
 #include <sstream>
 #include <iostream>
 #include <configcontainer.h>
+#include <sys/utsname.h>
 
 #include <langinfo.h>
 
