@@ -99,8 +99,14 @@ void stfl::reset() {
 }
 
 std::string stfl::quote(const std::string& text) {
+	static mutex * mtx;
+	if (!mtx) {
+		mtx = new mutex();
+	}
+	mtx->lock();
 	stfl_ipool * ipool = stfl_ipool_create(nl_langinfo(CODESET));
 	std::string retval = stfl_ipool_fromwc(ipool,stfl_quote(stfl_ipool_towc(ipool,text.c_str())));
 	stfl_ipool_destroy(ipool);
+	mtx->unlock();
 	return retval;
 }
