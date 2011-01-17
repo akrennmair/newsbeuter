@@ -1,7 +1,7 @@
 redo-ifchange _conf.sh
 . ./_conf.sh
 
-RSSPPLIB_OBJS=`ls rss/*.cpp | sed 's/.cpp/.o/g'`
+RSSPPLIB_OBJS=`redo-subst .cpp .o rss/*.cpp`
 
 redo-ifchange $RSSPPLIB_OBJS
 

@@ -1,7 +1,8 @@
 redo-ifchange _conf.sh
 . ./_conf.sh
 
-OBJS=`cat libbeuter.deps | sed 's/.cpp/.o/g'`
+SRCS=`cat libbeuter.deps`
+OBJS=`redo-subst .cpp .o $SRCS`
 
 redo-ifchange $OBJS
 

@@ -2,7 +2,8 @@ redo-ifchange _conf.sh
 . ./_conf.sh
 
 PODBEUTER_LIBS="-lbeuter -lpthread"
-PODBEUTER_OBJS=`cat podbeuter.deps | sed 's/.cpp/.o/g'`
+PODBEUTER_SRCS=`cat podbeuter.deps`
+PODBEUTER_OBJS=`redo-subst .cpp .o $PODBEUTER_SRCS`
 LIBS="libbeuter.a"
 
 redo-ifchange $MODFILES $PODBEUTER_OBJS $LIBS
