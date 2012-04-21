@@ -9,6 +9,8 @@
 
 #include <curl/curl.h>
 
+#include<unistd.h>
+
 #define GREADER_LOGIN					"https://www.google.com/accounts/ClientLogin"
 #define GREADER_API_PREFIX				"http://www.google.com/reader/api/0/"
 #define GREADER_FEED_PREFIX				"http://www.google.com/reader/atom/"
