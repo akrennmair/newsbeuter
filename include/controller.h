@@ -24,7 +24,10 @@ namespace newsbeuter {
 		public:
 			controller();
 			~controller();
+			bool create_xdg_base_dir(std::string xdg_dir);
+			void upgrade_user_data_file(std::string src, std::string dst);
 			void set_view(view * vv);
+			
 			view * get_view() { return v; }
 			void run(int argc = 0, char * argv[] = NULL);
 
@@ -89,8 +92,8 @@ namespace newsbeuter {
 			unsigned int get_feed_count_per_tag(const std::string& tag);
 		private:
 			void usage(char * argv0);
-			bool setup_dirs_xdg(const char *env_home, bool silent);
-			void setup_dirs(bool silent);
+			bool setup_dirs_xdg(const char *env_home);
+			void setup_dirs();
 			void version_information(const char * argv0, unsigned int level);
 			void import_opml(const char * filename);
 			void export_opml();

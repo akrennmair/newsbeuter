@@ -17,6 +17,8 @@ namespace podbeuter {
 		public:
 			pb_controller();
 			~pb_controller();
+			bool create_xdg_base_dir(std::string xdg_dir);
+			void upgrade_user_data_file(std::string src, std::string dst);
 			inline void set_view(pb_view * vv) { v = vv; }
 			void run(int argc, char * argv[] = 0);
 
