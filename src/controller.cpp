@@ -150,8 +150,6 @@ bool controller::setup_dirs_xdg(const char *env_home) {
 
 	/* in cache */
 	lock_file   = xdg_cache_dir + std::string(NEWSBEUTER_PATH_SEP) + cache_file + LOCK_SUFFIX;
-	searchfile  = utils::strprintf("%s%shistory.search", xdg_cache_dir.c_str(), NEWSBEUTER_PATH_SEP);
-	cmdlinefile = utils::strprintf("%s%shistory.cmdline", xdg_cache_dir.c_str(), NEWSBEUTER_PATH_SEP);
 
 	/* in config */
 	config_file = xdg_config_dir + std::string(NEWSBEUTER_PATH_SEP) + config_file;
@@ -160,6 +158,8 @@ bool controller::setup_dirs_xdg(const char *env_home) {
 	cache_file  = xdg_data_dir + std::string(NEWSBEUTER_PATH_SEP) + cache_file;
 	url_file    = xdg_data_dir + std::string(NEWSBEUTER_PATH_SEP) + url_file;
 	queue_file  = xdg_data_dir + std::string(NEWSBEUTER_PATH_SEP) + queue_file;
+	searchfile  = utils::strprintf("%s%shistory.search", xdg_data_dir.c_str(), NEWSBEUTER_PATH_SEP);
+	cmdlinefile = utils::strprintf("%s%shistory.cmdline", xdg_data_dir.c_str(), NEWSBEUTER_PATH_SEP);
 
 	return true;
 }
@@ -203,6 +203,8 @@ void controller::setup_dirs() {
 			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/urls",     env_home, NEWSBEUTER_PATH_SEP), url_file);    // ~/.local/share/newsbeuter/urls
 			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/cache.db", env_home, NEWSBEUTER_PATH_SEP), cache_file);  // ~/.local/share/newsbeuter/news.db
 			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/queue",    env_home, NEWSBEUTER_PATH_SEP), queue_file);  // ~/.local/share/newsbeuter/queue
+			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/history.search", env_home, NEWSBEUTER_PATH_SEP), searchfile); // ~/.local/share/newsbeuter/history.search
+			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/history.cmdline", env_home, NEWSBEUTER_PATH_SEP), cmdlinefile); // ~/.local/share/newsbeuter/history.cmdline
 
 			/* leave behind a file to signal that an upgrade already has been performed */
 			close(open(upgrade2_6_plock.c_str(), O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR));

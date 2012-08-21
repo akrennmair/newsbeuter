@@ -105,16 +105,14 @@ bool pb_controller::setup_dirs_xdg(const char *env_home) {
 
 	/* in cache */
 	lock_file   = xdg_cache_dir + std::string(NEWSBEUTER_PATH_SEP) + lock_file;
-	searchfile  = utils::strprintf("%s%shistory.search", xdg_cache_dir.c_str(), NEWSBEUTER_PATH_SEP);
-	cmdlinefile = utils::strprintf("%s%shistory.cmdline", xdg_cache_dir.c_str(), NEWSBEUTER_PATH_SEP);
 
 	/* in config */
 	config_file = xdg_config_dir + std::string(NEWSBEUTER_PATH_SEP) + config_file;
 
 	/* in data */
-	cache_file  = xdg_data_dir + std::string(NEWSBEUTER_PATH_SEP) + cache_file;
-	url_file    = xdg_data_dir + std::string(NEWSBEUTER_PATH_SEP) + url_file;
 	queue_file  = xdg_data_dir + std::string(NEWSBEUTER_PATH_SEP) + queue_file;
+	searchfile  = utils::strprintf("%s%shistory.search", xdg_data_dir.c_str(), NEWSBEUTER_PATH_SEP);
+	cmdlinefile = utils::strprintf("%s%shistory.cmdline", xdg_data_dir.c_str(), NEWSBEUTER_PATH_SEP);
 
 	return true;
 }
@@ -136,32 +134,6 @@ pb_controller::pb_controller() : v(0), config_file("config"), queue_file("queue"
 	if (!setup_dirs_xdg(env_home)) {
 		std::cerr << _("Fatal error: could not setup user-data folders in standard XDG locations!") << std::endl;
 		exit(EACCES);
-	}
-
-	/*
- 	 * Upgrade user-data to XDG directories.
-	 * Old directory is deprecated and new users will not get it. Old data is not deleted in case something goes wrong.
-	 */
-	std::string legacy_config_dir = env_home;
-	legacy_config_dir.append(NEWSBEUTER_PATH_SEP);
-	legacy_config_dir.append(NEWSBEUTER_CONFIG_SUBDIR);
-	if (access(legacy_config_dir.c_str(), R_OK | X_OK | W_OK) == 0)
-	{
-		/* upgrades from any version prior to 2.6 if the directory does not contain "upgrade-v2.6" */
-		std::string upgrade2_6_plock = legacy_config_dir;
-		upgrade2_6_plock.append(NEWSBEUTER_PATH_SEP);
-		upgrade2_6_plock.append("upgrade-v2.6");
-		if (access(upgrade2_6_plock.c_str(), R_OK) != 0)
-		{
-			/* copy user-data and configuration to new XDG directory destinations */
-			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/config",   env_home, NEWSBEUTER_PATH_SEP), config_file); // ~/.config/newsbeuter/config
-			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/urls",     env_home, NEWSBEUTER_PATH_SEP), url_file);    // ~/.local/share/newsbeuter/urls
-			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/cache.db", env_home, NEWSBEUTER_PATH_SEP), cache_file);  // ~/.local/share/newsbeuter/news.db
-			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/queue",    env_home, NEWSBEUTER_PATH_SEP), queue_file);  // ~/.local/share/newsbeuter/queue
-
-			/* leave behind a file to signal that an upgrade already has been performed */
-			close(open(upgrade2_6_plock.c_str(), O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR));
-		}
 	}
 }
 
