@@ -193,21 +193,24 @@ void controller::setup_dirs() {
 	if (access(legacy_config_dir.c_str(), R_OK | X_OK | W_OK) == 0)
 	{
 		/* upgrades from any version prior to 2.6 if the directory does not contain "upgrade-v2.6" */
-		std::string upgrade2_6_plock = legacy_config_dir;
-		upgrade2_6_plock.append(NEWSBEUTER_PATH_SEP);
-		upgrade2_6_plock.append("upgrade-v2.6");
-		if (access(upgrade2_6_plock.c_str(), R_OK) != 0)
+		std::string xdg_upgrade_file = legacy_config_dir;
+		xdg_upgrade_file.append(NEWSBEUTER_PATH_SEP);
+		xdg_upgrade_file.append("deprecated-directory");
+		if (access(xdg_upgrade_file.c_str(), R_OK) != 0)
 		{
 			/* copy user-data and configuration to new XDG directory destinations */
-			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/config",   env_home, NEWSBEUTER_PATH_SEP), config_file); // ~/.config/newsbeuter/config
-			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/urls",     env_home, NEWSBEUTER_PATH_SEP), url_file);    // ~/.local/share/newsbeuter/urls
-			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/cache.db", env_home, NEWSBEUTER_PATH_SEP), cache_file);  // ~/.local/share/newsbeuter/news.db
-			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/queue",    env_home, NEWSBEUTER_PATH_SEP), queue_file);  // ~/.local/share/newsbeuter/queue
-			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/history.search", env_home, NEWSBEUTER_PATH_SEP), searchfile); // ~/.local/share/newsbeuter/history.search
-			upgrade_user_data_file(utils::strprintf("%s%s.newsbeuter/history.cmdline", env_home, NEWSBEUTER_PATH_SEP), cmdlinefile); // ~/.local/share/newsbeuter/history.cmdline
+			upgrade_user_data_file(utils::strprintf("%s/config",   legacy_config_dir.c_str()), config_file); // ~/.config/newsbeuter/config
+			upgrade_user_data_file(utils::strprintf("%s/urls",     legacy_config_dir.c_str()), url_file);    // ~/.local/share/newsbeuter/urls
+			upgrade_user_data_file(utils::strprintf("%s/cache.db", legacy_config_dir.c_str()), cache_file);  // ~/.local/share/newsbeuter/news.db
+			upgrade_user_data_file(utils::strprintf("%s/queue",    legacy_config_dir.c_str()), queue_file);  // ~/.local/share/newsbeuter/queue
+			upgrade_user_data_file(utils::strprintf("%s/history.search",  legacy_config_dir.c_str()), searchfile); // ~/.local/share/newsbeuter/history.search
+			upgrade_user_data_file(utils::strprintf("%s/history.cmdline", legacy_config_dir.c_str()), cmdlinefile); // ~/.local/share/newsbeuter/history.cmdline
 
-			/* leave behind a file to signal that an upgrade already has been performed */
-			close(open(upgrade2_6_plock.c_str(), O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR));
+			/* leave behind a deprecation notice */
+			std::ofstream xdg_upgrade_file_out(xdg_upgrade_file.c_str());
+			xdg_upgrade_file_out << _("This data directory was deprecated in version 2.6. It can be deleted safely if user-data is intact when running the program after upgrade.") << std::endl << std::endl;
+			xdg_upgrade_file_out << _("User-data was copied over on upgrade and now recides within ~/.local/share/newsbeuter/ (or $XDG_DATA_HOME/newsbeuter/) and configurations in ~/.config/newsbeuter/ (or $XDG_CONFIG_HOME/newsbeuter/).") << std::endl;
+			xdg_upgrade_file_out.close();
 		}
 	}
 }
@@ -234,9 +237,11 @@ void controller::upgrade_user_data_file(std::string src, std::string dst) {
 		{
 			std::ofstream dst_stream(dst.c_str());
 			dst_stream << src_stream.rdbuf();
+			dst_stream.close();
 		} else {
 			std::cerr << utils::strprintf(_("Warning: User-data file %s not moved to new location %s on upgrade."), src.c_str(), dst.c_str()) << std::endl;
 		}
+		src_stream.close();
 	}
 }
 
