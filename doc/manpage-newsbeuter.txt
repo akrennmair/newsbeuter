@@ -138,9 +138,9 @@ include::chapter-cmdline.txt[]
 FILES
 -----
 
-'$HOME/.newsbeuter/config'
+'$HOME/.config/newsbeuter/config'
 
-'$HOME/.newsbeuter/urls'
+'$HOME/.local/share/newsbeuter/urls'
 
 
 SEE ALSO
