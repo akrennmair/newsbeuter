@@ -1,7 +1,7 @@
 After you've installed newsbeuter, you can run it for the first time by typing
 "newsbeuter" on your command prompt. This will bring you the following message:
 
-	Error: no URLs configured. Please fill the file /home/ak/.newsbeuter/urls with RSS feed URLs or import an OPML file.
+	Error: no URLs configured. Please fill the file /home/ak/.local/share/newsbeuter/urls with RSS feed URLs or import an OPML file.
 
 	newsbeuter 2.4
 	usage: ./newsbeuter [-i <file>|-e] [-u <urlfile>] [-c <cachefile>] [-x <command> ...] [-h]
@@ -24,9 +24,9 @@ After you've installed newsbeuter, you can run it for the first time by typing
 
 This means that newsbeuter can't start without any configured feeds. To add
 feeds to newsbeuter, you can either add URLs to the configuration file
-$HOME/.newsbeuter/urls or you can import an OPML file by running "newsbeuter -i
-blogroll.opml". To manually add URLs, open the file with your favorite text
-editor and add the URLs, one per line:
+$HOME/.local/share/newsbeuter/urls or you can import an OPML file by running
+"newsbeuter -blogroll i.opml". To manually add URLs, open the file with your
+favorite text editor and add the URLs, one per line:
 
 	http://rss.cnn.com/rss/cnn_topstories.rss
 	http://newsrss.bbc.co.uk/rss/newsonline_world_edition/front_page/rss.xml
@@ -37,14 +37,14 @@ provide the username/password in the following way:
 	http://username:password@hostname.domain.tld/feed.rss
 
 In order to protect username and password, make sure that
-$HOME/.newsbeuter/urls has the appropriate permissions. Newsbeuter also makes
-sure that usernames and passwords within URLs aren't displayed in its user
-interface. In case there is a '@' in the username, you need to write it as 
-'%40' instead so that it can be distinguished from the '@' that separates the 
-username/password part from the hostname part.
+$HOME/.local/share/newsbeuter/urls has the appropriate permissions. Newsbeuter
+also makes sure that usernames and passwords within URLs aren't displayed in
+its user interface. In case there is a '@' in the username, you need to write
+it as '%40' instead so that it can be distinguished from the '@' that
+separates the username/password part from the hostname part.
 
 You can also configure local files as feeds, by prefixing the local path with
-"file://" and adding it to the $HOME/.newsbeuter/urls file:
+"file://" and adding it to the $HOME/.local/share/newsbeuter/urls file:
 
 	file:///var/log/rss_eventlog.xml
 
@@ -79,7 +79,7 @@ Conditional HTTP downloading can be optionally disabled per feed by using the
 "always-download" configuration command.
 
 Several aspects of newsbeuter's behaviour can be configured via a configuration
-file, by default $HOME/.newsbeuter/config. This configuration file contains
+file, by default $HOME/.config/newsbeuter/config. This configuration file contains
 lines in the form "<config-command> <arg1> ...".  The configuration file can
 also contain comments, which start with the '#' character and go as far as the
 end of line. If you need to enter a configuration argument that contains
@@ -98,7 +98,7 @@ feed, only the articles of the currently viewed feed are searched. When opening
 an article from a search result dialog, the search phrase is highlighted.
 
 The history of all your searches is saved to the filesystem, to
-\~/.newsbeuter/history.search. By default, the last 100 search phrases are
+\~/.cache/newsbeuter/history.search. By default, the last 100 search phrases are
 stored, but this limited can be influenced through the "history-limit"
 configuration variable. To disable search history saving, simply set the
 history-limit to 0.

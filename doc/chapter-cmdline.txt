@@ -8,7 +8,7 @@ the screen, similar to tools like vi(m) or mutt. You can now enter commands.
 Pressing the return key executes the command (possibly giving feedback to the
 user) and closes the commandline. You can cancel entering commands by pressing
 the ESC key. The history of all the commands that you enter will be saved to
-\~/.newsbeuter/history.cmdline. The backlog is limited to 100 entries by default,
+\~/.cache/newsbeuter/history.cmdline. The backlog is limited to 100 entries by default,
 but can be influenced by setting the "history-limit" configuration variable.
 To disable history saving, set the history-limit to 0.
 
@@ -27,10 +27,10 @@ position) were added.
 
 Please be aware that the input history of both the command line and the search
 functions are saved to the filesystems, to the files
-\~/.newsbeuter/history.cmdline resp. \~/.newsbeuter/history.search. By default,
-the last 100 entries are saved, but this can be configured (configuration
-variable history-limit) and also totally disabled (by setting said variable to
-0).
+\~/.cache/newsbeuter/history.cmdline resp. \~/.cache/newsbeuter/history.search.
+By default, the last 100 entries are saved, but this can be configured
+(configuration variable history-limit) and also totally disabled (by setting
+said variable to 0).
 
 Currently, the following command line commands are available:
 

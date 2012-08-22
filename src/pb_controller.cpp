@@ -7,6 +7,9 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <fcntl.h>
+#include <cerrno>
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <pwd.h>
@@ -23,7 +26,7 @@
 
 using namespace newsbeuter;
 
-static std::string lock_file = "pb-lock.pid";
+static std::string lock_file;
 
 static void ctrl_c_action(int sig) {
 	LOG(LOG_DEBUG,"caugh signal %d",sig);
@@ -42,88 +45,124 @@ namespace podbeuter {
  * returns false, if that fails
  */
 bool pb_controller::setup_dirs_xdg(const char *env_home) {
-        const char *env_xdg_config;
-        const char *env_xdg_data;
-        std::string xdg_config_dir;
-        std::string xdg_data_dir;
+        const char *env_xdg_cache;
+	const char *env_xdg_config;
+	const char *env_xdg_data;
+	std::string xdg_cache_dir;
+	std::string xdg_config_dir;
+	std::string xdg_data_dir;
 
-        env_xdg_config = ::getenv("XDG_CONFIG_HOME");
-        if (env_xdg_config) {
-                xdg_config_dir = env_xdg_config;
-        } else {
-                xdg_config_dir = env_home;
-                xdg_config_dir.append(NEWSBEUTER_PATH_SEP);
-                xdg_config_dir.append(".config");
-        }
+	/* Test and create XDG base directories as needed */
+	env_xdg_cache = ::getenv("XDG_CACHE_HOME");
+	if (env_xdg_cache) {
+		xdg_cache_dir = env_xdg_cache;
+		create_xdg_base_dir(xdg_cache_dir);
+	} else {
+		xdg_cache_dir = env_home;
+		xdg_cache_dir.append(NEWSBEUTER_PATH_SEP);
+		xdg_cache_dir.append(".cache");
+		create_xdg_base_dir(xdg_cache_dir);
+	}
 
-        env_xdg_data = ::getenv("XDG_DATA_HOME");
-        if (env_xdg_data) {
-                xdg_data_dir = env_xdg_data;
-        } else {
-                xdg_data_dir = env_home;
-                xdg_data_dir.append(NEWSBEUTER_PATH_SEP);
-                xdg_data_dir.append(".local");
-                xdg_data_dir.append(NEWSBEUTER_PATH_SEP);
-                xdg_data_dir.append("share");
-        }
+	env_xdg_config = ::getenv("XDG_CONFIG_HOME");
+	if (env_xdg_config) {
+		xdg_config_dir = env_xdg_config;
+		create_xdg_base_dir(xdg_config_dir);
+	} else {
+		xdg_config_dir = env_home;
+		xdg_config_dir.append(NEWSBEUTER_PATH_SEP);
+		xdg_config_dir.append(".config");
+		create_xdg_base_dir(xdg_config_dir);
+	}
 
-        xdg_config_dir.append(NEWSBEUTER_PATH_SEP);
-        xdg_config_dir.append(NEWSBEUTER_SUBDIR_XDG);
+	env_xdg_data = ::getenv("XDG_DATA_HOME");
+	if (env_xdg_data) {
+		xdg_data_dir = env_xdg_data;
+		create_xdg_base_dir(xdg_data_dir);
+	} else {
+		xdg_data_dir = env_home;
+		xdg_data_dir.append(NEWSBEUTER_PATH_SEP);
+		xdg_data_dir.append(".local");
+		create_xdg_base_dir(xdg_data_dir);
 
-        xdg_data_dir.append(NEWSBEUTER_PATH_SEP);
-        xdg_data_dir.append(NEWSBEUTER_SUBDIR_XDG);
+		xdg_data_dir.append(NEWSBEUTER_PATH_SEP);
+		xdg_data_dir.append("share");
+		create_xdg_base_dir(xdg_data_dir);
+	}
 
-        if (access(xdg_config_dir.c_str(), R_OK | X_OK) != 0)
-        {
-                std::cout << utils::strprintf(_("XDG: configuration directory '%s' not accessible, using '%s' instead."), xdg_config_dir.c_str(), config_dir.c_str()) << std::endl;
-                return false;
-        }
-        if (access(xdg_data_dir.c_str(), R_OK | X_OK | W_OK) != 0)
-        {
-                std::cout << utils::strprintf(_("XDG: data directory '%s' not accessible, using '%s' instead."), xdg_data_dir.c_str(), config_dir.c_str()) << std::endl;
-                return false;
-        }
+	/* Test and create project subfolders as needed */
+	xdg_cache_dir.append(NEWSBEUTER_PATH_SEP);
+	xdg_cache_dir.append(NEWSBEUTER_SUBDIR_XDG);
+	create_xdg_base_dir(xdg_cache_dir);
 
-        config_dir = xdg_config_dir;
+	xdg_config_dir.append(NEWSBEUTER_PATH_SEP);
+	xdg_config_dir.append(NEWSBEUTER_SUBDIR_XDG);
+	create_xdg_base_dir(xdg_config_dir);
 
-        /* in config */
-        url_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + url_file;
-        config_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + config_file;
+	xdg_data_dir.append(NEWSBEUTER_PATH_SEP);
+	xdg_data_dir.append(NEWSBEUTER_SUBDIR_XDG);
+	create_xdg_base_dir(xdg_data_dir);
 
-        /* in data */
-        cache_file = xdg_data_dir + std::string(NEWSBEUTER_PATH_SEP) + cache_file;
-        lock_file = cache_file + LOCK_SUFFIX;
-        queue_file = xdg_data_dir + std::string(NEWSBEUTER_PATH_SEP) + queue_file;
-        searchfile = utils::strprintf("%s%shistory.search", xdg_data_dir.c_str(), NEWSBEUTER_PATH_SEP);
-        cmdlinefile = utils::strprintf("%s%shistory.cmdline", xdg_data_dir.c_str(), NEWSBEUTER_PATH_SEP);
+	/* in cache */
+	lock_file   = xdg_cache_dir + std::string(NEWSBEUTER_PATH_SEP) + queue_file + std::string(LOCK_SUFFIX);
 
-        return true;
+	/* in config */
+	config_file = xdg_config_dir + std::string(NEWSBEUTER_PATH_SEP) + config_file;
+
+	/* in data */
+	queue_file  = xdg_data_dir + std::string(NEWSBEUTER_PATH_SEP) + queue_file;
+	searchfile  = utils::strprintf("%s%shistory.search", xdg_data_dir.c_str(), NEWSBEUTER_PATH_SEP);
+	cmdlinefile = utils::strprintf("%s%shistory.cmdline", xdg_data_dir.c_str(), NEWSBEUTER_PATH_SEP);
+
+	return true;
 }
 
 pb_controller::pb_controller() : v(0), config_file("config"), queue_file("queue"), cfg(0), view_update_(true),  max_dls(1), ql(0) { 
-	char * cfgdir;
-	if (!(cfgdir = ::getenv("HOME"))) {
+	const char * env_home;
+	if (!(env_home = ::getenv("HOME"))) {
 		struct passwd * spw = ::getpwuid(::getuid());
 		if (spw) {
-			cfgdir = spw->pw_dir;
+			env_home = spw->pw_dir;
 		} else {
-			std::cout << _("Fatal error: couldn't determine home directory!") << std::endl;
-			std::cout << utils::strprintf(_("Please set the HOME environment variable or add a valid user for UID %u!"), ::getuid()) << std::endl;
+			std::cerr << _("Fatal error: couldn't determine home directory!") << std::endl;
+			std::cerr << utils::strprintf(_("Please set the HOME environment variable or add a valid user for UID %u!"), ::getuid()) << std::endl;
 			::exit(EXIT_FAILURE);
 		}
 	}
-	config_dir = cfgdir;
 
-	if (setup_dirs_xdg(cfgdir))
-		return;
+	/* Locate or create XDF standard directories. Cretes project subfolders in each directory. */
+	if (!setup_dirs_xdg(env_home)) {
+		std::cerr << _("Fatal error: could not setup user-data folders in standard XDG locations!") << std::endl;
+		exit(EACCES);
+	}
+}
 
-	config_dir.append(NEWSBEUTER_PATH_SEP);
-	config_dir.append(NEWSBEUTER_CONFIG_SUBDIR);
-	::mkdir(config_dir.c_str(),0700); // create configuration directory if it doesn't exist
+bool pb_controller::create_xdg_base_dir(std::string xdg_dir) {
+	if (access(xdg_dir.c_str(), R_OK | X_OK | W_OK) != 0)
+	{
+		mkdir(xdg_dir.c_str(),0700); // create directory if it does not exist
+		if (access(xdg_dir.c_str(), R_OK | X_OK | W_OK) != 0)
+		{
+			std::cerr << utils::strprintf(_("Error: XDG directory '%s' not accessible."), xdg_dir.c_str()) << std::endl;
+			return false;
+		}
+	}
+	return true;
+}
 
-	config_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + config_file;
-	queue_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + queue_file;
-	lock_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + lock_file;
+void pb_controller::upgrade_user_data_file(std::string src, std::string dst) {
+	/* source exists, but destination does not. only safe condition to proceed with upgrade. */
+	if (access(src.c_str(), R_OK | W_OK) == 0)
+	{
+		std::ifstream src_stream(src.c_str());
+		if (access(dst.c_str(), R_OK | W_OK) != 0)
+		{
+			std::ofstream dst_stream(dst.c_str());
+			dst_stream << src_stream.rdbuf();
+		} else {
+			std::cerr << utils::strprintf(_("Warning: User-data file %s not moved to new location %s on upgrade."), src.c_str(), dst.c_str()) << std::endl;
+		}
+	}
 }
 
 pb_controller::~pb_controller() { 
@@ -150,6 +189,7 @@ void pb_controller::run(int argc, char * argv[]) {
 				break;
 			case 'q':
 				queue_file = optarg;
+				lock_file = std::string(queue_file) + LOCK_SUFFIX;
 				break;
 			case 'a':
 				automatic_dl = true;

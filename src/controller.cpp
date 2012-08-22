@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <functional>
 
+#include <fcntl.h>
 #include <sys/time.h>
 #include <ctime>
 #include <cassert>
@@ -79,7 +80,7 @@ void omg_a_child_died(int /* sig */) {
 	::signal(SIGCHLD, omg_a_child_died); /* in case of unreliable signals */
 }
 
-controller::controller() : v(0), urlcfg(0), rsscache(0), url_file("urls"), cache_file("cache.db"), config_file("config"), queue_file("queue"), refresh_on_start(false), api(0), offline_mode(false) {
+controller::controller() : v(0), urlcfg(0), rsscache(0), url_file("urls"), cache_file("news.db"), config_file("config"), queue_file("queue"), refresh_on_start(false), api(0), offline_mode(false) {
 }
 
 
@@ -88,99 +89,160 @@ controller::controller() : v(0), urlcfg(0), rsscache(0), url_file("urls"), cache
  *
  * returns false, if that fails
  */
-bool controller::setup_dirs_xdg(const char *env_home, bool silent) {
+bool controller::setup_dirs_xdg(const char *env_home) {
+	const char *env_xdg_cache;
 	const char *env_xdg_config;
 	const char *env_xdg_data;
+	std::string xdg_cache_dir;
 	std::string xdg_config_dir;
 	std::string xdg_data_dir;
+
+	/* Test and create XDG base directories as needed */
+	env_xdg_cache = ::getenv("XDG_CACHE_HOME");
+	if (env_xdg_cache) {
+		xdg_cache_dir = env_xdg_cache;
+		create_xdg_base_dir(xdg_cache_dir);
+	} else {
+		xdg_cache_dir = env_home;
+		xdg_cache_dir.append(NEWSBEUTER_PATH_SEP);
+		xdg_cache_dir.append(".cache");
+		create_xdg_base_dir(xdg_cache_dir);
+	}
 
 	env_xdg_config = ::getenv("XDG_CONFIG_HOME");
 	if (env_xdg_config) {
 		xdg_config_dir = env_xdg_config;
+		create_xdg_base_dir(xdg_config_dir);
 	} else {
 		xdg_config_dir = env_home;
 		xdg_config_dir.append(NEWSBEUTER_PATH_SEP);
 		xdg_config_dir.append(".config");
+		create_xdg_base_dir(xdg_config_dir);
 	}
 
 	env_xdg_data = ::getenv("XDG_DATA_HOME");
 	if (env_xdg_data) {
 		xdg_data_dir = env_xdg_data;
+		create_xdg_base_dir(xdg_data_dir);
 	} else {
 		xdg_data_dir = env_home;
 		xdg_data_dir.append(NEWSBEUTER_PATH_SEP);
 		xdg_data_dir.append(".local");
+		create_xdg_base_dir(xdg_data_dir);
+
 		xdg_data_dir.append(NEWSBEUTER_PATH_SEP);
 		xdg_data_dir.append("share");
+		create_xdg_base_dir(xdg_data_dir);
 	}
+
+	/* Test and create project subfolders as needed */
+	xdg_cache_dir.append(NEWSBEUTER_PATH_SEP);
+	xdg_cache_dir.append(NEWSBEUTER_SUBDIR_XDG);
+	create_xdg_base_dir(xdg_cache_dir);
 
 	xdg_config_dir.append(NEWSBEUTER_PATH_SEP);
 	xdg_config_dir.append(NEWSBEUTER_SUBDIR_XDG);
+	create_xdg_base_dir(xdg_config_dir);
 
 	xdg_data_dir.append(NEWSBEUTER_PATH_SEP);
 	xdg_data_dir.append(NEWSBEUTER_SUBDIR_XDG);
+	create_xdg_base_dir(xdg_data_dir);
 
-	if (access(xdg_config_dir.c_str(), R_OK | X_OK) != 0)
-	{
-		if (!silent) {
-			std::cerr << utils::strprintf(_("XDG: configuration directory '%s' not accessible, using '%s' instead."), xdg_config_dir.c_str(), config_dir.c_str()) << std::endl;
-		}
-		return false;
-	}
-	if (access(xdg_data_dir.c_str(), R_OK | X_OK | W_OK) != 0)
-	{
-		if (!silent) {
-			std::cerr << utils::strprintf(_("XDG: data directory '%s' not accessible, using '%s' instead."), xdg_data_dir.c_str(), config_dir.c_str()) << std::endl;
-		}
-		return false;
-	}
-
-	config_dir = xdg_config_dir;
+	/* in cache */
+	lock_file   = xdg_cache_dir + std::string(NEWSBEUTER_PATH_SEP) + cache_file + LOCK_SUFFIX;
 
 	/* in config */
-	url_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + url_file;
-	config_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + config_file;
+	config_file = xdg_config_dir + std::string(NEWSBEUTER_PATH_SEP) + config_file;
 
 	/* in data */
-	cache_file = xdg_data_dir + std::string(NEWSBEUTER_PATH_SEP) + cache_file;
-	lock_file = cache_file + LOCK_SUFFIX;
-	queue_file = xdg_data_dir + std::string(NEWSBEUTER_PATH_SEP) + queue_file;
-	searchfile = utils::strprintf("%s%shistory.search", xdg_data_dir.c_str(), NEWSBEUTER_PATH_SEP);
+	cache_file  = xdg_data_dir + std::string(NEWSBEUTER_PATH_SEP) + cache_file;
+	url_file    = xdg_data_dir + std::string(NEWSBEUTER_PATH_SEP) + url_file;
+	queue_file  = xdg_data_dir + std::string(NEWSBEUTER_PATH_SEP) + queue_file;
+	searchfile  = utils::strprintf("%s%shistory.search", xdg_data_dir.c_str(), NEWSBEUTER_PATH_SEP);
 	cmdlinefile = utils::strprintf("%s%shistory.cmdline", xdg_data_dir.c_str(), NEWSBEUTER_PATH_SEP);
 
 	return true;
 }
 
-void controller::setup_dirs(bool silent) {
+void controller::setup_dirs() {
 	const char * env_home;
 	if (!(env_home = ::getenv("HOME"))) {
 		struct passwd * spw = ::getpwuid(::getuid());
 		if (spw) {
 			env_home = spw->pw_dir;
 		} else {
-			std::cout << _("Fatal error: couldn't determine home directory!") << std::endl;
-			std::cout << utils::strprintf(_("Please set the HOME environment variable or add a valid user for UID %u!"), ::getuid()) << std::endl;
+			std::cerr << _("Fatal error: couldn't determine home directory!") << std::endl;
+			std::cerr << utils::strprintf(_("Please set the HOME environment variable or add a valid user for UID %u!"), ::getuid()) << std::endl;
 			::exit(EXIT_FAILURE);
 		}
 	}
 
-	config_dir = env_home;
-	config_dir.append(NEWSBEUTER_PATH_SEP);
-	config_dir.append(NEWSBEUTER_CONFIG_SUBDIR);
+	/* Locate or create XDF standard directories. Cretes project subfolders in each directory. */
+	if (!setup_dirs_xdg(env_home)) {
+		std::cerr << _("Fatal error: could not setup user-data folders in standard XDG locations!") << std::endl;
+		exit(EACCES);
+	}
 
-	if (setup_dirs_xdg(env_home, silent))
-		return;
+	/*
+ 	 * Upgrade user-data to XDG directories.
+	 * Old directory is deprecated and new users will not get it. Old data is not deleted in case something goes wrong.
+	 */
+	std::string legacy_config_dir = env_home;
+	legacy_config_dir.append(NEWSBEUTER_PATH_SEP);
+	legacy_config_dir.append(NEWSBEUTER_CONFIG_SUBDIR);
+	if (access(legacy_config_dir.c_str(), R_OK | X_OK | W_OK) == 0)
+	{
+		/* upgrades from any version prior to 2.6 if the directory does not contain "upgrade-v2.6" */
+		std::string xdg_upgrade_file = legacy_config_dir;
+		xdg_upgrade_file.append(NEWSBEUTER_PATH_SEP);
+		xdg_upgrade_file.append("deprecated-directory");
+		if (access(xdg_upgrade_file.c_str(), R_OK) != 0)
+		{
+			/* copy user-data and configuration to new XDG directory destinations */
+			upgrade_user_data_file(utils::strprintf("%s/config",   legacy_config_dir.c_str()), config_file); // ~/.config/newsbeuter/config
+			upgrade_user_data_file(utils::strprintf("%s/urls",     legacy_config_dir.c_str()), url_file);    // ~/.local/share/newsbeuter/urls
+			upgrade_user_data_file(utils::strprintf("%s/cache.db", legacy_config_dir.c_str()), cache_file);  // ~/.local/share/newsbeuter/news.db
+			upgrade_user_data_file(utils::strprintf("%s/queue",    legacy_config_dir.c_str()), queue_file);  // ~/.local/share/newsbeuter/queue
+			upgrade_user_data_file(utils::strprintf("%s/history.search",  legacy_config_dir.c_str()), searchfile); // ~/.local/share/newsbeuter/history.search
+			upgrade_user_data_file(utils::strprintf("%s/history.cmdline", legacy_config_dir.c_str()), cmdlinefile); // ~/.local/share/newsbeuter/history.cmdline
 
-	mkdir(config_dir.c_str(),0700); // create configuration directory if it doesn't exist
+			/* leave behind a deprecation notice */
+			std::ofstream xdg_upgrade_file_out(xdg_upgrade_file.c_str());
+			xdg_upgrade_file_out << _("This data directory was deprecated in version 2.6. It can be deleted safely if user-data is intact when running the program after upgrade.") << std::endl << std::endl;
+			xdg_upgrade_file_out << _("User-data was copied over on upgrade and now recides within ~/.local/share/newsbeuter/ (or $XDG_DATA_HOME/newsbeuter/) and configurations in ~/.config/newsbeuter/ (or $XDG_CONFIG_HOME/newsbeuter/).") << std::endl;
+			xdg_upgrade_file_out.close();
+		}
+	}
+}
 
-	url_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + url_file;
-	cache_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + cache_file;
-	lock_file = cache_file + LOCK_SUFFIX;
-	config_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + config_file;
-	queue_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + queue_file;
+bool controller::create_xdg_base_dir(std::string xdg_dir) {
+	if (access(xdg_dir.c_str(), R_OK | X_OK | W_OK) != 0)
+	{
+		mkdir(xdg_dir.c_str(),0700); // create directory if it does not exist
+		if (access(xdg_dir.c_str(), R_OK | X_OK | W_OK) != 0)
+		{
+			std::cerr << utils::strprintf(_("Error: XDG directory '%s' not accessible."), xdg_dir.c_str()) << std::endl;
+			return false;
+		}
+	}
+	return true;
+}
 
-	searchfile = utils::strprintf("%s%shistory.search", config_dir.c_str(), NEWSBEUTER_PATH_SEP);
-	cmdlinefile = utils::strprintf("%s%shistory.cmdline", config_dir.c_str(), NEWSBEUTER_PATH_SEP);
+void controller::upgrade_user_data_file(std::string src, std::string dst) {
+	/* source exists, but destination does not. only safe condition to proceed with upgrade. */
+	if (access(src.c_str(), R_OK | W_OK) == 0)
+	{
+		std::ifstream src_stream(src.c_str());
+		if (access(dst.c_str(), R_OK | W_OK) != 0)
+		{
+			std::ofstream dst_stream(dst.c_str());
+			dst_stream << src_stream.rdbuf();
+			dst_stream.close();
+		} else {
+			std::cerr << utils::strprintf(_("Warning: User-data file %s not moved to new location %s on upgrade."), src.c_str(), dst.c_str()) << std::endl;
+		}
+		src_stream.close();
+	}
 }
 
 controller::~controller() {
@@ -229,7 +291,7 @@ void controller::run(int argc, char * argv[]) {
 		}
 	} while (c != -1);
 
-	setup_dirs(silent);
+	setup_dirs();
 
 	optind = 1;
 

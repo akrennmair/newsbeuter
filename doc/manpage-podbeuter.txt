@@ -49,9 +49,9 @@ include::podbeuter-cfgcmds.txt[]
 FILES
 -----
 
-'$HOME/.newsbeuter/config'
+'$HOME/.config/newsbeuter/config'
 
-'$HOME/.newsbeuter/queue'
+'$HOME/.local/share/newsbeuter/queue'
 
 
 SEE ALSO

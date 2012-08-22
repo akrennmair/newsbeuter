@@ -45,7 +45,7 @@
 ## configuration option: cache-file
 ## description: This configuration option sets the cache file. This is especially useful if the filesystem of your home directory doesn't support proper locking (e.g. NFS).
 ## parameter syntax: <path>
-# cache-file "~/.newsbeuter/cache.db"
+# cache-file "~/.local/share/newsbeuter/news.db"
 
 ## configuration option: cleanup-on-quit
 ## description: If yes, then the cache gets locked and superfluous feeds and items are removed, such as feeds that can't be found in the urls configuration file anymore.
@@ -278,7 +278,7 @@
 # text-width 0
 
 ## configuration option: urls-source
-## description: This configuration command sets the source where URLs shall be retrieved from. By default, this is ~/.newsbeuter/urls. Alternatively, you can set it to "opml", which enables newsbeuter's OPML online subscription mode, or to "googlereader", which enables newsbeuter's Google Reader support. In order to make Google Reader support work correctly, you also need to set googlereader-login and googlereader-password.
+## description: This configuration command sets the source where URLs shall be retrieved from. By default, this is ~/.local/share/newsbeuter/urls. Alternatively, you can set it to "opml", which enables newsbeuter's OPML online subscription mode, or to "googlereader", which enables newsbeuter's Google Reader support. In order to make Google Reader support work correctly, you also need to set googlereader-login and googlereader-password.
 ## parameter syntax: <source>
 # urls-source "local"
 
