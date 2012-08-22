@@ -26,7 +26,7 @@
 
 using namespace newsbeuter;
 
-static std::string lock_file = "pb-lock.pid";
+static std::string lock_file;
 
 static void ctrl_c_action(int sig) {
 	LOG(LOG_DEBUG,"caugh signal %d",sig);
@@ -104,7 +104,7 @@ bool pb_controller::setup_dirs_xdg(const char *env_home) {
 	create_xdg_base_dir(xdg_data_dir);
 
 	/* in cache */
-	lock_file   = xdg_cache_dir + std::string(NEWSBEUTER_PATH_SEP) + lock_file;
+	lock_file   = xdg_cache_dir + std::string(NEWSBEUTER_PATH_SEP) + queue_file + std::string(LOCK_SUFFIX);
 
 	/* in config */
 	config_file = xdg_config_dir + std::string(NEWSBEUTER_PATH_SEP) + config_file;
@@ -189,6 +189,7 @@ void pb_controller::run(int argc, char * argv[]) {
 				break;
 			case 'q':
 				queue_file = optarg;
+				lock_file = std::string(queue_file) + LOCK_SUFFIX;
 				break;
 			case 'a':
 				automatic_dl = true;
