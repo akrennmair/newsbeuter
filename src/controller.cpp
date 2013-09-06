@@ -1193,7 +1193,7 @@ bool controller::is_valid_podcast_type(const std::string& /* mimetype */) {
 	return true;
 }
 
-void controller::enqueue_url(const std::string& url, std::tr1::shared_ptr<rss_feed> feed) {
+void controller::enqueue_url(const std::string& url, const std::string& title, std::tr1::shared_ptr<rss_feed> feed) {
 	bool url_found = false;
 	std::fstream f;
 	f.open(queue_file.c_str(), std::fstream::in);
@@ -1214,7 +1214,7 @@ void controller::enqueue_url(const std::string& url, std::tr1::shared_ptr<rss_fe
 	if (!url_found) {
 		f.open(queue_file.c_str(), std::fstream::app | std::fstream::out);
 		std::string filename = generate_enqueue_filename(url, feed);
-		f << url << " " << stfl::quote(filename) << std::endl;
+		f << url << " " << stfl::quote(filename) << " " << stfl::quote(title) << std::endl;
 		f.close();
 	}
 }
@@ -1438,7 +1438,7 @@ void controller::enqueue_items(std::tr1::shared_ptr<rss_feed> feed) {
 			LOG(LOG_DEBUG, "controller::enqueue_items: enclosure_url = `%s' enclosure_type = `%s'", (*it)->enclosure_url().c_str(), (*it)->enclosure_type().c_str());
 			if (is_valid_podcast_type((*it)->enclosure_type()) && utils::is_http_url((*it)->enclosure_url())) {
 				LOG(LOG_INFO, "controller::enqueue_items: enqueuing `%s'", (*it)->enclosure_url().c_str());
-				enqueue_url((*it)->enclosure_url(), feed);
+				enqueue_url((*it)->enclosure_url(), (*it)->title(), feed);
 				(*it)->set_enqueued(true);
 				rsscache->update_rssitem_unread_and_enqueued(*it, feed->rssurl());
 			}

@@ -52,7 +52,7 @@ namespace newsbeuter {
 			inline void catchup_all(std::tr1::shared_ptr<rss_feed> feed) { rsscache->catchup_all(feed); }
 			inline bool get_refresh_on_start() const { return refresh_on_start; }
 			bool is_valid_podcast_type(const std::string& mimetype);
-			void enqueue_url(const std::string& url, std::tr1::shared_ptr<rss_feed> feed);
+			void enqueue_url(const std::string& url, const std::string& title, std::tr1::shared_ptr<rss_feed> feed);
 			void notify(const std::string& msg);
 			unsigned int get_pos_of_next_unread(unsigned int pos);
 

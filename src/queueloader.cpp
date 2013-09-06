@@ -80,17 +80,22 @@ void queueloader::reload(std::vector<download>& downloads, bool remove_unplayed)
 					LOG(LOG_INFO, "queueloader::reload: found `%s' nowhere -> storing to new vector", line.c_str());
 					download d(ctrl);
 					std::string fn;
-					if (fields.size() == 1)
+					std::string title;
+					if (fields.size() == 1) {
 						fn = get_filename(fields[0]);
-					else
+						title = get_title(fields[0]);
+					} else {
 						fn = fields[1];
+						title = fields[2];
+					}
 					d.set_filename(fn);
+					d.set_title(title);
 					if (access(fn.c_str(), F_OK)==0) {
 						LOG(LOG_INFO, "queueloader::reload: found `%s' on file system -> mark as already downloaded", fn.c_str());
-						if (fields.size() >= 3) {
-							if (fields[2] == "downloaded")
+						if (fields.size() >= 4) {
+							if (fields[3] == "downloaded")
 								d.set_status(DL_READY);
-							if (fields[2] == "played")
+							if (fields[3] == "played")
 								d.set_status(DL_PLAYED);
 						}
 						else
@@ -107,7 +112,7 @@ void queueloader::reload(std::vector<download>& downloads, bool remove_unplayed)
 	f.open(queuefile.c_str(), std::fstream::out);
 	if (f.is_open()) {
 		for (std::vector<download>::iterator it=dltemp.begin();it!=dltemp.end();++it) {
-			f << it->url() << " " << stfl::quote(it->filename());
+			f << it->url() << " " << stfl::quote(it->filename()) << " " << stfl::quote(it->title());
 			if (it->status() == DL_READY)
 				f << " downloaded";
 			if (it->status() == DL_PLAYED)
@@ -137,6 +142,13 @@ std::string queueloader::get_filename(const std::string& str) {
 		fn.append(base);
 	}
 	return fn;
+}
+
+std::string queueloader::get_title(const std::string& str) {
+	char buf[1024];
+	snprintf(buf, sizeof(buf), "%s", str.c_str());
+	char * base = basename(buf);
+	return std::string(base);
 }
 
 }
