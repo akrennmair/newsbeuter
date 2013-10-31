@@ -64,7 +64,7 @@ configcontainer::configcontainer()
 	config_data["notify-program"]  = configdata("", configdata::PATH);
 	config_data["notify-format"]   = configdata(_("newsbeuter: finished reload, %f unread feeds (%n unread articles total)"), configdata::STR);
 	config_data["datetime-format"] = configdata("%b %d", configdata::STR);
-	config_data["urls-source"]     = configdata("local", "local", "opml", "oldreader", "ttrss", NULL); // enum
+	config_data["urls-source"]     = configdata("local", "local", "opml", "oldreader", "newsblur", "ttrss", NULL); // enum
 	config_data["bookmark-cmd"]    = configdata("", configdata::STR);
 	config_data["opml-url"]        = configdata("", configdata::STR, true);
 	config_data["html-renderer"]   = configdata("internal", configdata::PATH);
@@ -93,6 +93,8 @@ configcontainer::configcontainer()
 	config_data["prepopulate-query-feeds"] = configdata("false", configdata::BOOL);
 	config_data["goto-first-unread"] = configdata("true", configdata::BOOL);
 	config_data["proxy-type"] = configdata("http", "http", "socks4", "socks4a", "socks5", NULL); // enum
+	config_data["newsblur-login"] = configdata("", configdata::STR);
+	config_data["newsblur-password"] = configdata("", configdata::STR);
 	config_data["oldreader-login"] = configdata("", configdata::STR);
 	config_data["oldreader-password"] = configdata("", configdata::STR);
 	config_data["oldreader-passwordfile"] = configdata("", configdata::PATH);

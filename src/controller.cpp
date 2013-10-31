@@ -15,6 +15,7 @@
 #include <rss_parser.h>
 #include <remote_api.h>
 #include <oldreader_api.h>
+#include <newsblur_api.h>
 #include <ttrss_api.h>
 #include <xlicense.h>
 
@@ -437,6 +438,10 @@ void controller::run(int argc, char * argv[]) {
 	} else if (type == "oldreader") {
 		api = new oldreader_api(&cfg);
 		urlcfg = new oldreader_urlreader(&cfg, url_file, api);
+		real_offline_mode = offline_mode;
+	} else if (type == "newsblur") {
+		api = new newsblur_api(&cfg);
+		urlcfg = new newsblur_urlreader(&cfg, url_file, api);
 		real_offline_mode = offline_mode;
 	} else if (type == "ttrss") {
 		api = new ttrss_api(&cfg);
