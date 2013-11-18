@@ -320,7 +320,7 @@ void itemlist_formaction::process_operation(operation op, bool automatic, std::v
 					{
 						scope_mutex lock(&feed->item_mutex);
 						LOG(LOG_DEBUG, "itemlist_formaction: oh, it looks like I'm in a pseudo-feed (search result, query feed)");
-						for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=feed->items().begin();it!=feed->items().end();++it) {
+						for (std::vector<std::shared_ptr<rss_item> >::iterator it=feed->items().begin();it!=feed->items().end();++it) {
 							(*it)->set_unread_nowrite_notify(false, true); // TODO: do we need to call mark_article_read here, too?
 						}
 					}
@@ -568,7 +568,7 @@ void itemlist_formaction::qna_start_search() {
 
 	v->set_status(_("Searching..."));
 	searchhistory.add_line(searchphrase);
-	std::vector<std::tr1::shared_ptr<rss_item> > items;
+	std::vector<std::shared_ptr<rss_item> > items;
 	try {
 		std::string utf8searchphrase = utils::convert_text(searchphrase, "utf-8", nl_langinfo(CODESET));
 		if (show_searchresult) {
@@ -588,7 +588,7 @@ void itemlist_formaction::qna_start_search() {
 
 	{
 		scope_mutex lock(&search_dummy_feed->item_mutex);
-		for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=items.begin();it!=items.end();++it) {
+		for (std::vector<std::shared_ptr<rss_item> >::iterator it=items.begin();it!=items.end();++it) {
 			search_dummy_feed->add_item(*it);
 		}
 	}
@@ -606,7 +606,7 @@ void itemlist_formaction::do_update_visible_items() {
 	update_visible_items = false;
 
 	scope_mutex lock(&feed->item_mutex);
-	std::vector<std::tr1::shared_ptr<rss_item> >& items = feed->items();
+	std::vector<std::shared_ptr<rss_item> >& items = feed->items();
 
 	std::vector<itemptr_pos_pair> new_visible_items;
 
@@ -617,7 +617,7 @@ void itemlist_formaction::do_update_visible_items() {
 	 */
 
 	unsigned int i=0;
-	for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it = items.begin(); it != items.end(); ++it, ++i) {
+	for (std::vector<std::shared_ptr<rss_item> >::iterator it = items.begin(); it != items.end(); ++it, ++i) {
 		(*it)->set_index(i+1);
 		if (!apply_filter || m.matches(it->get())) {
 			new_visible_items.push_back(itemptr_pos_pair(*it, i));
@@ -946,7 +946,7 @@ void itemlist_formaction::recalculate_form() {
 	}
 }
 
-void itemlist_formaction::save_article(const std::string& filename, std::tr1::shared_ptr<rss_item> item) {
+void itemlist_formaction::save_article(const std::string& filename, std::shared_ptr<rss_item> item) {
 	if (filename == "") {
 		v->show_error(_("Aborted saving."));
 	} else {
@@ -982,7 +982,7 @@ void itemlist_formaction::set_regexmanager(regexmanager * r) {
 	f->modify("items", "replace", textview);
 }
 
-std::string itemlist_formaction::gen_flags(std::tr1::shared_ptr<rss_item> item) {
+std::string itemlist_formaction::gen_flags(std::shared_ptr<rss_item> item) {
 	std::string flags;
 	if (item->deleted()) {
 		flags.append("D");
@@ -1020,7 +1020,7 @@ void itemlist_formaction::prepare_set_filterpos() {
 	}
 }
 
-void itemlist_formaction::set_feed(std::tr1::shared_ptr<rss_feed> fd) {
+void itemlist_formaction::set_feed(std::shared_ptr<rss_feed> fd) {
 	LOG(LOG_DEBUG, "itemlist_formaction::set_feed: fd pointer = %p title = `%s'", fd.get(), fd->title().c_str());
 	feed = fd;
 	feed->load();

@@ -43,7 +43,7 @@ void formaction::recalculate_form() {
 
 formaction::~formaction() { }
 
-std::tr1::shared_ptr<stfl::form> formaction::get_form() {
+std::shared_ptr<stfl::form> formaction::get_form() {
 	return f;
 }
 

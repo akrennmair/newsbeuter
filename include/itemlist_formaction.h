@@ -9,7 +9,7 @@
 
 namespace newsbeuter {
 
-typedef std::pair<std::tr1::shared_ptr<rss_item>, unsigned int> itemptr_pos_pair;
+typedef std::pair<std::shared_ptr<rss_item>, unsigned int> itemptr_pos_pair;
 
 class itemlist_formaction : public formaction {
 	public:
@@ -24,12 +24,12 @@ class itemlist_formaction : public formaction {
 			update_visible_items = true;
 		}
 
-		void set_feed(std::tr1::shared_ptr<rss_feed> fd);
+		void set_feed(std::shared_ptr<rss_feed> fd);
 
 		virtual std::string id() const { return "articlelist"; }
 		virtual std::string title();
 
-		inline std::tr1::shared_ptr<rss_feed> get_feed() { return feed; }
+		inline std::shared_ptr<rss_feed> get_feed() { return feed; }
 		inline void set_pos(unsigned int p) { pos = p; }
 		std::string get_guid();
 		virtual keymap_hint_entry * get_keymap_hint();
@@ -60,7 +60,7 @@ class itemlist_formaction : public formaction {
 		void set_head(const std::string& s, unsigned int unread, unsigned int total, const std::string &url);
 		int get_pos(unsigned int idx);
 
-		void save_article(const std::string& filename, std::tr1::shared_ptr<rss_item> item);
+		void save_article(const std::string& filename, std::shared_ptr<rss_item> item);
 
 		void save_filterpos();
 
@@ -70,13 +70,13 @@ class itemlist_formaction : public formaction {
 
 		void handle_cmdline_num(unsigned int idx);
 
-		std::string gen_flags(std::tr1::shared_ptr<rss_item> item);
+		std::string gen_flags(std::shared_ptr<rss_item> item);
 		std::string gen_datestr(time_t t, const char * datetimeformat);
 
 		void prepare_set_filterpos();
 
 		unsigned int pos;
-		std::tr1::shared_ptr<rss_feed> feed;
+		std::shared_ptr<rss_feed> feed;
 		bool rebuild_list;
 		bool apply_filter;
 		matcher m;
@@ -87,7 +87,7 @@ class itemlist_formaction : public formaction {
 
 		history filterhistory;
 
-		std::tr1::shared_ptr<rss_feed> search_dummy_feed;
+		std::shared_ptr<rss_feed> search_dummy_feed;
 
 		mutex redraw_mtx;
 

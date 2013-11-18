@@ -133,7 +133,7 @@ void regexmanager::handle_action(const std::string& action, const std::vector<st
 			}
 		}
 
-		std::tr1::shared_ptr<matcher> m(new matcher());
+		std::shared_ptr<matcher> m(new matcher());
 		if (!m->parse(params[0])) {
 			throw confighandlerexception(utils::strprintf(_("couldn't parse filter expression `%s': %s"), params[0].c_str(), m->get_parse_error().c_str()));
 		}
@@ -143,14 +143,14 @@ void regexmanager::handle_action(const std::string& action, const std::vector<st
 		locations["articlelist"].first.push_back(NULL);
 		locations["articlelist"].second.push_back(colorstr);
 
-		matchers.push_back(std::pair<std::tr1::shared_ptr<matcher>, int>(m, pos));
+		matchers.push_back(std::pair<std::shared_ptr<matcher>, int>(m, pos));
 
 	} else
 		throw confighandlerexception(AHS_INVALID_COMMAND);
 }
 
 int regexmanager::article_matches(matchable * item) {
-	for (std::vector<std::pair<std::tr1::shared_ptr<matcher>, int> >::iterator it=matchers.begin();it!=matchers.end();++it) {
+	for (std::vector<std::pair<std::shared_ptr<matcher>, int> >::iterator it=matchers.begin();it!=matchers.end();++it) {
 		if (it->first->matches(item)) {
 			return it->second;
 		}

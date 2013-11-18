@@ -52,7 +52,7 @@ static int single_string_callback(void * handler, int argc, char ** argv, char *
 }
 
 static int rssfeed_callback(void * myfeed, int argc, char ** argv, char ** /* azColName */) {
-	std::tr1::shared_ptr<rss_feed>* feed = static_cast<std::tr1::shared_ptr<rss_feed>* >(myfeed);
+	std::shared_ptr<rss_feed>* feed = static_cast<std::shared_ptr<rss_feed>* >(myfeed);
 	// normaly, this shouldn't happen, but we keep the assert()s here nevertheless
 	assert(argc == 3);
 	assert(argv[0] != NULL);
@@ -94,9 +94,9 @@ static int vectorofstring_callback(void * vp, int argc, char ** argv, char ** /*
 }
 
 static int rssitem_callback(void * myfeed, int argc, char ** argv, char ** /* azColName */) {
-	std::tr1::shared_ptr<rss_feed>* feed = static_cast<std::tr1::shared_ptr<rss_feed>* >(myfeed);
+	std::shared_ptr<rss_feed>* feed = static_cast<std::shared_ptr<rss_feed>* >(myfeed);
 	assert (argc == 13);
-	std::tr1::shared_ptr<rss_item> item(new rss_item(NULL));
+	std::shared_ptr<rss_item> item(new rss_item(NULL));
 	item->set_guid(argv[0]);
 	item->set_title(argv[1]);
 	item->set_author(argv[2]);
@@ -127,16 +127,16 @@ static int fill_content_callback(void * myfeed, int argc, char ** argv, char ** 
 	rss_feed * feed = static_cast<rss_feed *>(myfeed);
 	assert(argc == 2);
 	if (argv[0]) {
-		std::tr1::shared_ptr<rss_item> item = feed->get_item_by_guid_unlocked(argv[0]);
+		std::shared_ptr<rss_item> item = feed->get_item_by_guid_unlocked(argv[0]);
 		item->set_description(argv[1] ? argv[1] : "");
 	}
 	return 0;
 }
 
 static int search_item_callback(void * myfeed, int argc, char ** argv, char ** /* azColName */) {
-	std::vector<std::tr1::shared_ptr<rss_item> > * items = static_cast<std::vector<std::tr1::shared_ptr<rss_item> > *>(myfeed);
+	std::vector<std::shared_ptr<rss_item> > * items = static_cast<std::vector<std::shared_ptr<rss_item> > *>(myfeed);
 	assert (argc == 13);
-	std::tr1::shared_ptr<rss_item> item(new rss_item(NULL));
+	std::shared_ptr<rss_item> item(new rss_item(NULL));
 	item->set_guid(argv[0]);
 	item->set_title(argv[1]);
 	item->set_author(argv[2]);
@@ -337,7 +337,7 @@ std::vector<std::string> cache::get_feed_urls() {
 
 
 // this function writes an rss_feed including all rss_items to the database
-void cache::externalize_rssfeed(std::tr1::shared_ptr<rss_feed> feed, bool reset_unread) {
+void cache::externalize_rssfeed(std::shared_ptr<rss_feed> feed, bool reset_unread) {
 	scope_measure m1("cache::externalize_feed");
 	if (feed->rssurl().substr(0,6) == "query:")
 		return;
@@ -372,7 +372,7 @@ void cache::externalize_rssfeed(std::tr1::shared_ptr<rss_feed> feed, bool reset_
 	LOG(LOG_INFO, "cache::externalize_feed: max_items = %u feed.items().size() = %u", max_items, feed->total_item_count());
 	
 	if (max_items > 0 && feed->items().size() > max_items) {
-		std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=feed->items().begin();
+		std::vector<std::shared_ptr<rss_item> >::iterator it=feed->items().begin();
 		for (unsigned int i=0;i<max_items;++i)
 			++it;	
 		if (it != feed->items().end())
@@ -383,7 +383,7 @@ void cache::externalize_rssfeed(std::tr1::shared_ptr<rss_feed> feed, bool reset_
 	time_t old_time = time(NULL) - days * 24*60*60;
 
 	// the reverse iterator is there for the sorting foo below (think about it)
-	for (std::vector<std::tr1::shared_ptr<rss_item> >::reverse_iterator it=feed->items().rbegin(); it != feed->items().rend(); ++it) {
+	for (std::vector<std::shared_ptr<rss_item> >::reverse_iterator it=feed->items().rbegin(); it != feed->items().rend(); ++it) {
 		if (days == 0 || (*it)->pubDate_timestamp() >= old_time)
 			update_rssitem_unlocked(*it, feed->rssurl(), reset_unread);
 	}
@@ -391,7 +391,7 @@ void cache::externalize_rssfeed(std::tr1::shared_ptr<rss_feed> feed, bool reset_
 
 // this function reads an rss_feed including all of its rss_items.
 // the feed parameter needs to have the rssurl member set.
-void cache::internalize_rssfeed(std::tr1::shared_ptr<rss_feed> feed, rss_ignores * ign) {
+void cache::internalize_rssfeed(std::shared_ptr<rss_feed> feed, rss_ignores * ign) {
 	scope_measure m1("cache::internalize_rssfeed");
 	if (feed->rssurl().substr(0,6) == "query:")
 		return;
@@ -434,7 +434,7 @@ void cache::internalize_rssfeed(std::tr1::shared_ptr<rss_feed> feed, rss_ignores
 	}
 
 	unsigned int i=0;
-	for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=feed->items().begin(); it != feed->items().end(); ++it,++i) {
+	for (std::vector<std::shared_ptr<rss_item> >::iterator it=feed->items().begin(); it != feed->items().end(); ++it,++i) {
 		(*it)->set_cache(this);
 		(*it)->set_feedptr(feed);
 		(*it)->set_feedurl(feed->rssurl());
@@ -456,8 +456,8 @@ void cache::internalize_rssfeed(std::tr1::shared_ptr<rss_feed> feed, rss_ignores
 	unsigned int max_items = cfg->get_configvalue_as_int("max-items");
 	
 	if (max_items > 0 && feed->items().size() > max_items) {
-		std::vector<std::tr1::shared_ptr<rss_item> > flagged_items;
-		std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=feed->items().begin();
+		std::vector<std::shared_ptr<rss_item> > flagged_items;
+		std::vector<std::shared_ptr<rss_item> >::iterator it=feed->items().begin();
 		for (unsigned int i=0;i<max_items;++i)
 			++it;
 		for (unsigned int i=max_items;i<feed->items().size();++i) {
@@ -470,7 +470,7 @@ void cache::internalize_rssfeed(std::tr1::shared_ptr<rss_feed> feed, rss_ignores
 		feed->erase_items(it, feed->items().end()); // delete old entries
 		if (flagged_items.size() > 0) {
 			// if some flagged articles were saved, append them
-			for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator jt=flagged_items.begin();jt!=flagged_items.end();++jt) {
+			for (std::vector<std::shared_ptr<rss_item> >::iterator jt=flagged_items.begin();jt!=flagged_items.end();++jt) {
 				feed->add_item(*jt);
 			}
 		}
@@ -479,9 +479,9 @@ void cache::internalize_rssfeed(std::tr1::shared_ptr<rss_feed> feed, rss_ignores
 
 }
 
-std::vector<std::tr1::shared_ptr<rss_item> > cache::search_for_items(const std::string& querystr, const std::string& feedurl) {
+std::vector<std::shared_ptr<rss_item> > cache::search_for_items(const std::string& querystr, const std::string& feedurl) {
 	std::string query;
-	std::vector<std::tr1::shared_ptr<rss_item> > items;
+	std::vector<std::shared_ptr<rss_item> > items;
 	int rc;
 
 	scope_mutex lock(&mtx);
@@ -502,7 +502,7 @@ std::vector<std::tr1::shared_ptr<rss_item> > cache::search_for_items(const std::
 	return items;
 }
 
-void cache::delete_item(const std::tr1::shared_ptr<rss_item> item) {
+void cache::delete_item(const std::shared_ptr<rss_item> item) {
 	std::string query = prepare_query("DELETE FROM rss_item WHERE guid = '%q';",item->guid().c_str());
 	LOG(LOG_DEBUG,"running query: %s",query.c_str());
 	int rc = sqlite3_exec(db,query.c_str(),NULL,NULL,NULL);
@@ -521,7 +521,7 @@ void cache::do_vacuum() {
 	}
 }
 
-void cache::cleanup_cache(std::vector<std::tr1::shared_ptr<rss_feed> >& feeds) {
+void cache::cleanup_cache(std::vector<std::shared_ptr<rss_feed> >& feeds) {
 	mtx.lock(); // we don't use the scope_mutex here... see comments below
 
 	/*
@@ -540,7 +540,7 @@ void cache::cleanup_cache(std::vector<std::tr1::shared_ptr<rss_feed> >& feeds) {
 		unsigned int i = 0;
 		unsigned int feed_size = feeds.size();
 
-		for (std::vector<std::tr1::shared_ptr<rss_feed> >::iterator it=feeds.begin();it!=feeds.end();++it,++i) {
+		for (std::vector<std::shared_ptr<rss_feed> >::iterator it=feeds.begin();it!=feeds.end();++it,++i) {
 			std::string name = prepare_query("'%q'",(*it)->rssurl().c_str());
 			list.append(name);
 			if (i < feed_size-1) {
@@ -592,7 +592,7 @@ void cache::cleanup_cache(std::vector<std::tr1::shared_ptr<rss_feed> >& feeds) {
 	}
 }
 
-void cache::update_rssitem_unlocked(std::tr1::shared_ptr<rss_item> item, const std::string& feedurl, bool reset_unread) {
+void cache::update_rssitem_unlocked(std::shared_ptr<rss_item> item, const std::string& feedurl, bool reset_unread) {
 	std::string query = prepare_query("SELECT count(*) FROM rss_item WHERE guid = '%q';",item->guid().c_str());
 	cb_handler count_cbh;
 	LOG(LOG_DEBUG,"running query: %s", query.c_str());
@@ -656,12 +656,12 @@ void cache::update_rssitem_unlocked(std::tr1::shared_ptr<rss_item> item, const s
 	}
 }
 
-void cache::catchup_all(std::tr1::shared_ptr<rss_feed> feed) {
+void cache::catchup_all(std::shared_ptr<rss_feed> feed) {
 	scope_mutex lock(&mtx);
 	scope_mutex feedlock(&feed->item_mutex);
 	std::string query = "UPDATE rss_item SET unread = '0' WHERE unread != '0' AND guid IN (";
 
-	for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=feed->items().begin();it!=feed->items().end();++it) {
+	for (std::vector<std::shared_ptr<rss_item> >::iterator it=feed->items().begin();it!=feed->items().end();++it) {
 		query.append(prepare_query("'%q',", (*it)->guid().c_str()));
 	}
 	query.append("'');");
@@ -730,7 +730,7 @@ void cache::update_rssitem_unread_and_enqueued(rss_item* item, const std::string
 }
 
 /* this function updates the unread and enqueued flags */
-void cache::update_rssitem_unread_and_enqueued(std::tr1::shared_ptr<rss_item> item, const std::string& feedurl) {
+void cache::update_rssitem_unread_and_enqueued(std::shared_ptr<rss_item> item, const std::string& feedurl) {
 	scope_mutex lock(&mtx);
 
 	std::string query = prepare_query("SELECT count(*) FROM rss_item WHERE guid = '%q';",item->guid().c_str());
@@ -886,9 +886,9 @@ void cache::clean_old_articles() {
 }
 
 void cache::fetch_descriptions(rss_feed * feed) {
-	std::vector<std::tr1::shared_ptr<rss_item> >& items = feed->items();
+	std::vector<std::shared_ptr<rss_item> >& items = feed->items();
 	std::vector<std::string> guids;
-	for (std::vector<std::tr1::shared_ptr<rss_item> >::iterator it=items.begin();it!=items.end();++it) {
+	for (std::vector<std::shared_ptr<rss_item> >::iterator it=items.begin();it!=items.end();++it) {
 		guids.push_back(prepare_query("'%q'", (*it)->guid().c_str()));
 	}
 	std::string in_clause = utils::join(guids, ", ");

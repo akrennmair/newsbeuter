@@ -13,7 +13,7 @@
 
 namespace newsbeuter {
 
-itemview_formaction::itemview_formaction(view * vv, std::tr1::shared_ptr<itemlist_formaction> il, std::string formstr)
+itemview_formaction::itemview_formaction(view * vv, std::shared_ptr<itemlist_formaction> il, std::string formstr)
 	: formaction(vv,formstr), show_source(false), quit(false), rxman(0), num_lines(0), itemlist(il), in_search(false) { 
 	valid_cmds.push_back("save");
 	std::sort(valid_cmds.begin(), valid_cmds.end());
@@ -61,10 +61,10 @@ void itemview_formaction::prepare() {
 				render_width -= 5; 	
 		}
 
-		std::tr1::shared_ptr<rss_item> item = feed->get_item_by_guid(guid);
+		std::shared_ptr<rss_item> item = feed->get_item_by_guid(guid);
 		listformatter listfmt;
 
-		std::tr1::shared_ptr<rss_feed> feedptr = item->get_feedptr();
+		std::shared_ptr<rss_feed> feedptr = item->get_feedptr();
 
 		std::string title, feedtitle;
 		if (feedptr.get() != NULL) {
@@ -150,7 +150,7 @@ void itemview_formaction::prepare() {
 }
 
 void itemview_formaction::process_operation(operation op, bool automatic, std::vector<std::string> * args) {
-	std::tr1::shared_ptr<rss_item> item = feed->get_item_by_guid(guid);
+	std::shared_ptr<rss_item> item = feed->get_item_by_guid(guid);
 	bool hardquit = false;
 
 	/*
@@ -468,7 +468,7 @@ void itemview_formaction::handle_cmdline(const std::string& cmd) {
 	if (!tokens.empty()) {
 		if (tokens[0] == "save" && tokens.size() >= 2) {
 			std::string filename = utils::resolve_tilde(tokens[1]);
-			std::tr1::shared_ptr<rss_item> item = feed->get_item_by_guid(guid);
+			std::shared_ptr<rss_item> item = feed->get_item_by_guid(guid);
 
 			if (filename == "") {
 				v->show_error(_("Aborted saving."));
@@ -490,7 +490,7 @@ void itemview_formaction::handle_cmdline(const std::string& cmd) {
 void itemview_formaction::finished_qna(operation op) {
 	formaction::finished_qna(op); // important!
 
-	std::tr1::shared_ptr<rss_item> item = feed->get_item_by_guid(guid);
+	std::shared_ptr<rss_item> item = feed->get_item_by_guid(guid);
 
 	switch (op) {
 		case OP_INT_EDITFLAGS_END:
@@ -597,7 +597,7 @@ void itemview_formaction::update_percent() {
 }
 
 std::string itemview_formaction::title() {
-	std::tr1::shared_ptr<rss_item> item = feed->get_item_by_guid(guid);
+	std::shared_ptr<rss_item> item = feed->get_item_by_guid(guid);
 	return utils::strprintf(_("Article - %s"), item->title().c_str());
 }
 

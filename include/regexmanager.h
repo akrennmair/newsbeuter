@@ -7,7 +7,7 @@
 #include <regex.h>
 #include <matcher.h>
 #include <utility>
-#include <tr1/memory>
+#include <memory>
 
 namespace newsbeuter {
 
@@ -24,7 +24,7 @@ class regexmanager : public config_action_handler {
 		typedef std::pair<std::vector<regex_t *>, std::vector<std::string> > rc_pair;
 		std::map<std::string, rc_pair> locations;
 		std::vector<std::string> cheat_store_for_dump_config;
-		std::vector<std::pair<std::tr1::shared_ptr<matcher>, int> > matchers;
+		std::vector<std::pair<std::shared_ptr<matcher>, int> > matchers;
 		std::string extract_initial_marker(const std::string& str);
 	public:
 		inline std::vector<std::string>& get_attrs(const std::string& loc) { return locations[loc].second; }
