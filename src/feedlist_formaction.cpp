@@ -24,7 +24,7 @@ namespace newsbeuter {
 
 feedlist_formaction::feedlist_formaction(view * vv, std::string formstr) 
 	: formaction(vv,formstr), zero_feedpos(false), feeds_shown(0),
-		auto_open(false), quit(false), apply_filter(false), search_dummy_feed(new rss_feed(v->get_ctrl()->get_cache())),
+		quit(false), apply_filter(false), search_dummy_feed(new rss_feed(v->get_ctrl()->get_cache())),
 		filterpos(0), set_filterpos(false), rxman(0), old_width(0) {
 	assert(true==m.parse(FILTER_UNREAD_FEEDS));
 	valid_cmds.push_back("tag");

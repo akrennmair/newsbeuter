@@ -77,7 +77,6 @@ class itemlist_formaction : public formaction {
 
 		unsigned int pos;
 		std::shared_ptr<rss_feed> feed;
-		bool rebuild_list;
 		bool apply_filter;
 		matcher m;
 		std::vector<itemptr_pos_pair> visible_items;
