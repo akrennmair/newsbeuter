@@ -22,7 +22,7 @@
 
 namespace newsbeuter {
 
-rss_item::rss_item(cache * c) : unread_(true), ch(c), enqueued_(false), deleted_(0), idx(0), override_unread_(false), size_(0) {
+rss_item::rss_item(cache * c) : pubDate_(0), unread_(true), ch(c), enqueued_(false), deleted_(0), idx(0), override_unread_(false), size_(0) {
 	// LOG(LOG_CRITICAL, "new rss_item");
 }
 
@@ -113,7 +113,7 @@ void rss_item::set_unread(bool u) {
 
 std::string rss_item::pubDate() const {
 	char text[1024];
-	strftime(text,sizeof(text),"%a, %d %b %Y %T %z", localtime(&pubDate_)); 
+	strftime(text,sizeof(text), _("%a, %d %b %Y %T %z"), localtime(&pubDate_)); 
 	return std::string(text);
 }
 
