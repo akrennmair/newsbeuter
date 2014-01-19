@@ -372,7 +372,7 @@ void cache::externalize_rssfeed(std::shared_ptr<rss_feed> feed, bool reset_unrea
 	LOG(LOG_INFO, "cache::externalize_feed: max_items = %u feed.items().size() = %u", max_items, feed->total_item_count());
 	
 	if (max_items > 0 && feed->items().size() > max_items) {
-		std::vector<std::shared_ptr<rss_item> >::iterator it=feed->items().begin();
+		auto it=feed->items().begin();
 		for (unsigned int i=0;i<max_items;++i)
 			++it;	
 		if (it != feed->items().end())
@@ -434,7 +434,7 @@ void cache::internalize_rssfeed(std::shared_ptr<rss_feed> feed, rss_ignores * ig
 	}
 
 	unsigned int i=0;
-	for (std::vector<std::shared_ptr<rss_item> >::iterator it=feed->items().begin(); it != feed->items().end(); ++it,++i) {
+	for (auto it=feed->items().begin(); it != feed->items().end(); ++it,++i) {
 		(*it)->set_cache(this);
 		(*it)->set_feedptr(feed);
 		(*it)->set_feedurl(feed->rssurl());
@@ -445,7 +445,7 @@ void cache::internalize_rssfeed(std::shared_ptr<rss_feed> feed, rss_ignores * ig
 			// to the beginning of the vector, and then fast-forward to
 			// the next element.
 			it = feed->items().begin();
-      --i;
+			--i;
 			for (int j=0;j<int(i);j++) {
 				++it;
 			}
@@ -457,7 +457,7 @@ void cache::internalize_rssfeed(std::shared_ptr<rss_feed> feed, rss_ignores * ig
 	
 	if (max_items > 0 && feed->items().size() > max_items) {
 		std::vector<std::shared_ptr<rss_item> > flagged_items;
-		std::vector<std::shared_ptr<rss_item> >::iterator it=feed->items().begin();
+		auto it=feed->items().begin();
 		for (unsigned int i=0;i<max_items;++i)
 			++it;
 		for (unsigned int i=max_items;i<feed->items().size();++i) {
@@ -470,8 +470,8 @@ void cache::internalize_rssfeed(std::shared_ptr<rss_feed> feed, rss_ignores * ig
 		feed->erase_items(it, feed->items().end()); // delete old entries
 		if (flagged_items.size() > 0) {
 			// if some flagged articles were saved, append them
-			for (std::vector<std::shared_ptr<rss_item> >::iterator jt=flagged_items.begin();jt!=flagged_items.end();++jt) {
-				feed->add_item(*jt);
+			for (auto item : flagged_items) {
+				feed->add_item(item);
 			}
 		}
 	}
@@ -540,8 +540,8 @@ void cache::cleanup_cache(std::vector<std::shared_ptr<rss_feed> >& feeds) {
 		unsigned int i = 0;
 		unsigned int feed_size = feeds.size();
 
-		for (std::vector<std::shared_ptr<rss_feed> >::iterator it=feeds.begin();it!=feeds.end();++it,++i) {
-			std::string name = prepare_query("'%q'",(*it)->rssurl().c_str());
+		for (auto feed : feeds) {
+			std::string name = prepare_query("'%q'",feed->rssurl().c_str());
 			list.append(name);
 			if (i < feed_size-1) {
 				list.append(", ");
@@ -661,8 +661,8 @@ void cache::catchup_all(std::shared_ptr<rss_feed> feed) {
 	scope_mutex feedlock(&feed->item_mutex);
 	std::string query = "UPDATE rss_item SET unread = '0' WHERE unread != '0' AND guid IN (";
 
-	for (std::vector<std::shared_ptr<rss_item> >::iterator it=feed->items().begin();it!=feed->items().end();++it) {
-		query.append(prepare_query("'%q',", (*it)->guid().c_str()));
+	for (auto item : feed->items()) {
+		query.append(prepare_query("'%q',", item->guid().c_str()));
 	}
 	query.append("'');");
 
@@ -886,10 +886,9 @@ void cache::clean_old_articles() {
 }
 
 void cache::fetch_descriptions(rss_feed * feed) {
-	std::vector<std::shared_ptr<rss_item> >& items = feed->items();
 	std::vector<std::string> guids;
-	for (std::vector<std::shared_ptr<rss_item> >::iterator it=items.begin();it!=items.end();++it) {
-		guids.push_back(prepare_query("'%q'", (*it)->guid().c_str()));
+	for (auto item : feed->items()) {
+		guids.push_back(prepare_query("'%q'", item->guid().c_str()));
 	}
 	std::string in_clause = utils::join(guids, ", ");
 

@@ -230,10 +230,6 @@ bool ttrss_api::update_article_flags(const std::string& oldflags, const std::str
 	return success;
 }
 
-static bool sort_by_pubdate(const rsspp::item& a, const rsspp::item& b) {
-	return a.pubDate_ts > b.pubDate_ts;
-}
-
 rsspp::feed ttrss_api::fetch_feed(const std::string& id) {
 	rsspp::feed f;
 
@@ -308,7 +304,9 @@ rsspp::feed ttrss_api::fetch_feed(const std::string& id) {
 		f.items.push_back(item);
 	}
 
-	std::sort(f.items.begin(), f.items.end(), sort_by_pubdate);
+	std::sort(f.items.begin(), f.items.end(), [](const rsspp::item& a, const rsspp::item& b) {
+		return a.pubDate_ts > b.pubDate_ts;
+	});
 
 	json_object_put(content);
 	return f;

@@ -252,28 +252,28 @@ void rss_parser::fill_feed_items(std::shared_ptr<rss_feed> feed) {
 	 * we iterate over all items of a feed, create an rss_item object for
 	 * each item, and fill it with the appropriate values from the data structure.
 	 */
-	for (std::vector<rsspp::item>::iterator item=f.items.begin();item!=f.items.end();++item) {
+	for (auto item : f.items) {
 		std::shared_ptr<rss_item> x(new rss_item(ch));
 
-		set_item_title(feed, x, *item);
+		set_item_title(feed, x, item);
 
-		if (item->link != "") {
-			x->set_link(utils::absolute_url(feed->link(), item->link));
+		if (item.link != "") {
+			x->set_link(utils::absolute_url(feed->link(), item.link));
 		}
 
-		if (x->link().empty() && item->guid_isPermaLink) {
-			x->set_link(item->guid);
+		if (x->link().empty() && item.guid_isPermaLink) {
+			x->set_link(item.guid);
 		}
 
-		set_item_author(x, *item);
+		set_item_author(x, item);
 
 		x->set_feedurl(feed->rssurl());
-    x->set_feedptr(feed);
+		x->set_feedptr(feed);
 
-		if ((f.rss_version == rsspp::ATOM_1_0 || f.rss_version == rsspp::TTRSS_JSON || f.rss_version == rsspp::NEWSBLUR_JSON) && item->labels.size() > 0) {
+		if ((f.rss_version == rsspp::ATOM_1_0 || f.rss_version == rsspp::TTRSS_JSON || f.rss_version == rsspp::NEWSBLUR_JSON) && item.labels.size() > 0) {
 			std::vector<std::string>::const_iterator start, finish;
-			start = item->labels.begin();
-			finish = item->labels.end();
+			start = item.labels.begin();
+			finish = item.labels.end();
 			if (std::find(start, finish, "fresh") != finish) {
 				x->set_unread_nowrite(true);
 				x->set_override_unread(true);
@@ -304,18 +304,18 @@ void rss_parser::fill_feed_items(std::shared_ptr<rss_feed> feed) {
 			}
 		}
 
-		set_item_content(x, *item);
+		set_item_content(x, item);
 
-		if (item->pubDate != "") 
-			x->set_pubDate(parse_date(item->pubDate));
+		if (item.pubDate != "") 
+			x->set_pubDate(parse_date(item.pubDate));
 		else
 			x->set_pubDate(::time(NULL));
 			
-		x->set_guid(get_guid(*item));
+		x->set_guid(get_guid(item));
 
-		x->set_base(item->base);
+		x->set_base(item.base);
 
-		set_item_enclosure(x, *item);
+		set_item_enclosure(x, item);
 
 		LOG(LOG_DEBUG, "rss_parser::parse: item title = `%s' link = `%s' pubDate = `%s' (%d) description = `%s'", x->title().c_str(), 
 			x->link().c_str(), x->pubDate().c_str(), x->pubDate_timestamp(), x->description().c_str());

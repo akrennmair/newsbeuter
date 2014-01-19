@@ -74,9 +74,9 @@ void view::set_keymap(keymap * k) {
 
 
 void view::update_bindings() {
-	for (std::vector<std::shared_ptr<formaction> >::iterator it=formaction_stack.begin();it!=formaction_stack.end();++it) {
-		if (*it) {
-			set_bindings(*it);
+	for (auto form : formaction_stack) {
+		if (form) {
+			set_bindings(form);
 		}
 	}
 }
@@ -372,9 +372,9 @@ void view::set_feedlist(std::vector<std::shared_ptr<rss_feed> > feeds) {
 	try {
 		scope_mutex lock(mtx);
 
-		for (std::vector<std::shared_ptr<rss_feed> >::iterator it=feeds.begin();it!=feeds.end();++it) {
-			if ((*it)->rssurl().substr(0,6) != "query:") {
-				(*it)->set_feedptrs(*it);
+		for (auto feed : feeds) {
+			if (feed->rssurl().substr(0,6) != "query:") {
+				feed->set_feedptrs(feed);
 			}
 		}
 
@@ -568,9 +568,9 @@ char view::confirm(const std::string& prompt, const std::string& charset) {
 }
 
 void view::notify_itemlist_change(std::shared_ptr<rss_feed> feed) {
-	for (std::vector<std::shared_ptr<formaction> >::iterator it=formaction_stack.begin();it!=formaction_stack.end();++it) {
-		if (*it != NULL && (*it)->id() == "articlelist") {
-			std::shared_ptr<itemlist_formaction> itemlist = std::dynamic_pointer_cast<itemlist_formaction, formaction>(*it);
+	for (auto form : formaction_stack) {
+		if (form != NULL && form->id() == "articlelist") {
+			std::shared_ptr<itemlist_formaction> itemlist = std::dynamic_pointer_cast<itemlist_formaction, formaction>(form);
 			if (itemlist != NULL) {
 				std::shared_ptr<rss_feed> f = itemlist->get_feed();
 				if (f != NULL && f->rssurl() == feed->rssurl()) {
@@ -815,7 +815,7 @@ void view::force_redraw() {
 
 void view::pop_current_formaction() {
 	std::shared_ptr<formaction> f = get_current_formaction();
-	std::vector<std::shared_ptr<formaction> >::iterator it=formaction_stack.begin();
+	auto it=formaction_stack.begin();
 	for (unsigned int i=0;i<current_formaction;i++)
 		++it;
 	formaction_stack.erase(it);
@@ -823,15 +823,15 @@ void view::pop_current_formaction() {
 		current_formaction = formaction_stack_size() - 1; // XXX TODO this is not correct... we'd need to return to the previous one, but NULL formactions have no parent
 	} else if (formaction_stack.size() > 0) {
 		// first, we set back the parent formactions of those who reference the formaction we just removed
-		for (std::vector<std::shared_ptr<formaction> >::iterator it=formaction_stack.begin();it!=formaction_stack.end();++it) {
-			if ((*it)->get_parent_formaction() == f) {
-				(*it)->set_parent_formaction(formaction_stack[0]);
+		for (auto form : formaction_stack) {
+			if (form->get_parent_formaction() == f) {
+				form->set_parent_formaction(formaction_stack[0]);
 			}
 		}
 		// we set the new formaction based on the removed formaction's parent.
 		unsigned int i=0;
-		for (std::vector<std::shared_ptr<formaction> >::iterator it=formaction_stack.begin();it!=formaction_stack.end();++it,i++) {
-			if (*it == f->get_parent_formaction()) {
+		for (auto form : formaction_stack) {
+			if (form == f->get_parent_formaction()) {
 				current_formaction = i;
 				break;
 			}
@@ -852,16 +852,16 @@ void view::set_current_formaction(unsigned int pos) {
 
 void view::remove_formaction(unsigned int pos) {
 	std::shared_ptr<formaction> f = formaction_stack[pos];
-	std::vector<std::shared_ptr<formaction> >::iterator it=formaction_stack.begin();
+	auto it = formaction_stack.begin();
 	for (unsigned int i=0;i<pos;i++)
 		++it;
 	formaction_stack.erase(it);
 	current_formaction--;
 	if (f != NULL && formaction_stack.size() > 0) {
 		// we set back the parent formactions of those who reference the formaction we just removed
-		for (std::vector<std::shared_ptr<formaction> >::iterator it=formaction_stack.begin();it!=formaction_stack.end();++it) {
-			if ((*it)->get_parent_formaction() == f) {
-				(*it)->set_parent_formaction(formaction_stack[0]);
+		for (auto form : formaction_stack) {
+			if (form->get_parent_formaction() == f) {
+				form->set_parent_formaction(formaction_stack[0]);
 			}
 		}
 	}
@@ -874,8 +874,8 @@ void view::set_colors(std::map<std::string,std::string>& fgc, std::map<std::stri
 }
 
 void view::apply_colors_to_all_formactions() {
-	for (std::vector<std::shared_ptr<formaction> >::iterator it=formaction_stack.begin();it!=formaction_stack.end();++it) {
-		apply_colors(*it);
+	for (auto form : formaction_stack) {
+		apply_colors(form);
 	}
 	if (formaction_stack.size() > 0 && formaction_stack[current_formaction]) {
 		formaction_stack[current_formaction]->set_redraw(true);
@@ -960,9 +960,9 @@ void view::set_regexmanager(regexmanager * r) {
 std::vector<std::pair<unsigned int, std::string> > view::get_formaction_names() {
 	std::vector<std::pair<unsigned int, std::string> > formaction_names;
 	unsigned int i=0;
-	for (std::vector<std::shared_ptr<formaction> >::iterator it=formaction_stack.begin();it!=formaction_stack.end();++it,i++) {
-		if (*it && (*it)->id() != "dialogs") {
-			formaction_names.push_back(std::pair<unsigned int, std::string>(i, (*it)->title()));
+	for (auto form : formaction_stack) {
+		if (form && form->id() != "dialogs") {
+			formaction_names.push_back(std::pair<unsigned int, std::string>(i, form->title()));
 		}
 	}
 	return formaction_names;
