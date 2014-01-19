@@ -921,7 +921,7 @@ std::wstring utils::clean_nonprintable_characters(std::wstring text) {
  */
 
 #if HAVE_OPENSSL
-static mutex * openssl_mutexes = NULL;
+static std::mutex * openssl_mutexes = NULL;
 static int openssl_mutexes_size = 0;
 
 static void openssl_mth_locking_function(int mode, int n, const char * file, int line) {
@@ -946,7 +946,7 @@ static unsigned long openssl_mth_id_function(void) {
 void utils::initialize_ssl_implementation(void) {
 #if HAVE_OPENSSL
 	openssl_mutexes_size = CRYPTO_num_locks();
-	openssl_mutexes = new mutex[openssl_mutexes_size];
+	openssl_mutexes = new std::mutex[openssl_mutexes_size];
 	CRYPTO_set_id_callback(openssl_mth_id_function);
 	CRYPTO_set_locking_callback(openssl_mth_locking_function);
 #endif

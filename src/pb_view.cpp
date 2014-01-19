@@ -110,8 +110,7 @@ void pb_view::run(bool auto_download) {
 					os >> idx;
 					if (idx != -1) {
 						if (ctrl->downloads()[idx].status() != DL_DOWNLOADING) {
-							poddlthread * thread = new poddlthread(&ctrl->downloads()[idx], ctrl->get_cfgcont());
-							thread->start();
+							std::thread t{poddlthread(&ctrl->downloads()[idx], ctrl->get_cfgcont())};
 						}
 					}
 				}

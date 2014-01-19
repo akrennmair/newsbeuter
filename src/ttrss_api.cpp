@@ -200,8 +200,8 @@ bool ttrss_api::mark_article_read(const std::string& guid, bool read) {
 
 	// Do this in a thread, as we don't care about the result enough to wait for
 	// it.
-	thread * mrt = new markreadthread( this, guid, read );
-	mrt->start();
+	std::thread t{markreadthread(this, guid, read)};
+	t.detach();
 	return true;
 
 }

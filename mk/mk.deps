@@ -75,8 +75,6 @@ src/select_formaction.o: include/select_formaction.h include/view.h config.h inc
 
 src/stflpp.o: include/stflpp.h include/logger.h include/exception.h
 
-src/thread.o: include/thread.h include/exception.h include/logger.h
-
 src/urlreader.o: include/urlreader.h include/utils.h include/logger.h config.h
 
 src/urlview_formaction.o: include/urlview_formaction.h include/view.h config.h include/listformatter.h

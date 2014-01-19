@@ -547,7 +547,7 @@ void cache::cleanup_cache(std::vector<std::shared_ptr<rss_feed> >& feeds) {
 				list.append(", ");
 			}
 		}
-		list.append(")");
+		list.append("'')");
 
 		std::string cleanup_rss_feeds_statement("DELETE FROM rss_feed WHERE rssurl NOT IN ");
 		cleanup_rss_feeds_statement.append(list);

@@ -862,17 +862,16 @@ void controller::reload_all(bool unattended) {
 		this->reload_range(0, size-1, size, unattended);
 	} else {
 		std::vector<std::pair<unsigned int, unsigned int> > partitions = utils::partition_indexes(0, size-1, num_threads);
-		std::vector<pthread_t> threads;
+		std::vector<std::thread> threads;
 		LOG(LOG_DEBUG, "controller::reload_all: starting reload threads...");
 		for (unsigned int i=0;i<num_threads-1;i++) {
-			reloadrangethread* t = new reloadrangethread(this, partitions[i].first, partitions[i].second, size, unattended);
-			threads.push_back(t->start());
+			threads.push_back(std::thread(reloadrangethread(this, partitions[i].first, partitions[i].second, size, unattended)));
 		}
 		LOG(LOG_DEBUG, "controller::reload_all: starting my own reload...");
 		this->reload_range(partitions[num_threads-1].first, partitions[num_threads-1].second, size, unattended);
 		LOG(LOG_DEBUG, "controller::reload_all: joining other threads...");
-		for (std::vector<pthread_t>::iterator it=threads.begin();it!=threads.end();++it) {
-			::pthread_join(*it, NULL);
+		for (size_t i=0;i<threads.size();i++) {
+			threads[i].join();
 		}
 	}
 
@@ -954,8 +953,8 @@ bool controller::trylock_reload_mutex() {
 
 void controller::start_reload_all_thread(std::vector<int> * indexes) {
 	LOG(LOG_INFO,"starting reload all thread");
-	thread * dlt = new downloadthread(this, indexes);
-	dlt->start();
+	std::thread t(downloadthread(this, indexes));
+	t.detach();
 }
 
 void controller::version_information(const char * argv0, unsigned int level) {

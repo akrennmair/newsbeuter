@@ -48,8 +48,8 @@ void feedlist_formaction::init() {
 	 * The feedlist_formaction is responsible for starting up the reloadthread, which is responsible
 	 * for regularly spawning downloadthreads.
 	 */
-	reloadthread  * rt = new reloadthread(v->get_ctrl(), v->get_cfg());
-	rt->start();
+	std::thread t{reloadthread(v->get_ctrl(), v->get_cfg())};
+	t.detach();
 
 	apply_filter = !(v->get_cfg()->get_configvalue_as_bool("show-read-feeds"));
 }
