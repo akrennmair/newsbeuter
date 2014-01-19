@@ -6,7 +6,7 @@
 
 #include <configcontainer.h>
 #include <matcher.h>
-#include <mutex.h>
+#include <mutex>
 #include <utils.h>
 
 #include <memory>
@@ -216,7 +216,7 @@ namespace newsbeuter {
 			void unload();
 			void load();
 
-			mutex item_mutex; // this is ugly, but makes it possible to lock items use e.g. from the cache class
+			std::mutex item_mutex; // this is ugly, but makes it possible to lock items use e.g. from the cache class
 		private:
 			std::string title_;
 			std::string description_;

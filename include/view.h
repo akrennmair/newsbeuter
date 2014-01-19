@@ -8,7 +8,7 @@
 #include <string>
 #include <rss.h>
 #include <keymap.h>
-#include <mutex.h>
+#include <mutex>
 #include <htmlrenderer.h>
 #include <colormanager.h>
 #include <regexmanager.h>
@@ -119,7 +119,7 @@ namespace newsbeuter {
 
 			configcontainer * cfg;
 			keymap * keys;
-			mutex * mtx;
+			std::mutex mtx;
 
 			friend class colormanager;
 

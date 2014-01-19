@@ -4,7 +4,7 @@
 #include <sqlite3.h>
 #include <rss.h>
 #include <configcontainer.h>
-#include <mutex.h>
+#include <mutex>
 
 namespace newsbeuter {
 
@@ -48,7 +48,7 @@ class cache {
 			
 		sqlite3 * db;
 		configcontainer * cfg;
-		mutex mtx;
+		std::mutex mtx;
 };
 
 }

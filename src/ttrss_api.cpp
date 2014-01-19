@@ -23,7 +23,7 @@ ttrss_api::~ttrss_api() {
 }
 
 bool ttrss_api::authenticate() {
-	 if (auth_lock.trylock()) {
+	 if (auth_lock.try_lock()) {
 		sid = retrieve_sid();
 		auth_lock.unlock();
 	 } else {

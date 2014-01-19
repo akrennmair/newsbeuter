@@ -318,7 +318,7 @@ void itemlist_formaction::process_operation(operation op, bool automatic, std::v
 					v->get_ctrl()->mark_all_read(pos);
 				} else {
 					{
-						scope_mutex lock(&feed->item_mutex);
+						std::lock_guard<std::mutex> lock(feed->item_mutex);
 						LOG(LOG_DEBUG, "itemlist_formaction: oh, it looks like I'm in a pseudo-feed (search result, query feed)");
 						for (std::vector<std::shared_ptr<rss_item> >::iterator it=feed->items().begin();it!=feed->items().end();++it) {
 							(*it)->set_unread_nowrite_notify(false, true); // TODO: do we need to call mark_article_read here, too?
@@ -593,7 +593,7 @@ void itemlist_formaction::qna_start_search() {
 	}
 
 	{
-		scope_mutex lock(&search_dummy_feed->item_mutex);
+		std::lock_guard<std::mutex> lock(search_dummy_feed->item_mutex);
 		search_dummy_feed->clear_items();
 		for (std::vector<std::shared_ptr<rss_item> >::iterator it=items.begin();it!=items.end();++it) {
 			search_dummy_feed->add_item(*it);
@@ -612,7 +612,7 @@ void itemlist_formaction::do_update_visible_items() {
 
 	update_visible_items = false;
 
-	scope_mutex lock(&feed->item_mutex);
+	std::lock_guard<std::mutex> lock(feed->item_mutex);
 	std::vector<std::shared_ptr<rss_item> >& items = feed->items();
 
 	std::vector<itemptr_pos_pair> new_visible_items;
@@ -639,7 +639,7 @@ void itemlist_formaction::do_update_visible_items() {
 }
 
 void itemlist_formaction::prepare() {
-	scope_mutex mtx(&redraw_mtx);
+	std::lock_guard<std::mutex> mtx(redraw_mtx);
 
 	std::string sort_order = v->get_cfg()->get_configvalue("article-sort-order");
 	if (sort_order != old_sort_order) {

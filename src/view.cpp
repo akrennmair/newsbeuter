@@ -55,13 +55,11 @@ extern "C" {
 
 namespace newsbeuter {
 
-view::view(controller * c) : ctrl(c), cfg(0), keys(0), mtx(0), current_formaction(0), is_inside_qna(false), is_inside_cmdline(false), tab_count(0) {
-	mtx = new mutex();
+view::view(controller * c) : ctrl(c), cfg(0), keys(0), current_formaction(0), is_inside_qna(false), is_inside_cmdline(false), tab_count(0) {
 }
 
 view::~view() {
 	stfl::reset();
-	delete mtx;
 }
 
 void view::set_config_container(configcontainer * cfgcontainer) {
@@ -129,7 +127,7 @@ void view::set_status_unlocked(const std::string& msg) {
 }
 
 void view::set_status(const std::string& msg) {
-	scope_mutex lock(mtx);
+	std::lock_guard<std::mutex> lock(mtx);
 	set_status_unlocked(msg);
 }
 
@@ -358,7 +356,7 @@ void view::open_in_browser(const std::string& url) {
 void view::update_visible_feeds(std::vector<std::shared_ptr<rss_feed> > feeds) {
 	try {
 		if (formaction_stack_size() > 0) {
-			scope_mutex lock(mtx);
+			std::lock_guard<std::mutex> lock(mtx);
 			std::shared_ptr<feedlist_formaction> feedlist = std::dynamic_pointer_cast<feedlist_formaction, formaction>(formaction_stack[0]);
 			feedlist->update_visible_feeds(feeds);
 		}
@@ -370,7 +368,7 @@ void view::update_visible_feeds(std::vector<std::shared_ptr<rss_feed> > feeds) {
 
 void view::set_feedlist(std::vector<std::shared_ptr<rss_feed> > feeds) {
 	try {
-		scope_mutex lock(mtx);
+		std::lock_guard<std::mutex> lock(mtx);
 
 		for (auto feed : feeds) {
 			if (feed->rssurl().substr(0,6) != "query:") {

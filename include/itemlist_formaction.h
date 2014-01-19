@@ -3,7 +3,6 @@
 
 #include <formaction.h>
 #include <history.h>
-#include <mutex.h>
 #include <regexmanager.h>
 #include <view.h>
 
@@ -88,7 +87,7 @@ class itemlist_formaction : public formaction {
 
 		std::shared_ptr<rss_feed> search_dummy_feed;
 
-		mutex redraw_mtx;
+		std::mutex redraw_mtx;
 
 		bool set_filterpos;
 		unsigned int filterpos;

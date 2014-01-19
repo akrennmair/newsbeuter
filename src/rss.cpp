@@ -118,7 +118,7 @@ std::string rss_item::pubDate() const {
 }
 
 unsigned int rss_feed::unread_item_count() {
-	scope_mutex lock(&item_mutex);
+	std::lock_guard<std::mutex> lock(item_mutex);
 	unsigned int count = 0;
 	for (std::vector<std::shared_ptr<rss_item> >::const_iterator it=items_.begin();it!=items_.end();++it) {
 		if ((*it)->unread())
@@ -210,7 +210,7 @@ bool rss_feed::hidden() const {
 }
 
 std::shared_ptr<rss_item> rss_feed::get_item_by_guid(const std::string& guid) {
-	scope_mutex lock(&item_mutex);
+	std::lock_guard<std::mutex> lock(item_mutex);
 	return get_item_by_guid_unlocked(guid);
 }
 
@@ -426,7 +426,7 @@ bool rss_ignores::matches_resetunread(const std::string& url) {
 }
 
 void rss_feed::update_items(std::vector<std::shared_ptr<rss_feed> > feeds) {
-	scope_mutex lock(&item_mutex);
+	std::lock_guard<std::mutex> lock(item_mutex);
 	if (query.length() == 0)
 		return;
 
@@ -527,7 +527,7 @@ struct sort_item_by_date : public std::binary_function<std::shared_ptr<rss_item>
 };
 
 void rss_feed::sort(const std::string& method) {
-	scope_mutex lock(&item_mutex);
+	std::lock_guard<std::mutex> lock(item_mutex);
 	sort_unlocked(method);
 }
 
@@ -563,7 +563,7 @@ void rss_feed::sort_unlocked(const std::string& method) {
 }
 
 void rss_feed::remove_old_deleted_items() {
-	scope_mutex lock(&item_mutex);
+	std::lock_guard<std::mutex> lock(item_mutex);
 	std::vector<std::string> guids;
 	for (auto item : items_) {
 		guids.push_back(item->guid());
@@ -572,7 +572,7 @@ void rss_feed::remove_old_deleted_items() {
 }
 
 void rss_feed::purge_deleted_items() {
-	scope_mutex lock(&item_mutex);
+	std::lock_guard<std::mutex> lock(item_mutex);
 	scope_measure m1("rss_feed::purge_deleted_items");
 	auto it=items_.begin();
 	while (it!=items_.end()) {
@@ -587,7 +587,7 @@ void rss_feed::purge_deleted_items() {
 }
 
 void rss_feed::set_feedptrs(std::shared_ptr<rss_feed> self) {
-	scope_mutex lock(&item_mutex);
+	std::lock_guard<std::mutex> lock(item_mutex);
 	for (auto item : items_) {
 		item->set_feedptr(self);
 	}
@@ -608,14 +608,14 @@ std::string rss_feed::get_status() {
 }
 
 void rss_feed::unload() {
-	scope_mutex lock(&item_mutex);
+	std::lock_guard<std::mutex> lock(item_mutex);
 	for (auto item : items_) {
 		item->unload();
 	}
 }
 
 void rss_feed::load() {
-	scope_mutex lock(&item_mutex);
+	std::lock_guard<std::mutex> lock(item_mutex);
 	ch->fetch_descriptions(this);
 }
 

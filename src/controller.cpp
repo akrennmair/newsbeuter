@@ -26,6 +26,7 @@
 #include <cerrno>
 #include <algorithm>
 #include <functional>
+#include <mutex>
 
 #include <sys/time.h>
 #include <ctime>
@@ -189,9 +190,9 @@ controller::~controller() {
 	delete urlcfg;
 	delete api;
 
-	scope_mutex feedslock(&feeds_mutex);
+	std::lock_guard<std::mutex> feedslock(feeds_mutex);
 	for (std::vector<std::shared_ptr<rss_feed> >::iterator it=feeds.begin();it!=feeds.end();++it) {
-		scope_mutex lock(&((*it)->item_mutex));
+		std::lock_guard<std::mutex> lock((*it)->item_mutex);
 		(*it)->clear_items();
 	}
 	feeds.clear();
@@ -534,7 +535,7 @@ void controller::run(int argc, char * argv[]) {
 			return;
 		}
 		feed->set_order(i);
-		scope_mutex feedslock(&feeds_mutex);
+		std::lock_guard<std::mutex> feedslock(feeds_mutex);
 		feeds.push_back(feed);
 	}
 
@@ -549,7 +550,7 @@ void controller::run(int argc, char * argv[]) {
 	if (cfg.get_configvalue_as_bool("prepopulate-query-feeds")) {
 		std::cout << _("Prepopulating query feeds...");
 		std::cout.flush();
-		scope_mutex feedslock(&feeds_mutex);
+		std::lock_guard<std::mutex> feedslock(feeds_mutex);
 		for (std::vector<std::shared_ptr<rss_feed> >::iterator it=feeds.begin();it!=feeds.end();++it) {
 			if ((*it)->rssurl().substr(0,6) == "query:") {
 				(*it)->update_items(get_all_feeds_unlocked());
@@ -613,7 +614,7 @@ void controller::run(int argc, char * argv[]) {
 		std::cout.flush();
 	}
 	try {
-		scope_mutex feedslock(&feeds_mutex);
+		std::lock_guard<std::mutex> feedslock(feeds_mutex);
 		rsscache->cleanup_cache(feeds);
 		if (!silent) {
 			std::cout << _("done.") << std::endl;
@@ -629,12 +630,12 @@ void controller::run(int argc, char * argv[]) {
 }
 
 void controller::update_feedlist() {
-	scope_mutex feedslock(&feeds_mutex);
+	std::lock_guard<std::mutex> feedslock(feeds_mutex);
 	v->set_feedlist(feeds);
 }
 
 void controller::update_visible_feeds() {
-	scope_mutex feedslock(&feeds_mutex);
+	std::lock_guard<std::mutex> feedslock(feeds_mutex);
 	v->update_visible_feeds(feeds);
 }
 
@@ -645,9 +646,9 @@ void controller::catchup_all() {
 		v->show_error(utils::strprintf(_("Error: couldn't mark all feeds read: %s"), e.what()));
 		return;
 	}
-	scope_mutex feedslock(&feeds_mutex);
+	std::lock_guard<std::mutex> feedslock(feeds_mutex);
 	for (std::vector<std::shared_ptr<rss_feed> >::iterator it=feeds.begin();it!=feeds.end();++it) {
-		scope_mutex lock(&(*it)->item_mutex);
+		std::lock_guard<std::mutex> lock((*it)->item_mutex);
 		if ((*it)->items().size() > 0) {
 			if (api) {
 				api->mark_all_read((*it)->rssurl());
@@ -677,7 +678,7 @@ void controller::record_google_replay(const std::string& guid, bool read) {
 void controller::mark_all_read(unsigned int pos) {
 	if (pos < feeds.size()) {
 		scope_measure m("controller::mark_all_read");
-		scope_mutex feedslock(&feeds_mutex);
+		std::lock_guard<std::mutex> feedslock(feeds_mutex);
 		std::shared_ptr<rss_feed> feed = feeds[pos];
 		if (feed->rssurl().substr(0,6) == "query:") {
 			rsscache->catchup_all(feed);
@@ -688,7 +689,7 @@ void controller::mark_all_read(unsigned int pos) {
 			}
 		}
 		m.stopover("after rsscache->catchup_all, before iteration over items");
-		scope_mutex lock(&feed->item_mutex);
+		std::lock_guard<std::mutex> lock(feed->item_mutex);
 		std::vector<std::shared_ptr<rss_item> >& items = feed->items();
 		std::vector<std::shared_ptr<rss_item> >::iterator begin = items.begin(), end = items.end();
 		if (items.size() > 0) {
@@ -718,7 +719,7 @@ void controller::reload(unsigned int pos, unsigned int max, bool unattended, cur
 			oldfeed->set_status(DURING_DOWNLOAD);
 			std::shared_ptr<rss_feed> newfeed = parser.parse();
 			if (newfeed->items().size() > 0) {
-				scope_mutex feedslock(&feeds_mutex);
+				std::lock_guard<std::mutex> feedslock(feeds_mutex);
 				save_feed(newfeed, pos);
 				enqueue_items(newfeed);
 				if (!unattended) {
@@ -747,7 +748,7 @@ void controller::reload(unsigned int pos, unsigned int max, bool unattended, cur
 }
 
 std::shared_ptr<rss_feed> controller::get_feed(unsigned int pos) {
-	scope_mutex feedslock(&feeds_mutex);
+	std::lock_guard<std::mutex> feedslock(feeds_mutex);
 	if (pos >= feeds.size()) {
 		throw std::out_of_range(_("invalid feed index (bug)"));
 	}
@@ -762,7 +763,7 @@ void controller::reload_indexes(const std::vector<int>& indexes, bool unattended
 
 	unsigned long size;
 	{
-		scope_mutex feedslock(&feeds_mutex);
+		std::lock_guard<std::mutex> feedslock(feeds_mutex);
 		size = feeds.size();
 	}
 
@@ -839,7 +840,7 @@ void controller::reload_all(bool unattended) {
 	unsigned int size;
 
 	{
-		scope_mutex feedlock(&feeds_mutex);
+		std::lock_guard<std::mutex> feedlock(feeds_mutex);
 		for (std::vector<std::shared_ptr<rss_feed> >::iterator it=feeds.begin();it!=feeds.end();++it) {
 			(*it)->reset_status();
 		}
@@ -943,7 +944,7 @@ void controller::compute_unread_numbers(unsigned int& unread_feeds, unsigned int
 }
 
 bool controller::trylock_reload_mutex() {
-	if (reload_mutex.trylock()) {
+	if (reload_mutex.try_lock()) {
 		LOG(LOG_DEBUG, "controller::trylock_reload_mutex succeeded");
 		return true;
 	}
@@ -1245,7 +1246,7 @@ void controller::reload_urls_file() {
 	}
 
 	{
-		scope_mutex feedslock(&feeds_mutex);
+		std::lock_guard<std::mutex> feedslock(feeds_mutex);
 		feeds = new_feeds;
 	}
 
@@ -1406,7 +1407,7 @@ void controller::save_feed(std::shared_ptr<rss_feed> feed, unsigned int pos) {
 		feed->set_tags(urlcfg->get_tags(feed->rssurl()));
 		{
 			unsigned int order = feeds[pos]->get_order();
-			scope_mutex itemlock(&feeds[pos]->item_mutex);
+			std::lock_guard<std::mutex> itemlock(feeds[pos]->item_mutex);
 			feeds[pos]->clear_items();
 			feed->set_order(order);
 		}
@@ -1420,7 +1421,7 @@ void controller::save_feed(std::shared_ptr<rss_feed> feed, unsigned int pos) {
 void controller::enqueue_items(std::shared_ptr<rss_feed> feed) {
 	if (!cfg.get_configvalue_as_bool("podcast-auto-enqueue"))
 		return;
-	scope_mutex lock(&feed->item_mutex);
+	std::lock_guard<std::mutex> lock(feed->item_mutex);
 	for (std::vector<std::shared_ptr<rss_item> >::iterator it=feed->items().begin();it!=feed->items().end();++it) {
 		if (!(*it)->enqueued() && (*it)->enclosure_url().length() > 0) {
 			LOG(LOG_DEBUG, "controller::enqueue_items: enclosure_url = `%s' enclosure_type = `%s'", (*it)->enclosure_url().c_str(), (*it)->enclosure_type().c_str());
@@ -1537,7 +1538,7 @@ struct sort_feeds_by_order : public std::binary_function<std::shared_ptr<rss_fee
 
 
 void controller::sort_feeds() {
-	scope_mutex feedslock(&feeds_mutex);
+	std::lock_guard<std::mutex> feedslock(feeds_mutex);
 	std::vector<std::string> sortmethod_info = utils::tokenize(cfg.get_configvalue("feed-sort-order"), "-");
 	std::string sortmethod = sortmethod_info[0];
 	std::string direction = "desc";
@@ -1602,7 +1603,7 @@ void controller::dump_config(const std::string& filename) {
 }
 
 unsigned int controller::get_pos_of_next_unread(unsigned int pos) {
-	scope_mutex feedslock(&feeds_mutex);
+	std::lock_guard<std::mutex> feedslock(feeds_mutex);
 	for (pos++;pos < feeds.size();pos++) {
 		if (feeds[pos]->unread_item_count() > 0)
 			break;
@@ -1620,7 +1621,7 @@ void controller::update_flags(std::shared_ptr<rss_item> item) {
 std::vector<std::shared_ptr<rss_feed> > controller::get_all_feeds() { 
 	std::vector<std::shared_ptr<rss_feed> > tmpfeeds;
 	{
-		scope_mutex feedslock(&feeds_mutex);
+		std::lock_guard<std::mutex> feedslock(feeds_mutex);
 		tmpfeeds = feeds;
 	}
 	return tmpfeeds; 
@@ -1633,7 +1634,7 @@ std::vector<std::shared_ptr<rss_feed> > controller::get_all_feeds_unlocked() {
 
 unsigned int controller::get_feed_count_per_tag(const std::string& tag) {
 	unsigned int count = 0;
-	scope_mutex feedslock(&feeds_mutex);
+	std::lock_guard<std::mutex> feedslock(feeds_mutex);
 
 	for (std::vector<std::shared_ptr<rss_feed> >::const_iterator it=feeds.begin();it!=feeds.end();it++) {
 		if ((*it)->matches_tag(tag)) {

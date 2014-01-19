@@ -124,12 +124,12 @@ namespace newsbeuter {
 			rss_ignores ign;
 			filtercontainer filters;
 
-			mutex reload_mutex;
+			std::mutex reload_mutex;
 			configparser cfgparser;
 			colormanager colorman;
 			regexmanager rxman;
 			remote_api * api;
-			mutex feeds_mutex;
+			std::mutex feeds_mutex;
 			bool offline_mode;
 	};
 
