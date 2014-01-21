@@ -142,8 +142,8 @@ void configcontainer::register_commands(configparser& cfgparser)
 {
 	// this registers the config options defined above in the configuration parser
 	// -> if the resp. config option is encountered, it is passed to the configcontainer
-	for (std::map<std::string,configdata>::iterator it=config_data.begin();it!=config_data.end();++it) {
-		cfgparser.register_handler(it->first, this);
+	for (auto cfg : config_data) {
+		cfgparser.register_handler(cfg.first, this);
 	}
 }
 
@@ -263,28 +263,28 @@ void configcontainer::toggle(const std::string& key) {
 }
 
 void configcontainer::dump_config(std::vector<std::string>& config_output) {
-	for (std::map<std::string, configdata>::iterator it=config_data.begin();it!=config_data.end();++it) {
-		std::string configline = it->first + " ";
-		assert(it->second.type != configdata::INVALID);
-		switch (it->second.type) {
+	for (auto cfg : config_data) {
+		std::string configline = cfg.first + " ";
+		assert(cfg.second.type != configdata::INVALID);
+		switch (cfg.second.type) {
 		case configdata::BOOL:
 		case configdata::INT:
-			configline.append(it->second.value);
-			if (it->second.value != it->second.default_value)
-				configline.append(utils::strprintf(" # default: %s", it->second.default_value.c_str()));
+			configline.append(cfg.second.value);
+			if (cfg.second.value != cfg.second.default_value)
+				configline.append(utils::strprintf(" # default: %s", cfg.second.default_value.c_str()));
 			break;
 		case configdata::ENUM:
 		case configdata::STR:
 		case configdata::PATH:
-			if (it->second.multi_option) {
-				std::vector<std::string> tokens = utils::tokenize(it->second.value, " ");
-				for (std::vector<std::string>::iterator it=tokens.begin();it!=tokens.end();++it) {
-					configline.append(utils::quote(*it) + " ");
+			if (cfg.second.multi_option) {
+				std::vector<std::string> tokens = utils::tokenize(cfg.second.value, " ");
+				for (auto token : tokens) {
+					configline.append(utils::quote(token) + " ");
 				}
 			} else {
-				configline.append(utils::quote(it->second.value));
-				if (it->second.value != it->second.default_value) {
-					configline.append(utils::strprintf(" # default: %s", it->second.default_value.c_str()));
+				configline.append(utils::quote(cfg.second.value));
+				if (cfg.second.value != cfg.second.default_value) {
+					configline.append(utils::strprintf(" # default: %s", cfg.second.default_value.c_str()));
 				}
 			}
 			break;
@@ -301,9 +301,9 @@ void configcontainer::dump_config(std::vector<std::string>& config_output) {
 
 std::vector<std::string> configcontainer::get_suggestions(const std::string& fragment) {
 	std::vector<std::string> result;
-	for (std::map<std::string, configdata>::iterator it=config_data.begin();it!=config_data.end();++it) {
-		if (it->first.substr(0, fragment.length()) == fragment)
-			result.push_back(it->first);
+	for (auto cfg : config_data) {
+		if (cfg.first.substr(0, fragment.length()) == fragment)
+			result.push_back(cfg.first);
 	}
 	std::sort(result.begin(), result.end());
 	return result;

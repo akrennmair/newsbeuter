@@ -156,7 +156,7 @@ namespace newsbeuter {
 			}
 
 			inline void erase_items(std::vector<std::shared_ptr<rss_item> >::iterator begin, std::vector<std::shared_ptr<rss_item> >::iterator end) {
-				for (std::vector<std::shared_ptr<rss_item> >::const_iterator it=begin;it!=end;++it) {
+				for (auto it=begin;it!=end;++it) {
 					items_guid_map.erase((*it)->guid());
 				}
 				items_.erase(begin, end);

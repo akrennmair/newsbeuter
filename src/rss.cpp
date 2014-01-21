@@ -120,8 +120,8 @@ std::string rss_item::pubDate() const {
 unsigned int rss_feed::unread_item_count() {
 	std::lock_guard<std::mutex> lock(item_mutex);
 	unsigned int count = 0;
-	for (std::vector<std::shared_ptr<rss_item> >::const_iterator it=items_.begin();it!=items_.end();++it) {
-		if ((*it)->unread())
+	for (auto item : items_) {
+		if (item->unread())
 			++count;
 	}
 	return count;
@@ -155,8 +155,8 @@ std::string rss_feed::get_tags() {
 
 void rss_feed::set_tags(const std::vector<std::string>& tags) {
 	tags_.clear();
-	for (std::vector<std::string>::const_iterator it=tags.begin();it!=tags.end();++it) {
-		tags_.push_back(*it);
+	for (auto tag : tags) {
+		tags_.push_back(tag);
 	}
 }
 
@@ -186,10 +186,10 @@ std::string rss_item::description() const {
 std::string rss_feed::title() const {
 	bool found_title = false;
 	std::string alt_title;
-	for (std::vector<std::string>::const_iterator it=tags_.begin();it!=tags_.end();++it) {
-		if (it->substr(0,1) == "~" || it->substr(0,1) == "!") {
+	for (auto tag : tags_) {
+		if (tag.substr(0,1) == "~" || tag.substr(0,1) == "!") {
 			found_title = true;
-			alt_title = it->substr(1, it->length()-1);
+			alt_title = tag.substr(1, tag.length()-1);
 			break;
 		}
 	}
@@ -201,8 +201,8 @@ std::string rss_feed::description() const {
 }
 
 bool rss_feed::hidden() const {
-	for (std::vector<std::string>::const_iterator it=tags_.begin();it!=tags_.end();++it) {
-		if (it->substr(0,1) == "!") {
+	for (auto tag : tags_) {
+		if (tag.substr(0,1) == "!") {
 			return true;
 		}
 	}
@@ -215,8 +215,8 @@ std::shared_ptr<rss_item> rss_feed::get_item_by_guid(const std::string& guid) {
 }
 
 std::shared_ptr<rss_item> rss_feed::get_item_by_guid_unlocked(const std::string& guid) {
-	std::unordered_map<std::string, std::shared_ptr<rss_item> >::const_iterator it;
-	if ((it = items_guid_map.find(guid)) != items_guid_map.end()) {
+	auto it = items_guid_map.find(guid);
+	if (it != items_guid_map.end()) {
 		return it->second;
 	}
 	LOG(LOG_DEBUG, "rss_feed::get_item_by_guid_unlocked: hit dummy item!");
@@ -360,12 +360,12 @@ void rss_ignores::handle_action(const std::string& action, const std::vector<std
 			throw confighandlerexception(utils::strprintf(_("couldn't parse filter expression `%s': %s"), ignore_expr.c_str(), m.get_parse_error().c_str()));
 		ignores.push_back(feedurl_expr_pair(ignore_rssurl, new matcher(ignore_expr)));
 	} else if (action == "always-download") {
-		for (std::vector<std::string>::const_iterator it=params.begin();it!=params.end();++it) {
-			ignores_lastmodified.push_back(*it);
+		for (auto param : params) {
+			ignores_lastmodified.push_back(param);
 		}
 	} else if (action == "reset-unread-on-update") {
-		for (std::vector<std::string>::const_iterator it=params.begin();it!=params.end();++it) {
-			resetflag.push_back(*it);
+		for (auto param : params) {
+			resetflag.push_back(param);
 		}
 	} else
 		throw confighandlerexception(AHS_INVALID_COMMAND);

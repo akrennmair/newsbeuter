@@ -881,9 +881,10 @@ void view::apply_colors_to_all_formactions() {
 }
 
 void view::apply_colors(std::shared_ptr<formaction> fa) {
-	std::map<std::string,std::string>::const_iterator fgcit = fg_colors.begin();
-	std::map<std::string,std::string>::const_iterator bgcit = bg_colors.begin();
-	std::map<std::string,std::vector<std::string> >::const_iterator attit = attributes.begin();
+	auto fgcit = fg_colors.begin();
+	auto bgcit = bg_colors.begin();
+	auto attit = attributes.begin();
+
 	LOG(LOG_DEBUG, "view::apply_colors: fa = %s", fa->id().c_str());
 
 	std::string article_colorstr;
@@ -900,11 +901,11 @@ void view::apply_colors(std::shared_ptr<formaction> fa) {
 			colorattr.append("bg=");
 			colorattr.append(bgcit->second);
 		}
-		for (std::vector<std::string>::const_iterator it=attit->second.begin(); it!= attit->second.end(); ++it) {
+		for (auto attr : attit->second) {
 			if (colorattr.length() > 0)
 				colorattr.append(",");
 			colorattr.append("attr=");
-			colorattr.append(*it);
+			colorattr.append(attr);
 		} 
 
 		if (fgcit->first == "article") {

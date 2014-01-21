@@ -307,7 +307,7 @@ void keymap::handle_action(const std::string& action, const std::vector<std::str
 	} else if (action == "macro") {
 		if (params.size() < 1)
 			throw confighandlerexception(AHS_TOO_FEW_PARAMS);
-		std::vector<std::string>::const_iterator it = params.begin();
+		auto it = params.begin();
 		std::string macrokey = *it;
 		std::vector<macrocmd> cmds;
 		macrocmd tmpcmd;

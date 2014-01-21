@@ -103,8 +103,8 @@ struct json_object * ttrss_api::run_op(const std::string& op,
 
 	std::string req_data = "{\"op\":\"" + op + "\",\"sid\":\"" + sid + "\"";
 
-	for (std::map<std::string, std::string>::const_iterator it = args.begin(); it != args.end(); it++) {
-		req_data += ",\"" + it->first + "\":\"" + it->second + "\"";
+	for (auto arg : args) {
+		req_data += ",\"" + arg.first + "\":\"" + arg.second + "\"";
 	}
 	req_data += "}";
 

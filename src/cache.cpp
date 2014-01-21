@@ -383,7 +383,7 @@ void cache::externalize_rssfeed(std::shared_ptr<rss_feed> feed, bool reset_unrea
 	time_t old_time = time(NULL) - days * 24*60*60;
 
 	// the reverse iterator is there for the sorting foo below (think about it)
-	for (std::vector<std::shared_ptr<rss_item> >::reverse_iterator it=feed->items().rbegin(); it != feed->items().rend(); ++it) {
+	for (auto it=feed->items().rbegin(); it != feed->items().rend(); ++it) {
 		if (days == 0 || (*it)->pubDate_timestamp() >= old_time)
 			update_rssitem_unlocked(*it, feed->rssurl(), reset_unread);
 	}
@@ -800,8 +800,8 @@ void cache::remove_old_deleted_items(const std::string& rssurl, const std::vecto
 		return;
 	}
 	std::string guidset = "(";
-	for (std::vector<std::string>::const_iterator it=guids.begin();it!=guids.end();++it) {
-		guidset.append(prepare_query("'%q', ", it->c_str()));
+	for (auto guid : guids) {
+		guidset.append(prepare_query("'%q', ", guid.c_str()));
 	}
 	guidset.append("'')");
 	std::string query = prepare_query("DELETE FROM rss_item WHERE feedurl = '%q' AND deleted = 1 AND guid NOT IN %s;", rssurl.c_str(), guidset.c_str());
@@ -829,8 +829,8 @@ unsigned int cache::get_unread_count() {
 void cache::mark_items_read_by_guid(const std::vector<std::string>& guids) {
 	scope_measure m1("cache::mark_items_read_by_guid");
 	std::string guidset("(");
-	for (std::vector<std::string>::const_iterator it=guids.begin();it!=guids.end();++it) {
-		guidset.append(prepare_query("'%q', ", it->c_str()));
+	for (auto guid : guids) {
+		guidset.append(prepare_query("'%q', ", guid.c_str()));
 	}
 	guidset.append("'')");
 
@@ -915,8 +915,8 @@ void cache::record_google_replay(const std::string& guid, unsigned int state) {
 void cache::delete_google_replay_by_guid(const std::vector<std::string>& guids) {
 	std::vector<std::string> escaped_guids;
 
-	for (std::vector<std::string>::const_iterator it=guids.begin();it!=guids.end();++it) {
-		escaped_guids.push_back(prepare_query("'%q'", it->c_str()));
+	for (auto guid : guids) {
+		escaped_guids.push_back(prepare_query("'%q'", guid.c_str()));
 	}
 
 	std::string query = prepare_query("DELETE FROM google_replay WHERE guid IN ( %s );", utils::join(escaped_guids, ", ").c_str());

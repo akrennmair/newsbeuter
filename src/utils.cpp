@@ -684,8 +684,8 @@ size_t utils::wcswidth_stfl(const std::wstring& str, size_t size) {
 std::string utils::join(const std::vector<std::string>& strings, const std::string& separator) {
 	std::string result;
 
-	for (std::vector<std::string>::const_iterator it=strings.begin();it!=strings.end();++it) {
-		result.append(*it);
+	for (auto str : strings) {
+		result.append(str);
 		result.append(separator);
 	}
 
