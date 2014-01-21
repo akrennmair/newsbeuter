@@ -786,42 +786,28 @@ void controller::reload_indexes(const std::vector<int>& indexes, bool unattended
 		v->set_status("");
 }
 
-struct feed_cmp {
-	const std::vector<std::shared_ptr<rss_feed> > &feeds;
-	feed_cmp(const std::vector<std::shared_ptr<rss_feed> > &f)
-		: feeds(f)
-	{
-	}
-	void extract(std::string &s, const std::string &url) const
-	{
-		size_t p = url.find("//");
-		p = (p == std::string::npos) ? 0 : p+2;
-		std::string suff(url.substr(p));
-		p = suff.find('/');
-		s = suff.substr(0, p);
-	}
-	bool operator()(unsigned a, unsigned b) const
-	{
-		std::shared_ptr<rss_feed> x = feeds[a];
-		std::shared_ptr<rss_feed> y = feeds[b];
-		const std::string &u = x->rssurl();
-		const std::string &v = y->rssurl();
-		
-		std::string domain1, domain2;
-		extract(domain1, u);
-		extract(domain2, v);
-		std::reverse(domain1.begin(), domain1.end());
-		std::reverse(domain2.begin(), domain2.end());
-		return domain1 < domain2;
-	}
-};
-
 void controller::reload_range(unsigned int start, unsigned int end, unsigned int size, bool unattended) {
 
 	std::vector<unsigned int> v;
 	for (unsigned int i=start;i<=end;++i)
 		v.push_back(i);
-	std::sort(v.begin(), v.end(), feed_cmp(feeds));
+
+	auto extract = [](std::string& s, const std::string& url) {
+		size_t p = url.find("//");
+		p = (p == std::string::npos) ? 0 : p+2;
+		std::string suff(url.substr(p));
+		p = suff.find('/');
+		s = suff.substr(0, p);
+	};
+
+	std::sort(v.begin(), v.end(), [&](unsigned int a, unsigned int b) {
+		std::string domain1, domain2;
+		extract(domain1, feeds[a]->rssurl());
+		extract(domain2, feeds[b]->rssurl());
+		std::reverse(domain1.begin(), domain1.end());
+		std::reverse(domain2.begin(), domain2.end());
+		return domain1 < domain2;
+	});
 
 	curl_handle easyhandle;
 
