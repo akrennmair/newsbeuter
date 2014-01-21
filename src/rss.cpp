@@ -478,54 +478,6 @@ void rss_feed::set_rssurl(const std::string& u) {
 	}
 }
 
-struct sort_item_by_title : public std::binary_function<std::shared_ptr<rss_item>, std::shared_ptr<rss_item>, bool> {
-	bool reverse;
-	sort_item_by_title(bool b) : reverse(b) { }
-	bool operator()(std::shared_ptr<rss_item> a, std::shared_ptr<rss_item> b) {
-		return reverse ?  (strcasecmp(a->title().c_str(), b->title().c_str()) > 0) : (strcasecmp(a->title().c_str(), b->title().c_str()) < 0);
-	}
-};
-
-struct sort_item_by_flags : public std::binary_function<std::shared_ptr<rss_item>, std::shared_ptr<rss_item>, bool> {
-	bool reverse;
-	sort_item_by_flags(bool b) : reverse(b) { }
-	bool operator()(std::shared_ptr<rss_item> a, std::shared_ptr<rss_item> b) {
-		return reverse ?  (strcmp(a->flags().c_str(), b->flags().c_str()) > 0) : (strcmp(a->flags().c_str(), b->flags().c_str()) < 0);
-	}
-};
-
-struct sort_item_by_author : public std::binary_function<std::shared_ptr<rss_item>, std::shared_ptr<rss_item>, bool> {
-	bool reverse;
-	sort_item_by_author(bool b) : reverse(b) { }
-	bool operator()(std::shared_ptr<rss_item> a, std::shared_ptr<rss_item> b) {
-		return reverse ?  (strcmp(a->author().c_str(), b->author().c_str()) > 0) : (strcmp(a->author().c_str(), b->author().c_str()) < 0);
-	}
-};
-
-struct sort_item_by_link : public std::binary_function<std::shared_ptr<rss_item>, std::shared_ptr<rss_item>, bool> {
-	bool reverse;
-	sort_item_by_link(bool b) : reverse(b) { }
-	bool operator()(std::shared_ptr<rss_item> a, std::shared_ptr<rss_item> b) {
-		return reverse ?  (strcmp(a->link().c_str(), b->link().c_str()) >  0) : (strcmp(a->link().c_str(), b->link().c_str()) < 0);
-	}
-};
-
-struct sort_item_by_guid : public std::binary_function<std::shared_ptr<rss_item>, std::shared_ptr<rss_item>, bool> {
-	bool reverse;
-	sort_item_by_guid(bool b) : reverse(b) { }
-	bool operator()(std::shared_ptr<rss_item> a, std::shared_ptr<rss_item> b) {
-		return reverse ?  (strcmp(a->guid().c_str(), b->guid().c_str()) > 0) : (strcmp(a->guid().c_str(), b->guid().c_str()) < 0);
-	}
-};
-
-struct sort_item_by_date : public std::binary_function<std::shared_ptr<rss_item>, std::shared_ptr<rss_item>, bool> {
-	bool reverse;
-	sort_item_by_date(bool b) : reverse(b) { }
-	bool operator()(std::shared_ptr<rss_item> a, std::shared_ptr<rss_item> b) {
-		return reverse ?  (a->pubDate_timestamp() > b->pubDate_timestamp()) : (a->pubDate_timestamp() < b->pubDate_timestamp());
-	}
-};
-
 void rss_feed::sort(const std::string& method) {
 	std::lock_guard<std::mutex> lock(item_mutex);
 	sort_unlocked(method);
@@ -547,17 +499,29 @@ void rss_feed::sort_unlocked(const std::string& method) {
 
 	if (!methods.empty()) {
 		if (methods[0] == "title") {
-			std::stable_sort(items_.begin(), items_.end(), sort_item_by_title(reverse));
+			std::stable_sort(items_.begin(), items_.end(), [&](std::shared_ptr<rss_item> a, std::shared_ptr<rss_item> b) {
+				return reverse ?  (strcasecmp(a->title().c_str(), b->title().c_str()) > 0) : (strcasecmp(a->title().c_str(), b->title().c_str()) < 0);
+			});
 		} else if (methods[0] == "flags") {
-			std::stable_sort(items_.begin(), items_.end(), sort_item_by_flags(reverse));
+			std::stable_sort(items_.begin(), items_.end(), [&](std::shared_ptr<rss_item> a, std::shared_ptr<rss_item> b) {
+				return reverse ?  (strcmp(a->flags().c_str(), b->flags().c_str()) > 0) : (strcmp(a->flags().c_str(), b->flags().c_str()) < 0);
+			});
 		} else if (methods[0] == "author") {
-			std::stable_sort(items_.begin(), items_.end(), sort_item_by_author(reverse));
+			std::stable_sort(items_.begin(), items_.end(), [&](std::shared_ptr<rss_item> a, std::shared_ptr<rss_item> b) {
+				return reverse ?  (strcmp(a->author().c_str(), b->author().c_str()) > 0) : (strcmp(a->author().c_str(), b->author().c_str()) < 0);
+			});
 		} else if (methods[0] == "link") {
-			std::stable_sort(items_.begin(), items_.end(), sort_item_by_link(reverse));
+			std::stable_sort(items_.begin(), items_.end(), [&](std::shared_ptr<rss_item> a, std::shared_ptr<rss_item> b) {
+				return reverse ?  (strcmp(a->link().c_str(), b->link().c_str()) >  0) : (strcmp(a->link().c_str(), b->link().c_str()) < 0);
+			});
 		} else if (methods[0] == "guid") {
-			std::stable_sort(items_.begin(), items_.end(), sort_item_by_guid(reverse));
+			std::stable_sort(items_.begin(), items_.end(), [&](std::shared_ptr<rss_item> a, std::shared_ptr<rss_item> b) {
+				return reverse ?  (strcmp(a->guid().c_str(), b->guid().c_str()) > 0) : (strcmp(a->guid().c_str(), b->guid().c_str()) < 0);
+			});
 		} else if (methods[0] == "date") {
-			std::stable_sort(items_.begin(), items_.end(), sort_item_by_date(reverse));
+			std::stable_sort(items_.begin(), items_.end(), [&](std::shared_ptr<rss_item> a, std::shared_ptr<rss_item> b) {
+				return reverse ?  (a->pubDate_timestamp() > b->pubDate_timestamp()) : (a->pubDate_timestamp() < b->pubDate_timestamp());
+			});
 		}
 	}
 }
