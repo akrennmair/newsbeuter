@@ -144,7 +144,7 @@ namespace newsbeuter {
 			
 			bool hidden() const;
 			
-			inline std::vector<std::shared_ptr<rss_item> >& items() { return items_; }
+			inline std::vector<std::shared_ptr<rss_item>>& items() { return items_; }
 			inline void add_item(std::shared_ptr<rss_item> item) {
 				items_.push_back(item);
 				items_guid_map[item->guid()] = item;
@@ -155,13 +155,13 @@ namespace newsbeuter {
 				items_guid_map.clear();
 			}
 
-			inline void erase_items(std::vector<std::shared_ptr<rss_item> >::iterator begin, std::vector<std::shared_ptr<rss_item> >::iterator end) {
+			inline void erase_items(std::vector<std::shared_ptr<rss_item>>::iterator begin, std::vector<std::shared_ptr<rss_item>>::iterator end) {
 				for (auto it=begin;it!=end;++it) {
 					items_guid_map.erase((*it)->guid());
 				}
 				items_.erase(begin, end);
 			}
-			inline void erase_item(std::vector<std::shared_ptr<rss_item> >::iterator pos) {
+			inline void erase_item(std::vector<std::shared_ptr<rss_item>>::iterator pos) {
 				items_guid_map.erase((*pos)->guid());
 				items_.erase(pos);
 			}
@@ -183,7 +183,7 @@ namespace newsbeuter {
 			virtual bool has_attribute(const std::string& attribname);
 			virtual std::string get_attribute(const std::string& attribname);
 
-			void update_items(std::vector<std::shared_ptr<rss_feed> > feeds);
+			void update_items(std::vector<std::shared_ptr<rss_feed>> feeds);
 
 			inline void set_query(const std::string& s) { query = s; }
 
@@ -223,8 +223,8 @@ namespace newsbeuter {
 			std::string link_;
 			time_t pubDate_;
 			std::string rssurl_;
-			std::vector<std::shared_ptr<rss_item> > items_;
-			std::unordered_map<std::string, std::shared_ptr<rss_item> > items_guid_map;
+			std::vector<std::shared_ptr<rss_item>> items_;
+			std::unordered_map<std::string, std::shared_ptr<rss_item>> items_guid_map;
 			std::vector<std::string> tags_;
 			std::string query;
 			

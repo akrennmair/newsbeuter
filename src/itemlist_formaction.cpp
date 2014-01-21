@@ -574,7 +574,7 @@ void itemlist_formaction::qna_start_search() {
 
 	v->set_status(_("Searching..."));
 	searchhistory.add_line(searchphrase);
-	std::vector<std::shared_ptr<rss_item> > items;
+	std::vector<std::shared_ptr<rss_item>> items;
 	try {
 		std::string utf8searchphrase = utils::convert_text(searchphrase, "utf-8", nl_langinfo(CODESET));
 		if (show_searchresult) {
@@ -613,7 +613,7 @@ void itemlist_formaction::do_update_visible_items() {
 	update_visible_items = false;
 
 	std::lock_guard<std::mutex> lock(feed->item_mutex);
-	std::vector<std::shared_ptr<rss_item> >& items = feed->items();
+	std::vector<std::shared_ptr<rss_item>>& items = feed->items();
 
 	std::vector<itemptr_pos_pair> new_visible_items;
 

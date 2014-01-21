@@ -353,7 +353,7 @@ void view::open_in_browser(const std::string& url) {
 	pop_current_formaction();
 }
 
-void view::update_visible_feeds(std::vector<std::shared_ptr<rss_feed> > feeds) {
+void view::update_visible_feeds(std::vector<std::shared_ptr<rss_feed>> feeds) {
 	try {
 		if (formaction_stack_size() > 0) {
 			std::lock_guard<std::mutex> lock(mtx);
@@ -366,7 +366,7 @@ void view::update_visible_feeds(std::vector<std::shared_ptr<rss_feed> > feeds) {
 	}
 }
 
-void view::set_feedlist(std::vector<std::shared_ptr<rss_feed> > feeds) {
+void view::set_feedlist(std::vector<std::shared_ptr<rss_feed>> feeds) {
 	try {
 		std::lock_guard<std::mutex> lock(mtx);
 
@@ -865,7 +865,7 @@ void view::remove_formaction(unsigned int pos) {
 	}
 }
 
-void view::set_colors(std::map<std::string,std::string>& fgc, std::map<std::string,std::string>& bgc, std::map<std::string,std::vector<std::string> >& attribs) {
+void view::set_colors(std::map<std::string,std::string>& fgc, std::map<std::string,std::string>& bgc, std::map<std::string,std::vector<std::string>>& attribs) {
 	fg_colors = fgc;
 	bg_colors = bgc;
 	attributes = attribs;
@@ -956,8 +956,8 @@ void view::set_regexmanager(regexmanager * r) {
 }
 
 
-std::vector<std::pair<unsigned int, std::string> > view::get_formaction_names() {
-	std::vector<std::pair<unsigned int, std::string> > formaction_names;
+std::vector<std::pair<unsigned int, std::string>> view::get_formaction_names() {
+	std::vector<std::pair<unsigned int, std::string>> formaction_names;
 	unsigned int i=0;
 	for (auto form : formaction_stack) {
 		if (form && form->id() != "dialogs") {

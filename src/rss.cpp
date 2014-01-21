@@ -425,7 +425,7 @@ bool rss_ignores::matches_resetunread(const std::string& url) {
 	return false;
 }
 
-void rss_feed::update_items(std::vector<std::shared_ptr<rss_feed> > feeds) {
+void rss_feed::update_items(std::vector<std::shared_ptr<rss_feed>> feeds) {
 	std::lock_guard<std::mutex> lock(item_mutex);
 	if (query.length() == 0)
 		return;

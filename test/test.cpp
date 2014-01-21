@@ -66,7 +66,7 @@ void TestNewsbeuterReload() {
 	lemon.is(feedurls.size(), 1u, "1 feed url");
 	lemon.is(feedurls[0], "http://testbed.newsbeuter.org/unit-test/rss.xml", "first feed url");
 
-	std::vector<std::shared_ptr<rss_feed> > feedv;
+	std::vector<std::shared_ptr<rss_feed>> feedv;
 	feedv.push_back(feed);
 
 	cfg->set_configvalue("cleanup-on-quit", "true");
@@ -751,7 +751,7 @@ void TestHtmlRenderer() {
 }
 
 void TestIndexPartitioning() {
-	std::vector<std::pair<unsigned int, unsigned int> > partitions = utils::partition_indexes(0, 9, 2);
+	std::vector<std::pair<unsigned int, unsigned int>> partitions = utils::partition_indexes(0, 9, 2);
 	lemon.is(partitions.size(), 2u, "partitioning of [0,9] in 2 parts produced 2 parts");
 	lemon.is(partitions[0].first, 0u, "first partition start is 0");
 	lemon.is(partitions[0].second, 4u, "first partition end is 4");

@@ -17,8 +17,8 @@ class feedlist_formaction : public formaction {
 		virtual ~feedlist_formaction();
 		virtual void prepare();
 		virtual void init();
-		void set_feedlist(std::vector<std::shared_ptr<rss_feed> >& feeds);
-		void update_visible_feeds(std::vector<std::shared_ptr<rss_feed> >& feeds);
+		void set_feedlist(std::vector<std::shared_ptr<rss_feed>>& feeds);
+		void update_visible_feeds(std::vector<std::shared_ptr<rss_feed>>& feeds);
 		void set_tags(const std::vector<std::string>& t);
 		virtual keymap_hint_entry * get_keymap_hint();
 		std::shared_ptr<rss_feed> get_feed();

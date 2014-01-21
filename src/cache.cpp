@@ -134,7 +134,7 @@ static int fill_content_callback(void * myfeed, int argc, char ** argv, char ** 
 }
 
 static int search_item_callback(void * myfeed, int argc, char ** argv, char ** /* azColName */) {
-	std::vector<std::shared_ptr<rss_item> > * items = static_cast<std::vector<std::shared_ptr<rss_item> > *>(myfeed);
+	std::vector<std::shared_ptr<rss_item>> * items = static_cast<std::vector<std::shared_ptr<rss_item>> *>(myfeed);
 	assert (argc == 13);
 	std::shared_ptr<rss_item> item(new rss_item(NULL));
 	item->set_guid(argv[0]);
@@ -456,7 +456,7 @@ void cache::internalize_rssfeed(std::shared_ptr<rss_feed> feed, rss_ignores * ig
 	unsigned int max_items = cfg->get_configvalue_as_int("max-items");
 	
 	if (max_items > 0 && feed->items().size() > max_items) {
-		std::vector<std::shared_ptr<rss_item> > flagged_items;
+		std::vector<std::shared_ptr<rss_item>> flagged_items;
 		auto it=feed->items().begin();
 		for (unsigned int i=0;i<max_items;++i)
 			++it;
@@ -479,9 +479,9 @@ void cache::internalize_rssfeed(std::shared_ptr<rss_feed> feed, rss_ignores * ig
 
 }
 
-std::vector<std::shared_ptr<rss_item> > cache::search_for_items(const std::string& querystr, const std::string& feedurl) {
+std::vector<std::shared_ptr<rss_item>> cache::search_for_items(const std::string& querystr, const std::string& feedurl) {
 	std::string query;
-	std::vector<std::shared_ptr<rss_item> > items;
+	std::vector<std::shared_ptr<rss_item>> items;
 	int rc;
 
 	std::lock_guard<std::mutex> lock(mtx);
@@ -521,7 +521,7 @@ void cache::do_vacuum() {
 	}
 }
 
-void cache::cleanup_cache(std::vector<std::shared_ptr<rss_feed> >& feeds) {
+void cache::cleanup_cache(std::vector<std::shared_ptr<rss_feed>>& feeds) {
 	mtx.lock(); // we don't use the std::lock_guard<> here... see comments below
 
 	/*

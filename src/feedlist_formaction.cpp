@@ -365,7 +365,7 @@ REDO:
 	}
 }
 
-void feedlist_formaction::update_visible_feeds(std::vector<std::shared_ptr<rss_feed> >& feeds) {
+void feedlist_formaction::update_visible_feeds(std::vector<std::shared_ptr<rss_feed>>& feeds) {
 	assert(v->get_cfg() != NULL); // must not happen
 
 	visible_feeds.clear();
@@ -383,7 +383,7 @@ void feedlist_formaction::update_visible_feeds(std::vector<std::shared_ptr<rss_f
 	feeds_shown = visible_feeds.size();
 }
 
-void feedlist_formaction::set_feedlist(std::vector<std::shared_ptr<rss_feed> >& feeds) {
+void feedlist_formaction::set_feedlist(std::vector<std::shared_ptr<rss_feed>>& feeds) {
 	assert(v->get_cfg() != NULL); // must not happen
 
 	unsigned int width = utils::to_u(f->get("feeds:w"));
@@ -713,7 +713,7 @@ void feedlist_formaction::op_start_search() {
 	if (searchphrase.length() > 0) {
 		v->set_status(_("Searching..."));
 		searchhistory.add_line(searchphrase);
-		std::vector<std::shared_ptr<rss_item> > items;
+		std::vector<std::shared_ptr<rss_item>> items;
 		try {
 			std::string utf8searchphrase = utils::convert_text(searchphrase, "utf-8", nl_langinfo(CODESET));
 			items = v->get_ctrl()->search_for_items(utf8searchphrase, "");

@@ -29,8 +29,8 @@ namespace newsbeuter {
 			void run();
 			std::string run_modal(std::shared_ptr<formaction> f, const std::string& value = "");
 
-			void set_feedlist(std::vector<std::shared_ptr<rss_feed> > feeds);
-			void update_visible_feeds(std::vector<std::shared_ptr<rss_feed> > feeds);
+			void set_feedlist(std::vector<std::shared_ptr<rss_feed>> feeds);
+			void update_visible_feeds(std::vector<std::shared_ptr<rss_feed>> feeds);
 			void set_keymap(keymap * k);
 			void set_config_container(configcontainer * cfgcontainer);
 			void show_error(const std::string& msg);
@@ -79,7 +79,7 @@ namespace newsbeuter {
 
 			void force_redraw();
 
-			void set_colors(std::map<std::string,std::string>& fg_colors, std::map<std::string,std::string>& bg_colors, std::map<std::string,std::vector<std::string> >& attributes);
+			void set_colors(std::map<std::string,std::string>& fg_colors, std::map<std::string,std::string>& bg_colors, std::map<std::string,std::vector<std::string>>& attributes);
 
 			void notify_itemlist_change(std::shared_ptr<rss_feed> feed);
 
@@ -87,7 +87,7 @@ namespace newsbeuter {
 
 			void set_regexmanager(regexmanager * r);
 
-			std::vector<std::pair<unsigned int, std::string> > get_formaction_names();
+			std::vector<std::pair<unsigned int, std::string>> get_formaction_names();
 
 			std::shared_ptr<formaction> get_current_formaction();
 
@@ -123,7 +123,7 @@ namespace newsbeuter {
 
 			friend class colormanager;
 
-			std::vector<std::shared_ptr<formaction> > formaction_stack;
+			std::vector<std::shared_ptr<formaction>> formaction_stack;
 			unsigned int current_formaction;
 
 			std::vector<std::string> tags;
@@ -133,7 +133,7 @@ namespace newsbeuter {
 
 			std::map<std::string,std::string> fg_colors;
 			std::map<std::string,std::string> bg_colors;
-			std::map<std::string,std::vector<std::string> > attributes;
+			std::map<std::string,std::vector<std::string>> attributes;
 
 			bool is_inside_qna;
 			bool is_inside_cmdline;

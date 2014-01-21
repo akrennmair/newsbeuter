@@ -691,7 +691,7 @@ void controller::mark_all_read(unsigned int pos) {
 		}
 		m.stopover("after rsscache->catchup_all, before iteration over items");
 		std::lock_guard<std::mutex> lock(feed->item_mutex);
-		std::vector<std::shared_ptr<rss_item> >& items = feed->items();
+		std::vector<std::shared_ptr<rss_item>>& items = feed->items();
 		if (items.size() > 0) {
 			bool notify = items[0]->feedurl() != feed->rssurl();
 			LOG(LOG_DEBUG, "controller::mark_all_read: notify = %s", notify ? "yes" : "no");
@@ -847,7 +847,7 @@ void controller::reload_all(bool unattended) {
 	if (num_threads <= 1) {
 		this->reload_range(0, size-1, size, unattended);
 	} else {
-		std::vector<std::pair<unsigned int, unsigned int> > partitions = utils::partition_indexes(0, size-1, num_threads);
+		std::vector<std::pair<unsigned int, unsigned int>> partitions = utils::partition_indexes(0, size-1, num_threads);
 		std::vector<std::thread> threads;
 		LOG(LOG_DEBUG, "controller::reload_all: starting reload threads...");
 		for (unsigned int i=0;i<num_threads-1;i++) {
@@ -1146,8 +1146,8 @@ void controller::rec_find_rss_outlines(xmlNode * node, std::string tag) {
 
 
 
-std::vector<std::shared_ptr<rss_item> > controller::search_for_items(const std::string& query, const std::string& feedurl) {
-	std::vector<std::shared_ptr<rss_item> > items = rsscache->search_for_items(query, feedurl);
+std::vector<std::shared_ptr<rss_item>> controller::search_for_items(const std::string& query, const std::string& feedurl) {
+	std::vector<std::shared_ptr<rss_item>> items = rsscache->search_for_items(query, feedurl);
 	LOG(LOG_DEBUG, "controller::search_for_items: setting feed pointers");
 	for (auto item : items) {
 		item->set_feedptr(get_feed_by_url(item->feedurl()));
@@ -1196,7 +1196,7 @@ void controller::enqueue_url(const std::string& url, std::shared_ptr<rss_feed> f
 
 void controller::reload_urls_file() {
 	urlcfg->reload();
-	std::vector<std::shared_ptr<rss_feed> > new_feeds;
+	std::vector<std::shared_ptr<rss_feed>> new_feeds;
 	unsigned int i = 0;
 
 	for (auto url : urlcfg->get_urls()) {
@@ -1579,8 +1579,8 @@ void controller::update_flags(std::shared_ptr<rss_item> item) {
 	item->update_flags();
 }
 
-std::vector<std::shared_ptr<rss_feed> > controller::get_all_feeds() { 
-	std::vector<std::shared_ptr<rss_feed> > tmpfeeds;
+std::vector<std::shared_ptr<rss_feed>> controller::get_all_feeds() { 
+	std::vector<std::shared_ptr<rss_feed>> tmpfeeds;
 	{
 		std::lock_guard<std::mutex> feedslock(feeds_mutex);
 		tmpfeeds = feeds;
@@ -1588,7 +1588,7 @@ std::vector<std::shared_ptr<rss_feed> > controller::get_all_feeds() {
 	return tmpfeeds; 
 }
 
-std::vector<std::shared_ptr<rss_feed> > controller::get_all_feeds_unlocked() {
+std::vector<std::shared_ptr<rss_feed>> controller::get_all_feeds_unlocked() {
 	return feeds;
 }
 
