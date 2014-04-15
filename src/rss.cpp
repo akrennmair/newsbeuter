@@ -613,7 +613,8 @@ std::string rss_feed::get_status() {
 		case SUCCESS: return " ";
 		case TO_BE_DOWNLOADED: return "_";
 		case DURING_DOWNLOAD: return ".";
-		case DL_ERROR: return "x";
+		case DL_ERROR:
+		default: return "x";
 	}
 }
 
