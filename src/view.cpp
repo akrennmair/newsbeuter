@@ -327,7 +327,7 @@ void view::open_in_pager(const std::string& filename) {
 	pop_current_formaction();
 }
 
-void view::open_in_browser(const std::string& url) {
+oid view::open_in_browser(const std::string& url) {
 	formaction_stack.push_back(std::tr1::shared_ptr<formaction>());
 	current_formaction = formaction_stack_size() - 1;
 	std::string cmdline;
@@ -351,7 +351,14 @@ void view::open_in_browser(const std::string& url) {
 	}
 	stfl::reset();
 	LOG(LOG_DEBUG, "view::open_in_browser: running `%s'", cmdline.c_str());
-	::system(cmdline.c_str());
+    pid_t pid = fork();
+    if (pid == 0)
+    {
+        fclose(stdin);
+        fclose(stdout);
+	    ::system(cmdline.c_str());
+        exit(EXIT_SUCCESS);
+    }
 	pop_current_formaction();
 }
 
