@@ -41,8 +41,9 @@ if ($res->status_line == 301){
     $bkmrk_url = $ARGV[0];
 }
 
+my $safe_bkmrk_url = uri_escape($bkmrk_url);
 my $safe_desc=uri_escape($ARGV[1]);
-my $pinboard_url = $API_URL . "url=$bkmrk_url&tags=$tag&shared=no&toread=yes&description=$safe_desc&auth_token=$API_token";
+my $pinboard_url = $API_URL . "&auth_token=$API_token&url=$safe_bkmrk_url&description=$safe_desc&tags=$tag&shared=no&toread=yes";
 my $content = `curl -s \"$pinboard_url\"`;
 
 if ($content =~ m!<result code="done" />!){
