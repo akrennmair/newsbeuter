@@ -1,5 +1,8 @@
 #!/usr/bin/perl
 
+# $ARGV[0] is the URL of the article
+# $ARGV[1] is the title of the article
+
 use strict;
 use LWP::UserAgent;
 use URI::Escape;
@@ -15,7 +18,9 @@ if ($daemon){
         require Proc::Daemon;
         Proc::Damoen->import();
     };
-    unless ($@){
+    if($@){
+        warn();
+    }else{
         Proc::Daemon::Init();
     }
 }
@@ -31,8 +36,6 @@ my $ua = LWP::UserAgent->new(
     requests_redirectable => [],
 );
 
-# $ARGV[0] is the URL of the article
-# $ARGV[1] is the title of the article
 my $res = $ua->get($ARGV[0]);
 
 if ($res->status_line == 301){
