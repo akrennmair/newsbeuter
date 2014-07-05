@@ -18,6 +18,8 @@ class download {
 		inline dlstatus_t status() const { return dlstatus; }
 		const char * filename();
 		const char * url();
+		const char * title();
+		void set_title(const std::string& str);
 		void set_filename(const std::string& str);
 		void set_url(const std::string& url);
 		void set_progress(double cur, double max);
@@ -32,6 +34,7 @@ class download {
 	private:
 		std::string fn;
 		std::string url_;
+		std::string title_;
 		dlstatus_t dlstatus;
 		float cursize;
 		float totalsize;

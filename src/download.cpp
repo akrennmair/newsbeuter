@@ -16,6 +16,10 @@ download::download(pb_controller * c) : dlstatus(DL_QUEUED), cursize(0.0), total
 download::~download() {
 }
 
+const char * download::title() {
+	return title_.c_str();
+}
+
 const char * download::filename() {
 	return fn.c_str();
 }
@@ -26,6 +30,10 @@ const char * download::url() {
 
 void download::set_filename(const std::string& str) {
 	fn = str;
+}
+
+void download::set_title(const std::string& str) {
+	title_ = str;
 }
 
 double download::percents_finished() {

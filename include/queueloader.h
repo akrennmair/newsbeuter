@@ -13,6 +13,7 @@ namespace podbeuter {
 			void reload(std::vector<download>& downloads, bool remove_unplayed = false);
 		private:
 			std::string get_filename(const std::string& str);
+			std::string get_title(const std::string& str);
 			std::string queuefile;
 			pb_controller * ctrl;
 	};
