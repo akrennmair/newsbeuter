@@ -1,8 +1,14 @@
 # solarized color scheme for newsbeuter <http://www.newsbeuter.org/>
 # more on solarized: http://ethanschoonover.com/solarized
 
-color listnormal color244 color234
-color listfocus  color166 color235 
-color info       color136 color235 
-color background color244 color234
-color article    color244 color234
+color   article             default   default
+color   background          default   default
+color   info                default   black
+color   listfocus           black     yellow
+color   listfocus_unread    default   yellow   bold
+color   listnormal          default   default
+color   listnormal_unread   white     default
+
+highlight article "^(Title):.*$"         red     default
+highlight article "https?://[^ ]+"       blue    default
+highlight article "\\[image\\ [0-9]+\\]" green   default
