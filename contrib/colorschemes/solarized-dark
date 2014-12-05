@@ -5,7 +5,7 @@ color   article             default   default
 color   background          default   default
 color   info                default   black
 color   listfocus           black     yellow
-color   listfocus_unread    default   yellow   bold
+color   listfocus_unread    default   yellow
 color   listnormal          default   default
 color   listnormal_unread   white     default
 
