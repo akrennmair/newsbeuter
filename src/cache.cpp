@@ -134,9 +134,11 @@ static int fill_content_callback(void * myfeed, int argc, char ** argv, char ** 
 }
 
 static int search_item_callback(void * myfeed, int argc, char ** argv, char ** /* azColName */) {
-	std::vector<std::tr1::shared_ptr<rss_item> > * items = static_cast<std::vector<std::tr1::shared_ptr<rss_item> > *>(myfeed);
+	std::pair<cache*, std::vector<std::tr1::shared_ptr<rss_item> >* > * context = static_cast<std::pair<cache*, std::vector<std::tr1::shared_ptr<rss_item> >* > *>(myfeed);
+	cache* c = context->first;
+	std::vector<std::tr1::shared_ptr<rss_item> > * items = context->second;
 	assert (argc == 13);
-	std::tr1::shared_ptr<rss_item> item(new rss_item(NULL));
+	std::tr1::shared_ptr<rss_item> item(new rss_item(c));
 	item->set_guid(argv[0]);
 	item->set_title(argv[1]);
 	item->set_author(argv[2]);
@@ -148,7 +150,7 @@ static int search_item_callback(void * myfeed, int argc, char ** argv, char ** /
 	item->set_pubDate(t);
 	
 	item->set_size(utils::to_u(argv[5]));
-	item->set_unread((std::string("1") == argv[6]));
+	item->set_unread_nowrite_notify((std::string("1") == argv[6]), false);
 	item->set_feedurl(argv[7]);
 
 	item->set_enclosure_url(argv[8] ? argv[8] : "");
@@ -494,6 +496,7 @@ std::tr1::shared_ptr<rss_feed> cache::internalize_rssfeed(std::string rssurl, rs
 std::vector<std::tr1::shared_ptr<rss_item> > cache::search_for_items(const std::string& querystr, const std::string& feedurl) {
 	std::string query;
 	std::vector<std::tr1::shared_ptr<rss_item> > items;
+	std::pair<cache*, std::vector<std::tr1::shared_ptr<rss_item> >* > context(this, &items);
 	int rc;
 
 	scope_mutex lock(&mtx);
@@ -505,7 +508,7 @@ std::vector<std::tr1::shared_ptr<rss_item> > cache::search_for_items(const std::
 
 	LOG(LOG_DEBUG,"running query: %s",query.c_str());
 
-	rc = sqlite3_exec(db,query.c_str(),search_item_callback,&items,NULL);
+	rc = sqlite3_exec(db,query.c_str(),search_item_callback,&context,NULL);
 	if (rc != SQLITE_OK) {
 		LOG(LOG_CRITICAL,"query \"%s\" failed: error = %d", query.c_str(), rc);
 		throw dbexception(db);
