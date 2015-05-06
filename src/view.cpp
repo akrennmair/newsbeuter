@@ -357,6 +357,34 @@ void view::open_in_browser(const std::string& url) {
 	pop_current_formaction();
 }
 
+void view::open_in_player(const std::string& url) {
+	formaction_stack.push_back(std::shared_ptr<formaction>());
+	current_formaction = formaction_stack_size() - 1;
+	std::string cmdline;
+	std::string player = cfg->get_configvalue("player");
+	if (player.find("%u") != std::string::npos) {
+		fmtstr_formatter fmt;
+		std::string newurl;
+		newurl = utils::replace_all(url, "'", "%27");
+		newurl.insert(0, "'");
+		newurl.append("'");
+		fmt.register_fmt('u', newurl);
+		cmdline = fmt.do_format(player, 0);
+	} else {
+		if (player != "")
+			cmdline.append(player);
+		//else
+		//	cmdline.append("lynx");
+		cmdline.append(" '");
+		cmdline.append(utils::replace_all(url,"'", "%27"));
+		cmdline.append("'");
+	}
+	stfl::reset();
+	LOG(LOG_DEBUG, "view::open_in_player: running `%s'", cmdline.c_str());
+	::system(cmdline.c_str());
+	pop_current_formaction();
+}
+
 void view::update_visible_feeds(std::vector<std::shared_ptr<rss_feed>> feeds) {
 	try {
 		if (formaction_stack_size() > 0) {

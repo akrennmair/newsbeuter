@@ -168,6 +168,17 @@ REDO:
 			v->show_error(_("No feed selected!"));
 		}
 		break;
+	case OP_OPENINPLAYER:
+		if (feeds_shown > 0 && feedpos.length() > 0) {
+			std::shared_ptr<rss_feed> feed = v->get_ctrl()->get_feed(pos);
+			if (feed) {
+				LOG(LOG_INFO, "feedlist_formaction: opening feed at position `%s': %s", feedpos.c_str(), feed->link().c_str());
+				v->open_in_player(feed->link());
+			}
+		} else {
+			v->show_error(_("No feed selected!"));
+		}
+		break;
 	case OP_RELOADALL:
 		LOG(LOG_INFO, "feedlist_formaction: reloading all feeds");
 		{
