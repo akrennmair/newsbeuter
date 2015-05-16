@@ -105,7 +105,7 @@ void itemlist_formaction::process_operation(operation op, bool automatic, std::v
 				visible_items[itempos].first->set_unread(false);
 				v->get_ctrl()->mark_article_read(visible_items[itempos].first->guid(), true);
 				v->open_in_player(visible_items[itempos].first->link());
-				if (!v->get_cfg()->get_configvalue_as_bool("openbrowser-and-mark-jumps-to-next-unread")) {
+				if (!v->get_cfg()->get_configvalue_as_bool("openplayer-and-mark-jumps-to-next-unread")) {
 					if (itempos < visible_items.size()-1) {
 						f->set("itempos", utils::strprintf("%u", itempos + 1));
 					}

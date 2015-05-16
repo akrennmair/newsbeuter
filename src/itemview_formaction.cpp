@@ -213,9 +213,9 @@ void itemview_formaction::process_operation(operation op, bool automatic, std::v
 		v->set_status("");
 		break;
 	case OP_OPENINPLAYER:
-		LOG(LOG_INFO, "view::run_itemview: starting browser");
+		LOG(LOG_INFO, "view::run_itemview: starting player");
 		v->set_status(_("Starting player..."));
-		v->open_in_browser(item->link());
+		v->open_in_player(item->link());
 		v->set_status("");
 		break;
 	case OP_BOOKMARK:
