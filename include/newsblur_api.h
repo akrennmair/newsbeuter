@@ -39,6 +39,7 @@ class newsblur_urlreader : public urlreader {
 		newsblur_urlreader(const std::string& url_file, remote_api * a);
 		virtual ~newsblur_urlreader();
 		virtual void write_config();
+		virtual void dump_urls_to(const std::string& filepath);
 		virtual void reload();
 		virtual std::string get_source();
 	private:

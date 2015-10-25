@@ -11,6 +11,10 @@ void newsblur_urlreader::write_config() {
 	// NOTHING
 }
 
+void newsblur_urlreader::dump_urls_to(const std::string& filepath) {
+	LOG(LOG_ERROR, "newsblur_urlreader::dump_urls_to: not implemented");
+}
+
 void newsblur_urlreader::reload() {
 	urls.clear();
 	tags.clear();

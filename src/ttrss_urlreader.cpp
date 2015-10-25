@@ -11,6 +11,10 @@ void ttrss_urlreader::write_config() {
 	// NOTHING
 }
 
+void ttrss_urlreader::dump_urls_to(const std::string& filepath) {
+    LOG(LOG_ERROR, "ttrss_urlreader::dump_urls_to: not implemented");
+}
+
 void ttrss_urlreader::reload() {
 	urls.clear();
 	tags.clear();

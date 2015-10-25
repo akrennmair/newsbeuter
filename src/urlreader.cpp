@@ -75,8 +75,13 @@ void file_urlreader::load_config(const std::string& file) {
 }
 
 void file_urlreader::write_config() {
+	dump_urls_to(filename);
+}
+
+
+void file_urlreader::dump_urls_to(const std::string& filepath) {
 	std::fstream f;
-	f.open(filename.c_str(),std::fstream::out);
+	f.open(filepath.c_str(),std::fstream::out);
 	if (f.is_open()) {
 		for (auto url : urls) {
 			f << url;
@@ -97,6 +102,11 @@ opml_urlreader::~opml_urlreader() { }
 
 void opml_urlreader::write_config() {
 	// do nothing.
+}
+
+
+void opml_urlreader::dump_urls_to(const std::string& filepath) {
+	LOG(LOG_ERROR, "opml_urlreader::dump_urls_to: not implemented");
 }
 
 

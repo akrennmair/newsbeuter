@@ -40,6 +40,7 @@ class ttrss_urlreader : public urlreader {
 		ttrss_urlreader(const std::string& url_file, remote_api * a);
 		virtual ~ttrss_urlreader();
 		virtual void write_config();
+		virtual void dump_urls_to(const std::string& filepath);
 		virtual void reload();
 		virtual std::string get_source();
 	private:
