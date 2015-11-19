@@ -398,5 +398,12 @@ std::string ttrss_api::url_to_id(const std::string& url) {
 	return std::string(pound+1);
 }
 
+bool ttrss_api::subscribe_to_feed(const std::string& feedurl) {
+	LOG(LOG_ERROR, "ttrss_api::subscribe_to_feed: not implemented");
+}
+
+bool ttrss_api::unsubscribe_from_feed(const std::string& feedurl) {
+	LOG(LOG_ERROR, "ttrss_api::unsubscribe_from_feed: not implemented");
+}
 
 }

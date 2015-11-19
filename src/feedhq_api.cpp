@@ -314,4 +314,12 @@ std::string feedhq_api::post_content(const std::string& url, const std::string& 
 	return result;
 }
 
+bool feedhq_api::subscribe_to_feed(const std::string& feedurl) {
+	LOG(LOG_ERROR, "feedhq_api::subscribe_to_feed: not implemented");
+}
+
+bool feedhq_api::unsubscribe_from_feed(const std::string& feedurl) {
+	LOG(LOG_ERROR, "feedhq_api::unsubscribe_from_feed: not implemented");
+}
+
 }

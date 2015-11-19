@@ -232,4 +232,12 @@ json_object * newsblur_api::query_api(const std::string& endpoint, const std::st
 	return result;
 }
 
+bool newsblur_api::subscribe_to_feed(const std::string& feedurl) {
+	LOG(LOG_ERROR, "newsblur_api::subscribe_to_feed: not implemented");
+}
+
+bool newsblur_api::unsubscribe_from_feed(const std::string& feedurl) {
+	LOG(LOG_ERROR, "newsblur_api::unsubscribe_from_feed: not implemented");
+}
+
 }

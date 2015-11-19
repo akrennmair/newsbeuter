@@ -17,6 +17,8 @@ class oldreader_api : public remote_api {
 		virtual bool mark_all_read(const std::string& feedurl);
 		virtual bool mark_article_read(const std::string& guid, bool read);
 		virtual bool update_article_flags(const std::string& oldflags, const std::string& newflags, const std::string& guid);
+		virtual bool subscribe_to_feed(const std::string& feedurl);
+		virtual bool unsubscribe_from_feed(const std::string& feedurl);
 		std::vector<std::string> bulk_mark_articles_read(const std::vector<google_replay_pair>& actions);
 	private:
 		std::vector<std::string> get_tags(xmlNode * node);

@@ -311,4 +311,12 @@ std::string oldreader_api::post_content(const std::string& url, const std::strin
 	return result;
 }
 
+bool oldreader_api::subscribe_to_feed(const std::string& feedurl) {
+	LOG(LOG_ERROR, "oldreader_api::subscribe_to_feed: not implemented");
+}
+
+bool oldreader_api::unsubscribe_from_feed(const std::string& feedurl) {
+	LOG(LOG_ERROR, "oldreader_api::unsubscribe_from_feed: not implemented");
+}
+
 }
