@@ -402,7 +402,18 @@ std::string ttrss_api::url_to_id(const std::string& url) {
 }
 
 bool ttrss_api::subscribe_to_feed(const std::string& feedurl) {
-	LOG(LOG_ERROR, "ttrss_api::subscribe_to_feed: not implemented");
+	LOG(LOG_INFO, "ttrss_api::subscribe_to_feed: subscribing to %s",
+	    feedurl.c_str());
+
+	std::map<std::string, std::string> args;
+	args["feed_url"] = feedurl;
+	struct json_object * content = run_op("subscribeToFeed", args);
+
+	if (!content)
+		return false;
+
+	json_object_put(content);
+	return true;
 }
 
 bool ttrss_api::unsubscribe_from_feed(const std::string& feedurl) {
