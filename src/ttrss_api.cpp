@@ -353,6 +353,9 @@ void ttrss_api::fetch_feeds_per_category(struct json_object * cat, std::vector<t
 		const char * feed_title = json_object_get_string(json_object_object_get(feed, "title"));
 		const char * feed_url = json_object_get_string(json_object_object_get(feed, "feed_url"));
 
+		// NOTE: controller::edit_urls_file depends on title being the first
+		// tag.
+		// #TagsOrder# (grep it)
 		std::vector<std::string> tags;
 		tags.push_back(std::string("~") + feed_title);
 		if (cat_name) {

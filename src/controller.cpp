@@ -20,6 +20,7 @@
 #include <newsblur_api.h>
 #include <xlicense.h>
 
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -1251,6 +1252,7 @@ void controller::reload_urls_file() {
 
 void controller::edit_urls_file() {
 	const char * editor;
+	std::string filename;
 
 	editor = getenv("VISUAL");
 	if (!editor)
@@ -1258,7 +1260,44 @@ void controller::edit_urls_file() {
 	if (!editor)
 		editor = "vi";
 
-	std::string cmdline = utils::strprintf("%s \"%s\"", editor, utils::replace_all(url_file,"\"","\\\"").c_str());
+	/* First of all, we need to find out which file to edit and initialize
+	 * `filename` accordingly */
+	std::string urls_source = cfg.get_configvalue("urls-source");
+	if(urls_source == "local") {
+		// This one is easy: we already have `url_file`
+		filename = url_file;
+	} else if(urls_source == "ttrss") {
+		// let's create a temporary file
+		char path[255];
+		snprintf(path, sizeof(path), "/tmp/newsbeuter-urls.XXXXXX");
+		int fd = mkstemp(path);
+		if (fd != -1) {
+			filename = std::string(path);
+		} else {
+			LOG(LOG_ERROR, "controller::edit_urls_file: could not open temporary file `%s'", path);
+
+			return;
+		}
+	} else if(urls_source == "opml") {
+		// This branch is actually unreachable: upon importing an OPML file
+		// Newsbeuter exits immediately, so user never has an opportunity to
+		// call this function at all. This branch is kept as documentation.
+
+		return;
+	} else if(urls_source == "oldreader" || urls_source == "newsblur" || urls_source == "feedhq") {
+		LOG(LOG_WARN, "controller::edit_urls_file: write_config() not implemented for `%s'", urls_source.c_str());
+
+		return;
+	} else {
+		LOG(LOG_ERROR, "controller::edit_urls_file: write_config() not implemented for URLs source `%s'. Please report this!", urls_source.c_str());
+
+		return;
+	}
+
+	// Let's write the urls into the file now.
+	urlcfg->dump_urls_to(filename);
+
+	std::string cmdline = utils::strprintf("%s \"%s\"", editor, utils::replace_all(filename,"\"","\\\"").c_str());
 
 	v->push_empty_formaction();
 	stfl::reset();
@@ -1268,6 +1307,63 @@ void controller::edit_urls_file() {
 
 	v->pop_current_formaction();
 
+	if(urls_source == "local") {
+		reload_urls_file();
+	} else if(urls_source == "ttrss") {
+		file_urlreader updated(filename);
+		updated.reload();
+
+		LOG(LOG_DEBUG, "controller::edit_urls_file: read updated urls file");
+
+		auto orig_urls = urlcfg->get_urls();
+		auto urls = updated.get_urls();
+
+		std::set<std::string> orig_set(orig_urls.begin(), orig_urls.end());
+		std::set<std::string> upd_set(urls.begin(), urls.end());
+
+		std::vector<std::string> unsubscriptions(orig_urls.size());
+
+		std::vector<std::string>::iterator unsubscriptions_it =
+			std::set_difference(orig_set.begin(), orig_set.end(),
+								upd_set.begin(), upd_set.end(),
+								unsubscriptions.begin());
+		unsubscriptions.resize(unsubscriptions_it - unsubscriptions.begin());
+
+		std::vector<std::string> subscriptions;
+
+		for (auto url : urls) {
+			if(std::find(orig_set.begin(), orig_set.end(), url) == orig_set.end()) {
+				subscriptions.push_back(url);
+			}
+		}
+
+		for (auto url : unsubscriptions) {
+			LOG(LOG_INFO, "controller::edit_urls_file: unsubscribing from %s",
+			    url.c_str());
+			api->unsubscribe_from_feed(url);
+		}
+		for (auto url : subscriptions) {
+			LOG(LOG_INFO, "controller::edit_urls_file: subscribing to %s",
+			    url.c_str());
+			api->subscribe_to_feed(url);
+		}
+	}
+	// For all other URLs sources, we quit the function long ago, in the
+	// previous if-then-else chain
+
+	// Removing temporary URLs file.
+	if(remove(filename.c_str()) != 0) {
+		char buf[1024];
+
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
+		strerror_r(errno, buf, sizeof(buf));
+		LOG(LOG_ERROR, "Error deleting temporary URLs file: %s", buf);
+#else
+		char* result;
+		result = strerror_r(errno, buf, sizeof(buf));
+		LOG(LOG_ERROR, "Error deleting temporary URLs file: %s", result);
+#endif
+	};
 	reload_urls_file();
 }
 
