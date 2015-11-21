@@ -406,7 +406,19 @@ bool ttrss_api::subscribe_to_feed(const std::string& feedurl) {
 }
 
 bool ttrss_api::unsubscribe_from_feed(const std::string& feedurl) {
-	LOG(LOG_ERROR, "ttrss_api::unsubscribe_from_feed: not implemented");
+	LOG(LOG_INFO, "ttrss_api::unsubscribe_from_feed: unsubscribing from %s",
+	    feedurl.c_str());
+
+	std::map<std::string, std::string> args;
+	std::size_t pos = feedurl.find_last_of("#");
+	args["feed_id"] = feedurl.substr(pos+1);
+	struct json_object * content = run_op("unsubscribeFeed", args);
+
+	if (!content)
+		return false;
+
+	json_object_put(content);
+	return true;
 }
 
 }
