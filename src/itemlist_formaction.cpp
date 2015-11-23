@@ -98,11 +98,44 @@ void itemlist_formaction::process_operation(operation op, bool automatic, std::v
 		}
 	}
 	break;
+	case OP_OPENPLAYER_AND_MARK: {
+		LOG(LOG_INFO, "itemlist_formaction: opening item at pos `%s'", itemposname.c_str());
+		if (itemposname.length() > 0 && visible_items.size() != 0) {
+			if (itempos < visible_items.size()) {
+				visible_items[itempos].first->set_unread(false);
+				v->get_ctrl()->mark_article_read(visible_items[itempos].first->guid(), true);
+				v->open_in_player(visible_items[itempos].first->link());
+				if (!v->get_cfg()->get_configvalue_as_bool("openplayer-and-mark-jumps-to-next-unread")) {
+					if (itempos < visible_items.size()-1) {
+						f->set("itempos", utils::strprintf("%u", itempos + 1));
+					}
+				} else {
+					process_operation(OP_NEXTUNREAD);
+				}
+				do_redraw = true;
+			}
+		} else {
+			v->show_error(_("No item selected!")); // should not happen
+		}
+	}
+	break;
 	case OP_OPENINBROWSER: {
 		LOG(LOG_INFO, "itemlist_formaction: opening item at pos `%s'", itemposname.c_str());
 		if (itemposname.length() > 0 && visible_items.size() != 0) {
 			if (itempos < visible_items.size()) {
 				v->open_in_browser(visible_items[itempos].first->link());
+				do_redraw = true;
+			}
+		} else {
+			v->show_error(_("No item selected!")); // should not happen
+		}
+	}
+	break;
+	case OP_OPENINPLAYER: {
+		LOG(LOG_INFO, "itemlist_formaction: opening item at pos `%s'", itemposname.c_str());
+		if (itemposname.length() > 0 && visible_items.size() != 0) {
+			if (itempos < visible_items.size()) {
+				v->open_in_player(visible_items[itempos].first->link());
 				do_redraw = true;
 			}
 		} else {

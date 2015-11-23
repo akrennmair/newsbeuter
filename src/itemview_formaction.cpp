@@ -212,6 +212,12 @@ void itemview_formaction::process_operation(operation op, bool automatic, std::v
 		v->open_in_browser(item->link());
 		v->set_status("");
 		break;
+	case OP_OPENINPLAYER:
+		LOG(LOG_INFO, "view::run_itemview: starting player");
+		v->set_status(_("Starting player..."));
+		v->open_in_player(item->link());
+		v->set_status("");
+		break;
 	case OP_BOOKMARK:
 		if (automatic) {
 			qna_responses.clear();
@@ -405,6 +411,7 @@ keymap_hint_entry * itemview_formaction::get_keymap_hint() {
 		{ OP_SAVE, _("Save") },
 		{ OP_NEXTUNREAD, _("Next Unread") },
 		{ OP_OPENINBROWSER, _("Open in Browser") },
+		{ OP_OPENINPLAYER, _("Open in Player") },
 		{ OP_ENQUEUE, _("Enqueue") },
 		{ OP_HELP, _("Help") },
 		{ OP_NIL, NULL }
