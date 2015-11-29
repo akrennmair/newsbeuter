@@ -3,11 +3,11 @@
 
 color   article             default   default
 color   background          default   default
-color   info                default   black
-color   listfocus           black     yellow
+color   info                default   white
+color   listfocus           white     yellow
 color   listfocus_unread    default   yellow
 color   listnormal          default   default
-color   listnormal_unread   white     default
+color   listnormal_unread   black     default
 
 highlight article "^(Title):.*$"         blue    default
 highlight article "https?://[^ ]+"       red     default
