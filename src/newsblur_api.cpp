@@ -37,16 +37,16 @@ bool newsblur_api::authenticate() {
 std::vector<tagged_feedurl> newsblur_api::get_subscribed_urls() {
 	std::vector<tagged_feedurl> result;
 
-    json_object * response = query_api("/reader/feeds/", NULL);
+	json_object * response = query_api("/reader/feeds/", NULL);
 
 	json_object * feeds = json_object_object_get(response, "feeds");
 
 	json_object_iterator it = json_object_iter_begin(feeds);
 	json_object_iterator itEnd = json_object_iter_end(feeds);
 
-    json_object * folders = json_object_object_get(response, "folders");
+	json_object * folders = json_object_object_get(response, "folders");
 
-    std::map<std::string, std::vector<std::string>> feeds_to_tags = mk_feeds_to_tags(folders);
+	std::map<std::string, std::vector<std::string>> feeds_to_tags = mk_feeds_to_tags(folders);
 
 	while (!json_object_iter_equal(&it, &itEnd)) {
 		const char * feed_id = json_object_iter_peek_name(&it);
@@ -63,7 +63,7 @@ std::vector<tagged_feedurl> newsblur_api::get_subscribed_urls() {
 
 		known_feeds[feed_id] = current_feed;
 
-        std::string std_feed_id(feed_id);
+		std::string std_feed_id(feed_id);
 		std::vector<std::string> tags = feeds_to_tags[std_feed_id];
 		result.push_back(tagged_feedurl(std_feed_id, tags));
 
@@ -75,23 +75,23 @@ std::vector<tagged_feedurl> newsblur_api::get_subscribed_urls() {
 
 std::map<std::string, std::vector<std::string>> newsblur_api::mk_feeds_to_tags(
         json_object * folders) {
-    std::map<std::string, std::vector<std::string>> result;
-    array_list * tags = json_object_get_array(folders);
-    int tags_len = array_list_length(tags);
-    for (int i = 0; i < tags_len; ++i) {
-        json_object * tag_to_feed_ids = json_object_array_get_idx(folders, i);
-        json_object_object_foreach(tag_to_feed_ids, key, feeds_with_tag_obj) {
-            std::string std_key(key);
-            array_list * feeds_with_tag_arr = json_object_get_array(feeds_with_tag_obj);
-            int feeds_with_tag_len = array_list_length(feeds_with_tag_arr);
-            for (int j = 0; j < feeds_with_tag_len; ++j) {
-                json_object * feed_id_obj = json_object_array_get_idx(feeds_with_tag_obj, j);
-                std::string feed_id(json_object_get_string(feed_id_obj));
-                result[feed_id].push_back(std_key);
-            }
-        }
-    }
-    return result;
+	std::map<std::string, std::vector<std::string>> result;
+	array_list * tags = json_object_get_array(folders);
+	int tags_len = array_list_length(tags);
+	for (int i = 0; i < tags_len; ++i) {
+		json_object * tag_to_feed_ids = json_object_array_get_idx(folders, i);
+		json_object_object_foreach(tag_to_feed_ids, key, feeds_with_tag_obj) {
+			std::string std_key(key);
+			array_list * feeds_with_tag_arr = json_object_get_array(feeds_with_tag_obj);
+			int feeds_with_tag_len = array_list_length(feeds_with_tag_arr);
+			for (int j = 0; j < feeds_with_tag_len; ++j) {
+				json_object * feed_id_obj = json_object_array_get_idx(feeds_with_tag_obj, j);
+				std::string feed_id(json_object_get_string(feed_id_obj));
+				result[feed_id].push_back(std_key);
+			}
+		}
+	}
+	return result;
 }
 
 void newsblur_api::configure_handle(CURL * /*handle*/) {
@@ -113,10 +113,10 @@ bool newsblur_api::mark_all_read(const std::string& feed_url) {
 }
 
 bool newsblur_api::mark_article_read(const std::string& guid, bool read) {
-    // handle dummy articles
-    if (guid.empty()) {
-        return false;
-    }
+	// handle dummy articles
+	if (guid.empty()) {
+		return false;
+	}
 	std::string endpoint;
 	int separator = guid.find(ID_SEPARATOR);
 	std::string feed_id = guid.substr(0, separator);
@@ -230,6 +230,14 @@ json_object * newsblur_api::query_api(const std::string& endpoint, const std::st
 	if(!result)
 		LOG(LOG_WARN, "newsblur_api::query_api: request to %s failed", url);
 	return result;
+}
+
+bool newsblur_api::subscribe_to_feed(const std::string& feedurl) {
+	LOG(LOG_ERROR, "newsblur_api::subscribe_to_feed: not implemented");
+}
+
+bool newsblur_api::unsubscribe_from_feed(const std::string& feedurl) {
+	LOG(LOG_ERROR, "newsblur_api::unsubscribe_from_feed: not implemented");
 }
 
 }

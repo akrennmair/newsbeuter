@@ -17,6 +17,7 @@ class urlreader {
 		urlreader();
 		virtual ~urlreader();
 		virtual void write_config() = 0;
+		virtual void dump_urls_to(const std::string& filepath) = 0;
 		virtual void reload() = 0;
 		virtual std::string get_source() = 0;
 		std::vector<std::string>& get_urls();
@@ -37,6 +38,7 @@ class file_urlreader : public urlreader {
 		file_urlreader(const std::string& file = "");
 		virtual ~file_urlreader();
 		virtual void write_config();
+		virtual void dump_urls_to(const std::string& filepath);
 		virtual void reload();
 		void load_config(const std::string& file);
 		virtual std::string get_source();
@@ -49,6 +51,7 @@ class opml_urlreader : public urlreader {
 		opml_urlreader(configcontainer * c);
 		virtual ~opml_urlreader();
 		virtual void write_config();
+		virtual void dump_urls_to(const std::string& filepath);
 		virtual void reload();
 		virtual std::string get_source();
 	protected:

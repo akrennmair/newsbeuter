@@ -11,6 +11,10 @@ void oldreader_urlreader::write_config() {
 	// NOTHING
 }
 
+void oldreader_urlreader::dump_urls_to(const std::string& filepath) {
+	LOG(LOG_ERROR, "oldreader_urlreader::dump_urls_to: not implemented");
+}
+
 #define BROADCAST_FRIENDS_URL "http://theoldreader.com/reader/atom/user/-/state/com.google/broadcast-friends"
 #define STARRED_ITEMS_URL "http://theoldreader.com/reader/atom/user/-/state/com.google/starred"
 #define SHARED_ITEMS_URL "http://theoldreader.com/reader/atom/user/-/state/com.google/broadcast"

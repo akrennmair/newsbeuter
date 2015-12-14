@@ -17,6 +17,8 @@ class oldreader_api : public remote_api {
 		virtual bool mark_all_read(const std::string& feedurl);
 		virtual bool mark_article_read(const std::string& guid, bool read);
 		virtual bool update_article_flags(const std::string& oldflags, const std::string& newflags, const std::string& guid);
+		virtual bool subscribe_to_feed(const std::string& feedurl);
+		virtual bool unsubscribe_from_feed(const std::string& feedurl);
 		std::vector<std::string> bulk_mark_articles_read(const std::vector<google_replay_pair>& actions);
 	private:
 		std::vector<std::string> get_tags(xmlNode * node);
@@ -34,6 +36,7 @@ class oldreader_urlreader : public urlreader {
 		oldreader_urlreader(configcontainer * c, const std::string& url_file, remote_api * a);
 		virtual ~oldreader_urlreader();
 		virtual void write_config();
+		virtual void dump_urls_to(const std::string& filepath);
 		virtual void reload();
 		virtual std::string get_source();
 	private:

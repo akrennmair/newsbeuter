@@ -1,6 +1,8 @@
 #include <ttrss_api.h>
 #include <logger.h>
 
+#include <fstream>
+
 namespace newsbeuter {
 
 ttrss_urlreader::ttrss_urlreader(const std::string& url_file, remote_api * a) : file(url_file), api(a) { }
@@ -9,6 +11,22 @@ ttrss_urlreader::~ttrss_urlreader() { }
 
 void ttrss_urlreader::write_config() {
 	// NOTHING
+}
+
+void ttrss_urlreader::dump_urls_to(const std::string& filepath) {
+	std::fstream file(filepath, std::fstream::out);
+	file << "# TT-RSS API doesn't support editing feed titles and/or categories. We will\n";
+	file << "# still display feed's title (as a comment), but don't expect that adding tags\n";
+	file << "# to URL will do anything.\n";
+	file << "\n";
+
+	for (auto url : urls) {
+		auto title = tags[url][0];
+		file << "# " << title.substr(1) << "\n";
+		file << url << "\n";
+	}
+
+	file.close();
 }
 
 void ttrss_urlreader::reload() {

@@ -353,6 +353,9 @@ void ttrss_api::fetch_feeds_per_category(struct json_object * cat, std::vector<t
 		const char * feed_title = json_object_get_string(json_object_object_get(feed, "title"));
 		const char * feed_url = json_object_get_string(json_object_object_get(feed, "feed_url"));
 
+		// NOTE: controller::edit_urls_file depends on title being the first
+		// tag.
+		// #TagsOrder# (grep it)
 		std::vector<std::string> tags;
 		tags.push_back(std::string("~") + feed_title);
 		if (cat_name) {
@@ -398,5 +401,35 @@ std::string ttrss_api::url_to_id(const std::string& url) {
 	return std::string(pound+1);
 }
 
+bool ttrss_api::subscribe_to_feed(const std::string& feedurl) {
+	LOG(LOG_INFO, "ttrss_api::subscribe_to_feed: subscribing to %s",
+	    feedurl.c_str());
+
+	std::map<std::string, std::string> args;
+	args["feed_url"] = feedurl;
+	struct json_object * content = run_op("subscribeToFeed", args);
+
+	if (!content)
+		return false;
+
+	json_object_put(content);
+	return true;
+}
+
+bool ttrss_api::unsubscribe_from_feed(const std::string& feedurl) {
+	LOG(LOG_INFO, "ttrss_api::unsubscribe_from_feed: unsubscribing from %s",
+	    feedurl.c_str());
+
+	std::map<std::string, std::string> args;
+	std::size_t pos = feedurl.find_last_of("#");
+	args["feed_id"] = feedurl.substr(pos+1);
+	struct json_object * content = run_op("unsubscribeFeed", args);
+
+	if (!content)
+		return false;
+
+	json_object_put(content);
+	return true;
+}
 
 }
