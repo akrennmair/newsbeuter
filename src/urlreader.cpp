@@ -6,6 +6,7 @@
 #include <logger.h>
 #include <sys/utsname.h>
 #include <config.h>
+#include <stdio.h>
 
 namespace newsbeuter {
 
@@ -38,6 +39,7 @@ std::string file_urlreader::get_source() {
 }
 
 void file_urlreader::reload() {
+  printf("reloading...\n");
 	if (offline)
 		return;
 
@@ -48,10 +50,12 @@ void file_urlreader::reload() {
 	std::fstream f;
 	f.open(filename.c_str(),std::fstream::in);
 	if (f.is_open()) {
+	  printf("opening file\n");
 		std::string line;
-		do {
+		while (!f.eof()) {
 			getline(f,line);
-			if (!f.eof() && line.length() > 0 && line[0] != '#') {
+			if (line.length() > 0 && line[0] != '#') {
+			  printf("found line %s\n",line.c_str());
 				std::vector<std::string> tokens = utils::tokenize_quoted(line);
 				if (!tokens.empty()) {
 					std::string url = tokens[0];
@@ -65,7 +69,7 @@ void file_urlreader::reload() {
 					}
 				}
 			}
-		} while (!f.eof());
+		};
 	}
 }
 
