@@ -212,25 +212,19 @@ unsigned int cache::getDBSchemaVersion() {
 	sqlite3_stmt* stmt {};
 	unsigned int result;
 
-	// does "metadata" table exist?
-	rc = sqlite3_table_column_metadata(db, NULL, "metadata", NULL, NULL, NULL,
-	        NULL, NULL, NULL);
-	if (rc == SQLITE_ERROR) {
-		// table doesn't exist. It's okay; it means we're dealing with a cache
-		// file which is either empty or was created by an older version of
-		// Newsbeuter.
+	rc = sqlite3_prepare_v2(db, "SELECT db_schema_version FROM metadata",
+			-1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		// I'm pretty sure the query above is correct, and the only way it can
+		// fail is when metadata table is not present in the DB. That means
+		// we're dealing with an empty cache file, or one that was created by
+		// an older version of Newsbeuter.
 		result = 0;
 	} else {
-		rc = sqlite3_prepare_v2(db, "SELECT db_schema_version FROM metadata",
-		        -1, &stmt, NULL);
-
-		assert(rc == SQLITE_OK);
-		assert(stmt != NULL);
-
 		rc = sqlite3_step(stmt);
 		if (rc != SQLITE_ROW) {
 			// table is empty. Technically, this is impossible, but is easy
-			// enough to fix.
+			// enough to fix - just re-create the DB.
 			result = 0;
 		} else {
 			// row is available, let's grab it!
