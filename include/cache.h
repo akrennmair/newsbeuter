@@ -9,6 +9,7 @@
 namespace newsbeuter {
 
 typedef std::pair<std::string, unsigned int> google_replay_pair;
+typedef std::map<unsigned int, std::vector<std::string>> schema_patches_map;
 enum { GOOGLE_MARK_READ = 1, GOOGLE_MARK_UNREAD = 2 };
 
 class cache {
@@ -38,6 +39,7 @@ class cache {
 		std::vector<google_replay_pair> get_google_replay();
 		void delete_google_replay_by_guid(const std::vector<std::string>& guids);
 	private:
+		unsigned int getDBSchemaVersion();
 		void populate_tables();
 		void set_pragmas();
 		void delete_item(const std::shared_ptr<rss_item> item);
