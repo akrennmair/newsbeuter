@@ -302,6 +302,13 @@ static const schema_patches_map schemaPatches
 
 			"ALTER TABLE rss_item ADD base VARCHAR(128) NOT NULL DEFAULT \"\";",
 		},
+	},
+	{
+		2,
+		{
+			"CREATE TABLE metadata (db_schema_version INTEGER);",
+			"INSERT INTO metadata(db_schema_version) VALUES(2);",
+		}
 	}
 };
 
@@ -314,19 +321,29 @@ void cache::populate_tables() {
 	auto it = schemaPatches.cbegin();
 
 	// rewinding iterator to the first patchset that we need to apply
-	while ((*it).first < schemaVersion) ++it;
+	while (it != schemaPatches.cend() && (*it).first <= schemaVersion) ++it;
 
 	// applying the patches in order
 	for (; it != schemaPatches.cend(); ++it) {
+		auto patchlevel = (*it).first;
+		auto patch = (*it).second;
+
 		LOG(LOG_DEBUG,
 		    "cache::populate_tables: applying DB schema patches for level %u",
-		    (*it).first);
+		    patchlevel);
 
-		for (const auto& query : (*it).second) {
+		for (const auto& query : patch) {
 			rc = sqlite3_exec(db, query.c_str(), NULL, NULL, NULL);
 			LOG(LOG_DEBUG, "cache::populate_tables: %s rc = %d",
 			    query.c_str(), rc);
 		}
+
+		auto query = prepare_query(
+		    "UPDATE metadata SET db_schema_version = %u;", patchlevel);
+		rc = sqlite3_exec(db, query.c_str(), NULL, NULL, NULL);
+		LOG(LOG_DEBUG,
+		    "cache::populate_tables: %s rc = %d",
+		    query.c_str(), rc);
 	}
 }
 
