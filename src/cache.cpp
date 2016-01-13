@@ -205,6 +205,14 @@ void cache::set_pragmas() {
 		throw dbexception(db);
 	}
 
+	// we started using foreign keys in 2.10, so we should enable their
+	// enforcement
+	rc = sqlite3_exec(db, "PRAGMA foreign_keys = ON;", NULL, NULL, NULL);
+	if (rc != SQLITE_OK) {
+		LOG(LOG_CRITICAL,"setting PRAGMA foreign_keys = ON failed");
+		throw dbexception(db);
+	}
+
 }
 
 unsigned int cache::getDBSchemaVersion() {
@@ -308,6 +316,59 @@ static const schema_patches_map schemaPatches
 		{
 			"CREATE TABLE metadata (db_schema_version INTEGER);",
 			"INSERT INTO metadata(db_schema_version) VALUES(2);",
+		}
+	},
+	{
+		3,
+		{
+			"CREATE TABLE items_to_feeds( "
+			" feedid VARCHAR(1024) NOT NULL REFERENCES rss_feed(rssurl), "
+			" itemid INTEGER NOT NULL REFERENCES rss_item(id), "
+			" unread INTEGER(1) NOT NULL, "
+			" flags VARCHAR(52), "
+			" deleted INTEGER(1) NOT NULL DEFAULT 0, "
+			"PRIMARY KEY (feedid, itemid) );",
+
+			"INSERT INTO items_to_feeds"
+			"SELECT rss_feed.rssurl, rss_item.id, rss_item.unread, "
+			"       rss_item.flags, rss_item.deleted "
+			"FROM rss_feed JOIN rss_item "
+			"     ON rss_feed.rssurl = rss_item.feedurl;",
+			"CREATE INDEX idx_deleted ON items_to_feeds(deleted);",
+
+			// removing 'feedurl' column from rss_item table
+			"PRAGMA foreign_keys = OFF;",
+			"BEGIN TRANSACTION;",
+
+			"CREATE TABLE new_rss_item ( "
+			" id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+			" guid VARCHAR(64) NOT NULL, "
+			" title VARCHAR(1024) NOT NULL, "
+			" author VARCHAR(1024) NOT NULL, "
+			" url VARCHAR(1024) NOT NULL, "
+			" pubDate INTEGER NOT NULL, "
+			" content VARCHAR(65535) NOT NULL, "
+			" enclosure_url VARCHAR(1024), "
+			" enclosure_type VARCHAR(1024), "
+			" autoenqueued INTEGER(1) NOT NULL DEFAULT 0, "
+			" base VARCHAR(128) NOT NULL DEFAULT \"\");",
+
+			"INSERT INTO new_rss_item( "
+			"       id, guid, title, author, url, pubDate, content, "
+			"       enclosure_Url, enclosure_type, autoenqueued, base) "
+			"SELECT id, guid, title, author, url, pubDate, content, "
+			"       enclosure_url, enclosure_type, enqueued, base "
+			"FROM rss_item;",
+
+			"DROP TABLE rss_item;",
+			"ALTER TABLE new_rss_item RENAME TO rss_item;",
+
+			"CREATE INDEX idx_guid ON rss_item(guid);",
+			"PRAGMA foreign_key_check;",
+			"ANALYZE",
+
+			"END TRANSACTION;",
+			"PRAGMA foreign_keys = ON;",
 		}
 	}
 };
