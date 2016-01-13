@@ -22,7 +22,7 @@
 
 namespace newsbeuter {
 
-rss_item::rss_item(cache * c) : pubDate_(0), unread_(true), ch(c), enqueued_(false), deleted_(0), idx(0), override_unread_(false), size_(0) {
+rss_item::rss_item(cache * c) : pubDate_(0), unread_(true), ch(c), autoenqueued_(false), deleted_(0), idx(0), override_unread_(false), size_(0) {
 	// LOG(LOG_CRITICAL, "new rss_item");
 }
 
@@ -104,7 +104,7 @@ void rss_item::set_unread(bool u) {
 		if (feedptr)
 			feedptr->get_item_by_guid(guid_)->set_unread_nowrite(unread_); // notify parent feed
 		try {
-			if (ch) ch->update_rssitem_unread_and_enqueued(this, feedurl_);
+			if (ch) ch->update_rssitem_unread_and_autoenqueued(this, feedurl_);
 		} catch (const dbexception& e) {
 			// if the update failed, restore the old unread flag and rethrow the exception
 			unread_ = old_u;

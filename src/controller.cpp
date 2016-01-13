@@ -1441,13 +1441,13 @@ void controller::enqueue_items(std::shared_ptr<rss_feed> feed) {
 		return;
 	std::lock_guard<std::mutex> lock(feed->item_mutex);
 	for (auto item : feed->items()) {
-		if (!item->enqueued() && item->enclosure_url().length() > 0) {
+		if (!item->autoenqueued() && item->enclosure_url().length() > 0) {
 			LOG(LOG_DEBUG, "controller::enqueue_items: enclosure_url = `%s' enclosure_type = `%s'", item->enclosure_url().c_str(), item->enclosure_type().c_str());
 			if (is_valid_podcast_type(item->enclosure_type()) && utils::is_http_url(item->enclosure_url())) {
 				LOG(LOG_INFO, "controller::enqueue_items: enqueuing `%s'", item->enclosure_url().c_str());
 				enqueue_url(item->enclosure_url(), feed);
-				item->set_enqueued(true);
-				rsscache->update_rssitem_unread_and_enqueued(item, feed->rssurl());
+				item->set_autoenqueued(true);
+				rsscache->update_rssitem_unread_and_autoenqueued(item, feed->rssurl());
 			}
 		}
 	}

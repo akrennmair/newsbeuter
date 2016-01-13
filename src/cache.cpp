@@ -118,7 +118,7 @@ static int rssitem_callback(void * myfeed, int argc, char ** argv, char ** /* az
 
 	item->set_enclosure_url(argv[8] ? argv[8] : "");
 	item->set_enclosure_type(argv[9] ? argv[9] : "");
-	item->set_enqueued((std::string("1") == (argv[10] ? argv[10] : "")));
+	item->set_autoenqueued((std::string("1") == (argv[10] ? argv[10] : "")));
 	item->set_flags(argv[11] ? argv[11] : "");
 	item->set_base(argv[12] ? argv[12] : "");
 
@@ -157,7 +157,7 @@ static int search_item_callback(void * myfeed, int argc, char ** argv, char ** /
 
 	item->set_enclosure_url(argv[8] ? argv[8] : "");
 	item->set_enclosure_type(argv[9] ? argv[9] : "");
-	item->set_enqueued((std::string("1") == argv[10]));
+	item->set_autoenqueued((std::string("1") == argv[10]));
 	item->set_flags(argv[11] ? argv[11] : "");
 	item->set_base(argv[12] ? argv[12] : "");
 
@@ -561,7 +561,7 @@ std::shared_ptr<rss_feed> cache::internalize_rssfeed(std::string rssurl, rss_ign
 	}
 
 	/* ...and then the associated items */
-	query = prepare_query("SELECT guid,title,author,url,pubDate,length(content),unread,feedurl,enclosure_url,enclosure_type,enqueued,flags,base FROM rss_item WHERE feedurl = '%q' AND deleted = 0 ORDER BY pubDate DESC, id DESC;", rssurl.c_str());
+	query = prepare_query("SELECT guid,title,author,url,pubDate,length(content),unread,feedurl,enclosure_url,enclosure_type,autoenqueued,flags,base FROM rss_item WHERE feedurl = '%q' AND deleted = 0 ORDER BY pubDate DESC, id DESC;", rssurl.c_str());
 	LOG(LOG_DEBUG,"running query: %s",query.c_str());
 	rc = sqlite3_exec(db,query.c_str(),rssitem_callback,&feed,NULL);
 	if (rc != SQLITE_OK) {
@@ -626,9 +626,9 @@ std::vector<std::shared_ptr<rss_item>> cache::search_for_items(const std::string
 
 	std::lock_guard<std::mutex> lock(mtx);
 	if (feedurl.length() > 0) {
-		query = prepare_query("SELECT guid,title,author,url,pubDate,length(content),unread,feedurl,enclosure_url,enclosure_type,enqueued,flags,base FROM rss_item WHERE (title LIKE '%%%q%%' OR content LIKE '%%%q%%') AND feedurl = '%q' AND deleted = 0 ORDER BY pubDate DESC, id DESC;",querystr.c_str(), querystr.c_str(), feedurl.c_str());
+		query = prepare_query("SELECT guid,title,author,url,pubDate,length(content),unread,feedurl,enclosure_url,enclosure_type,autoenqueued,flags,base FROM rss_item WHERE (title LIKE '%%%q%%' OR content LIKE '%%%q%%') AND feedurl = '%q' AND deleted = 0 ORDER BY pubDate DESC, id DESC;",querystr.c_str(), querystr.c_str(), feedurl.c_str());
 	} else {
-		query = prepare_query("SELECT guid,title,author,url,pubDate,length(content),unread,feedurl,enclosure_url,enclosure_type,enqueued,flags,base FROM rss_item WHERE (title LIKE '%%%q%%' OR content LIKE '%%%q%%') AND deleted = 0 ORDER BY pubDate DESC, id DESC;",querystr.c_str(), querystr.c_str());
+		query = prepare_query("SELECT guid,title,author,url,pubDate,length(content),unread,feedurl,enclosure_url,enclosure_type,autoenqueued,flags,base FROM rss_item WHERE (title LIKE '%%%q%%' OR content LIKE '%%%q%%') AND deleted = 0 ORDER BY pubDate DESC, id DESC;",querystr.c_str(), querystr.c_str());
 	}
 
 	LOG(LOG_DEBUG,"running query: %s",query.c_str());
@@ -778,11 +778,11 @@ void cache::update_rssitem_unlocked(std::shared_ptr<rss_item> item, const std::s
 			throw dbexception(db);
 		}
 	} else {
-		std::string insert = prepare_query("INSERT INTO rss_item (guid,title,author,url,feedurl,pubDate,content,unread,enclosure_url,enclosure_type,enqueued, base) "
+		std::string insert = prepare_query("INSERT INTO rss_item (guid,title,author,url,feedurl,pubDate,content,unread,enclosure_url,enclosure_type,autoenqueued, base) "
 		                                   "VALUES ('%q','%q','%q','%q','%q','%u','%q','%d','%q','%q',%d, '%q')",
 		                                   item->guid().c_str(), item->title_raw().c_str(), item->author_raw().c_str(),
 		                                   item->link().c_str(), feedurl.c_str(), item->pubDate_timestamp(), item->description_raw().c_str(), (item->unread() ? 1 : 0),
-		                                   item->enclosure_url().c_str(), item->enclosure_type().c_str(), item->enqueued() ? 1 : 0, item->get_base().c_str());
+		                                   item->enclosure_url().c_str(), item->enclosure_type().c_str(), item->autoenqueued() ? 1 : 0, item->get_base().c_str());
 		LOG(LOG_DEBUG,"running query: %s", insert.c_str());
 		rc = sqlite3_exec(db,insert.c_str(),NULL,NULL,NULL);
 		if (rc != SQLITE_OK) {
@@ -828,7 +828,7 @@ void cache::catchup_all(const std::string& feedurl) {
 	}
 }
 
-void cache::update_rssitem_unread_and_enqueued(rss_item* item, const std::string& feedurl) {
+void cache::update_rssitem_unread_and_autoenqueued(rss_item* item, const std::string& feedurl) {
 	std::lock_guard<std::mutex> lock(mtx);
 
 	std::string query = prepare_query("SELECT count(*) FROM rss_item WHERE guid = '%q';",item->guid().c_str());
@@ -841,8 +841,8 @@ void cache::update_rssitem_unread_and_enqueued(rss_item* item, const std::string
 	}
 
 	if (count_cbh.count() > 0) {
-		std::string update = prepare_query("UPDATE rss_item SET unread = '%d', enqueued = '%d' WHERE guid = '%q'",
-		                                   item->unread()?1:0, item->enqueued()?1:0, item->guid().c_str());
+		std::string update = prepare_query("UPDATE rss_item SET unread = '%d', autoenqueued = '%d' WHERE guid = '%q'",
+		                                   item->unread()?1:0, item->autoenqueued()?1:0, item->guid().c_str());
 		LOG(LOG_DEBUG,"running query: %s", update.c_str());
 		rc = sqlite3_exec(db,update.c_str(),NULL,NULL,NULL);
 		if (rc != SQLITE_OK) {
@@ -850,11 +850,11 @@ void cache::update_rssitem_unread_and_enqueued(rss_item* item, const std::string
 			throw dbexception(db);
 		}
 	} else {
-		std::string insert = prepare_query("INSERT INTO rss_item (guid,title,author,url,feedurl,pubDate,content,unread,enclosure_url,enclosure_type,enqueued,flags,base) "
+		std::string insert = prepare_query("INSERT INTO rss_item (guid,title,author,url,feedurl,pubDate,content,unread,enclosure_url,enclosure_type,autoenqueued,flags,base) "
 		                                   "VALUES ('%q','%q','%q','%q','%q','%u','%q','%d','%q','%q',%d, '%q', '%q')",
 		                                   item->guid().c_str(), item->title_raw().c_str(), item->author_raw().c_str(),
 		                                   item->link().c_str(), feedurl.c_str(), item->pubDate_timestamp(), item->description_raw().c_str(), item->unread() ? 1 : 0,
-		                                   item->enclosure_url().c_str(), item->enclosure_type().c_str(), item->enqueued() ? 1 : 0, item->flags().c_str(),
+		                                   item->enclosure_url().c_str(), item->enclosure_type().c_str(), item->autoenqueued() ? 1 : 0, item->flags().c_str(),
 		                                   item->get_base().c_str());
 		LOG(LOG_DEBUG,"running query: %s", insert.c_str());
 		rc = sqlite3_exec(db,insert.c_str(),NULL,NULL,NULL);
@@ -865,8 +865,8 @@ void cache::update_rssitem_unread_and_enqueued(rss_item* item, const std::string
 	}
 }
 
-/* this function updates the unread and enqueued flags */
-void cache::update_rssitem_unread_and_enqueued(std::shared_ptr<rss_item> item, const std::string& feedurl) {
+/* this function updates the unread and auto-enqueued flags */
+void cache::update_rssitem_unread_and_autoenqueued(std::shared_ptr<rss_item> item, const std::string& feedurl) {
 	std::lock_guard<std::mutex> lock(mtx);
 
 	std::string query = prepare_query("SELECT count(*) FROM rss_item WHERE guid = '%q';",item->guid().c_str());
@@ -879,8 +879,8 @@ void cache::update_rssitem_unread_and_enqueued(std::shared_ptr<rss_item> item, c
 	}
 
 	if (count_cbh.count() > 0) {
-		std::string update = prepare_query("UPDATE rss_item SET unread = '%d', enqueued = '%d' WHERE guid = '%q'",
-		                                   item->unread()?1:0, item->enqueued()?1:0, item->guid().c_str());
+		std::string update = prepare_query("UPDATE rss_item SET unread = '%d', autoenqueued = '%d' WHERE guid = '%q'",
+		                                   item->unread()?1:0, item->autoenqueued()?1:0, item->guid().c_str());
 		LOG(LOG_DEBUG,"running query: %s", update.c_str());
 		rc = sqlite3_exec(db,update.c_str(),NULL,NULL,NULL);
 		if (rc != SQLITE_OK) {
@@ -888,11 +888,11 @@ void cache::update_rssitem_unread_and_enqueued(std::shared_ptr<rss_item> item, c
 			throw dbexception(db);
 		}
 	} else {
-		std::string insert = prepare_query("INSERT INTO rss_item (guid,title,author,url,feedurl,pubDate,content,unread,enclosure_url,enclosure_type,enqueued,flags,base) "
+		std::string insert = prepare_query("INSERT INTO rss_item (guid,title,author,url,feedurl,pubDate,content,unread,enclosure_url,enclosure_type,autoenqueued,flags,base) "
 		                                   "VALUES ('%q','%q','%q','%q','%q','%u','%q','%d','%q','%q',%d, '%q', '%q')",
 		                                   item->guid().c_str(), item->title_raw().c_str(), item->author_raw().c_str(),
 		                                   item->link().c_str(), feedurl.c_str(), item->pubDate_timestamp(), item->description_raw().c_str(), (item->unread() ? 1 : 0),
-		                                   item->enclosure_url().c_str(), item->enclosure_type().c_str(), item->enqueued() ? 1 : 0, item->flags().c_str(),
+		                                   item->enclosure_url().c_str(), item->enclosure_type().c_str(), item->autoenqueued() ? 1 : 0, item->flags().c_str(),
 		                                   item->get_base().c_str());
 		LOG(LOG_DEBUG,"running query: %s", insert.c_str());
 		rc = sqlite3_exec(db,insert.c_str(),NULL,NULL,NULL);

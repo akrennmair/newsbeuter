@@ -18,8 +18,8 @@ class cache {
 		~cache();
 		void externalize_rssfeed(std::shared_ptr<rss_feed> feed, bool reset_unread);
 		std::shared_ptr<rss_feed> internalize_rssfeed(std::string rssurl, rss_ignores * ign);
-		void update_rssitem_unread_and_enqueued(std::shared_ptr<rss_item> item, const std::string& feedurl);
-		void update_rssitem_unread_and_enqueued(rss_item* item, const std::string& feedurl);
+		void update_rssitem_unread_and_autoenqueued(std::shared_ptr<rss_item> item, const std::string& feedurl);
+		void update_rssitem_unread_and_autoenqueued(rss_item* item, const std::string& feedurl);
 		void cleanup_cache(std::vector<std::shared_ptr<rss_feed>>& feeds);
 		void do_vacuum();
 		std::vector<std::shared_ptr<rss_item>> search_for_items(const std::string& querystr, const std::string& feedurl);
