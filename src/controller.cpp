@@ -1402,8 +1402,8 @@ void controller::write_item(std::shared_ptr<rss_item> item, std::ostream& ostr) 
 	}
 }
 
-void controller::mark_deleted(const std::string& guid, bool b) {
-	rsscache->mark_item_deleted(guid, b);
+void controller::mark_deleted(const std::string& feedurl, const std::string& guid, bool b) {
+	rsscache->mark_item_deleted(feedurl, guid, b);
 }
 
 std::string controller::prepare_message(unsigned int pos, unsigned int max) {

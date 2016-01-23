@@ -30,7 +30,7 @@ class cache {
 		void fetch_lastmodified(const std::string& uri, time_t& t, std::string& etag);
 		void update_lastmodified(const std::string& uri, time_t t, const std::string& etag);
 		unsigned int get_unread_count();
-		void mark_item_deleted(const std::string& guid, bool b);
+		void mark_item_deleted(const std::string& feedurl, const std::string& guid, bool b);
 		void remove_old_deleted_items(const std::string& rssurl, const std::vector<std::string>& guids);
 		void mark_items_read_by_guid(const std::vector<std::string>& guids);
 		std::vector<std::string> get_read_item_guids();
@@ -42,7 +42,7 @@ class cache {
 		unsigned int getDBSchemaVersion();
 		void populate_tables();
 		void set_pragmas();
-		void delete_item(const std::shared_ptr<rss_item> item);
+		void delete_item(const std::shared_ptr<rss_feed> feed, const std::shared_ptr<rss_item> item);
 		void clean_old_articles();
 		void update_rssitem_unlocked(std::shared_ptr<rss_item> item, const std::string& feedurl, bool reset_unread);
 

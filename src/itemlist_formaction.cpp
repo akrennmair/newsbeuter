@@ -61,7 +61,10 @@ void itemlist_formaction::process_operation(operation op, bool automatic, std::v
 			visible_items[itempos].first->set_unread(false);
 			// mark as deleted
 			visible_items[itempos].first->set_deleted(!visible_items[itempos].first->deleted());
-			v->get_ctrl()->mark_deleted(visible_items[itempos].first->guid(), visible_items[itempos].first->deleted());
+			v->get_ctrl()->mark_deleted(
+			    visible_items[itempos].first->feedurl(),
+			    visible_items[itempos].first->guid(),
+			    visible_items[itempos].first->deleted());
 			if (itempos < visible_items.size()-1)
 				f->set("itempos", utils::strprintf("%u", itempos + 1));
 			invalidate(itempos);
