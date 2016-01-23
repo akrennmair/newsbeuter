@@ -772,33 +772,51 @@ void cache::cleanup_cache(std::vector<std::shared_ptr<rss_feed>>& feeds) {
 		cleanup_rss_feeds_statement.append(list);
 		cleanup_rss_feeds_statement.append(1,';');
 
-		std::string cleanup_rss_items_statement("DELETE FROM rss_item WHERE feedurl NOT IN ");
+		std::string cleanup_rss_items_statement(
+		    "DELETE FROM rss_item "
+		    "WHERE id IN ( "
+		    "    SELECT itemid "
+		    "    FROM items_to_feeds "
+		    "    WHERE feedid NOT IN ");
 		cleanup_rss_items_statement.append(list);
-		cleanup_rss_items_statement.append(1,';');
+		cleanup_rss_items_statement.append(");");
 
-		std::string cleanup_read_items_statement("DELETE FROM rss_item WHERE unread = 0");
+		std::string cleanup_items_to_feeds_entries(
+		    "DELETE FROM items_to_feeds "
+		    "WHERE feedid NOT IN ");
+		cleanup_items_to_feeds_entries.append(list);
+		cleanup_items_to_feeds_entries.append(1, ';');
 
-		// std::cerr << "statements: " << cleanup_rss_feeds_statement << " " << cleanup_rss_items_statement << std::endl;
+		std::string cleanup_read_items_statement(
+		    "DELETE FROM rss_item "
+		    "WHERE id IN ( "
+		    "    SELECT id FROM items_to_feeds WHERE unread = 0); "
+		    "DELETE FROM items_to_feeds "
+		    "WHERE unread = 0;");
 
-		LOG(LOG_DEBUG,"running query: %s", cleanup_rss_feeds_statement.c_str());
-		rc = sqlite3_exec(db,cleanup_rss_feeds_statement.c_str(),NULL,NULL,NULL);
-		if (rc != SQLITE_OK) {
-			LOG(LOG_CRITICAL,"query \"%s\" failed: error = %d", cleanup_rss_feeds_statement.c_str(), rc);
-			throw dbexception(db);
-		}
-
-		LOG(LOG_DEBUG,"running query: %s", cleanup_rss_items_statement.c_str());
-		rc = sqlite3_exec(db,cleanup_rss_items_statement.c_str(),NULL,NULL,NULL);
-		if (rc != SQLITE_OK) {
-			LOG(LOG_CRITICAL,"query \"%s\" failed: error = %d", cleanup_rss_items_statement.c_str(), rc);
-			throw dbexception(db);
+		std::vector<std::string> queries = {
+			cleanup_rss_feeds_statement,
+			cleanup_rss_items_statement,
+			cleanup_items_to_feeds_entries
+		};
+		for (const auto& query : queries) {
+			LOG(LOG_DEBUG, "running query: %s", query.c_str());
+			rc = sqlite3_exec(db, query.c_str(), NULL, NULL, NULL);
+			if (rc != SQLITE_OK) {
+				LOG(LOG_CRITICAL,
+				    "query \"%s\" failed: error = %d", query.c_str(), rc);
+				throw dbexception(db);
+			}
 		}
 
 		if (cfg->get_configvalue_as_bool("delete-read-articles-on-quit")) {
 			LOG(LOG_DEBUG,"running query: %s", cleanup_read_items_statement.c_str());
 			rc = sqlite3_exec(db,cleanup_read_items_statement.c_str(),NULL,NULL,NULL);
 			if (rc != SQLITE_OK) {
-				LOG(LOG_CRITICAL,"query \"%s\" failed: error = %d", cleanup_read_items_statement.c_str(), rc);
+				LOG(LOG_CRITICAL,
+				    "query \"%s\" failed: error = %d",
+				    cleanup_read_items_statement.c_str(),
+				    rc);
 				throw dbexception(db);
 			}
 		}
@@ -811,7 +829,9 @@ void cache::cleanup_cache(std::vector<std::shared_ptr<rss_feed>>& feeds) {
 	}
 }
 
-void cache::update_rssitem_unlocked(std::shared_ptr<rss_item> item, const std::string& feedurl, bool reset_unread) {
+void cache::update_rssitem_unlocked(std::shared_ptr<rss_item> item,
+const std::string& feedurl, bool reset_unread)
+{
 	std::string query = prepare_query("SELECT count(*) FROM rss_item WHERE guid = '%q';",item->guid().c_str());
 	cb_handler count_cbh;
 	LOG(LOG_DEBUG,"running query: %s", query.c_str());
