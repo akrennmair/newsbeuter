@@ -839,64 +839,126 @@ void cache::cleanup_cache(std::vector<std::shared_ptr<rss_feed>>& feeds) {
 void cache::update_rssitem_unlocked(std::shared_ptr<rss_item> item,
 const std::string& feedurl, bool reset_unread)
 {
-	std::string query = prepare_query("SELECT count(*) FROM rss_item WHERE guid = '%q';",item->guid().c_str());
+	std::string query = prepare_query(
+	    "SELECT count(*) FROM rss_item WHERE guid = '%q';",
+	    item->guid().c_str());
 	cb_handler count_cbh;
-	LOG(LOG_DEBUG,"running query: %s", query.c_str());
-	int rc = sqlite3_exec(db,query.c_str(),count_callback,&count_cbh,NULL);
+	LOG(LOG_DEBUG, "running query: %s", query.c_str());
+	int rc = sqlite3_exec(db, query.c_str(), count_callback, &count_cbh, NULL);
 	if (rc != SQLITE_OK) {
-		LOG(LOG_CRITICAL,"query \"%s\" failed: error = %d", query.c_str(), rc);
+		LOG(LOG_CRITICAL, "query \"%s\" failed: error = %d", query.c_str(), rc);
 		throw dbexception(db);
 	}
 	if (count_cbh.count() > 0) {
 		if (reset_unread) {
 			std::string content;
-			query = prepare_query("SELECT content FROM rss_item WHERE guid = '%q';", item->guid().c_str());
-			rc = sqlite3_exec(db, query.c_str(), single_string_callback, &content, NULL);
+			query = prepare_query(
+			    "SELECT content FROM rss_item WHERE guid = '%q';",
+			    item->guid().c_str());
+			rc = sqlite3_exec(db, query.c_str(),
+			         single_string_callback, &content, NULL);
 			if (rc != SQLITE_OK) {
-				LOG(LOG_CRITICAL,"query \"%s\" failed: error = %d", query.c_str(), rc);
+				LOG(LOG_CRITICAL,
+				    "query \"%s\" failed: error = %d", query.c_str(), rc);
 				throw dbexception(db);
 			}
 			if (content != item->description_raw()) {
-				LOG(LOG_DEBUG, "cache::update_rssitem_unlocked: '%s' is different from '%s'", content.c_str(), item->description_raw().c_str());
-				query = prepare_query("UPDATE rss_item SET unread = 1 WHERE guid = '%q';", item->guid().c_str());
+				LOG(LOG_DEBUG,
+				    "cache::update_rssitem_unlocked: '%s' is different from '%s'",
+				    content.c_str(),
+				    item->description_raw().c_str());
+				query = prepare_query(
+				    "UPDATE items_to_feeds "
+					"SET unread = 1 "
+					"WHERE feedid = '%q' AND itemid = ("
+					"    SELECT id FROM rss_item WHERE guid = '%q');",
+					feedurl.c_str(),
+				    item->guid().c_str());
 				rc = sqlite3_exec(db, query.c_str(), NULL, NULL, NULL);
 				if (rc != SQLITE_OK) {
-					LOG(LOG_CRITICAL,"query \"%s\" failed: error = %d", query.c_str(), rc);
+					LOG(LOG_CRITICAL, "query \"%s\" failed: error = %d",
+					    query.c_str(),
+					    rc);
 					throw dbexception(db);
 				}
 			}
 		}
 		std::string update;
-		if (item->override_unread()) {
-			update = prepare_query("UPDATE rss_item SET title = '%q', author = '%q', url = '%q', feedurl = '%q', content = '%q', enclosure_url = '%q', enclosure_type = '%q', base = '%q', unread = '%d' WHERE guid = '%q'",
-			                       item->title_raw().c_str(), item->author_raw().c_str(), item->link().c_str(),
-			                       feedurl.c_str(), item->description_raw().c_str(),
-			                       item->enclosure_url().c_str(), item->enclosure_type().c_str(), item->get_base().c_str(),
-			                       (item->unread() ? 1 : 0),
-			                       item->guid().c_str());
-		} else {
-			update = prepare_query("UPDATE rss_item SET title = '%q', author = '%q', url = '%q', feedurl = '%q', content = '%q', enclosure_url = '%q', enclosure_type = '%q', base = '%q' WHERE guid = '%q'",
-			                       item->title_raw().c_str(), item->author_raw().c_str(), item->link().c_str(),
-			                       feedurl.c_str(), item->description_raw().c_str(),
-			                       item->enclosure_url().c_str(), item->enclosure_type().c_str(), item->get_base().c_str(),
-			                       item->guid().c_str());
-		}
-		LOG(LOG_DEBUG,"running query: %s", update.c_str());
-		rc = sqlite3_exec(db,update.c_str(),NULL,NULL,NULL);
+		update = prepare_query(
+		    "UPDATE rss_item "
+		    "SET title = '%q', author = '%q', url = '%q', content = '%q', "
+		    "    enclosure_url = '%q', enclosure_type = '%q', base = '%q' "
+		    "WHERE guid = '%q';",
+		    item->title_raw().c_str(),
+		    item->author_raw().c_str(),
+		    item->link().c_str(),
+		    item->description_raw().c_str(),
+		    item->enclosure_url().c_str(),
+		    item->enclosure_type().c_str(),
+		    item->get_base().c_str(),
+		    item->guid().c_str());
+		LOG(LOG_DEBUG, "running query: %s",  update.c_str());
+		rc = sqlite3_exec(db, update.c_str(), NULL, NULL, NULL);
 		if (rc != SQLITE_OK) {
-			LOG(LOG_CRITICAL,"query \"%s\" failed: error = %d", update.c_str(), rc);
+			LOG(LOG_CRITICAL, "query \"%s\" failed: error = %d",
+			    update.c_str(), rc);
+			throw dbexception(db);
+		}
+
+		if (item->override_unread()) {
+			update = prepare_query(
+			    "UPDATE items_to_feeds "
+			    "SET unread = '%d' "
+			    "WHERE feedid = '%q' AND itemid = ("
+			    "    SELECT id FROM rss_item WHERE guid = '%q'",
+			    (item->unread() ? 1 : 0),
+			    feedurl.c_str(),
+			    item->guid().c_str());
+
+			LOG(LOG_DEBUG, "running query: %s",  update.c_str());
+			rc = sqlite3_exec(db, update.c_str(), NULL, NULL, NULL);
+			if (rc != SQLITE_OK) {
+				LOG(LOG_CRITICAL, "query \"%s\" failed: error = %d",
+					update.c_str(), rc);
+				throw dbexception(db);
+		}
+		}
+		LOG(LOG_DEBUG, "running query: %s",  update.c_str());
+		rc = sqlite3_exec(db, update.c_str(), NULL, NULL, NULL);
+		if (rc != SQLITE_OK) {
+			LOG(LOG_CRITICAL, "query \"%s\" failed: error = %d",
+			    update.c_str(), rc);
 			throw dbexception(db);
 		}
 	} else {
-		std::string insert = prepare_query("INSERT INTO rss_item (guid,title,author,url,feedurl,pubDate,content,unread,enclosure_url,enclosure_type,autoenqueued, base) "
-		                                   "VALUES ('%q','%q','%q','%q','%q','%u','%q','%d','%q','%q',%d, '%q')",
-		                                   item->guid().c_str(), item->title_raw().c_str(), item->author_raw().c_str(),
-		                                   item->link().c_str(), feedurl.c_str(), item->pubDate_timestamp(), item->description_raw().c_str(), (item->unread() ? 1 : 0),
-		                                   item->enclosure_url().c_str(), item->enclosure_type().c_str(), item->autoenqueued() ? 1 : 0, item->get_base().c_str());
+		std::string insert = prepare_query(
+		    "INSERT INTO rss_item (guid, title, author, url, feedurl, pubDate, "
+		    "                      content, unread, enclosure_url, "
+		    "                      enclosure_type, autoenqueued, base) "
+		    "VALUES ('%q','%q','%q','%q','%q','%u','%q','%d','%q','%q',%d,'%q')",
+
+		    "INSERT INTO rss_item (guid, title, author, url, feedurl, pubDate, "
+		    "                      content, unread, enclosure_url, "
+		    "                      enclosure_type, autoenqueued, base) "
+		    "VALUES ('%q','%q','%q','%q','%q','%u','%q','%d','%q','%q',%d,'%q')",
+
+		    item->guid().c_str(),
+		    item->title_raw().c_str(),
+		    item->author_raw().c_str(),
+		    item->link().c_str(),
+		    feedurl.c_str(),
+		    item->pubDate_timestamp(),
+		    item->description_raw().c_str(),
+		    (item->unread() ? 1 : 0),
+		    item->enclosure_url().c_str(),
+		    item->enclosure_type().c_str(),
+		    item->autoenqueued() ? 1 : 0,
+		    item->get_base().c_str());
 		LOG(LOG_DEBUG,"running query: %s", insert.c_str());
 		rc = sqlite3_exec(db,insert.c_str(),NULL,NULL,NULL);
 		if (rc != SQLITE_OK) {
-			LOG(LOG_CRITICAL,"query \"%s\" failed: error = %d", insert.c_str(), rc);
+			LOG(LOG_CRITICAL, "query \"%s\" failed: error = %d",
+			    insert.c_str(), rc);
 			throw dbexception(db);
 		}
 	}

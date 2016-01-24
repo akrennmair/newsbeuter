@@ -1,0 +1,37 @@
+CREATE TABLE rss_feed (
+    rssurl        VARCHAR(1024)  NOT NULL  PRIMARY KEY,
+    url           VARCHAR(1024)  NOT NULL
+    title         VARCHAR(1024)  NOT NULL
+    lastmodified  INTEGER(11)    NOT NULL  DEFAULT 0,
+    is_rtl        INTEGER(1)     NOT NULL  DEFAULT 0,
+    etag          VARCHAR(128)   NOT NULL  DEFAULT "");
+
+CREATE TABLE google_replay (
+    id     INTEGER      NOT NULL  PRIMARY KEY AUTOINCREMENT,
+    guid   VARCHAR(64)  NOT NULL
+    state  INTEGER      NOT NULL
+    ts     INTEGER      NOT NULL  );
+
+CREATE TABLE metadata (
+    db_schema_version INTEGER);
+
+CREATE TABLE items_to_feeds(
+    feedid   VARCHAR(1024)  NOT NULL  REFERENCES rss_feed(rssurl),
+    itemid   INTEGER        NOT NULL  REFERENCES rss_item(id),
+    unread   INTEGER(1)     NOT NULL
+    flags    VARCHAR(52),
+    deleted  INTEGER(1)     NOT NULL  DEFAULT 0,
+    PRIMARY KEY (feedid, itemid) );
+
+CREATE TABLE "rss_item" (
+    id              INTEGER         NOT NULL  PRIMARY KEY AUTOINCREMT
+    guid            VARCHAR(64)     NOT NULL,
+    title           VARCHAR(1024)   NOT NULL,
+    author          VARCHAR(1024)   NOT NULL,
+    url             VARCHAR(1024)   NOT NULL,
+    pubDate         INTEGER         NOT NULL,
+    content         VARCHAR(65535)  NOT NULL,
+    enclosure_url   VARCHAR(1024),
+    enclosure_type  VARCHAR(1024),
+    autoenqueued    INTEGER(1)      NOT NULL  DEFAULT 0,
+    base            VARCHAR(128)    NOT NULL  DEFAULT "");
