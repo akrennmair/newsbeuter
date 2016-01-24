@@ -704,8 +704,15 @@ std::vector<std::shared_ptr<rss_item>> cache::search_for_items(
 	    "ORDER BY pubDate DESC, id DESC;";
 
 	std::lock_guard<std::mutex> lock(mtx);
-	query = prepare_query(
-	     format.c_str(), querystr.c_str(), querystr.c_str(), feedurl.c_str());
+	if (feedurl.length() > 0) {
+		query = prepare_query(
+		    format.c_str(),
+		    querystr.c_str(), querystr.c_str(), feedurl.c_str());
+	} else {
+		query = prepare_query(
+		    format.c_str(),
+		    querystr.c_str(), querystr.c_str());
+	}
 
 	LOG(LOG_DEBUG, "running query: %s", query.c_str());
 
