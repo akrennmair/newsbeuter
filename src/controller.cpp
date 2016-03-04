@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <functional>
 #include <mutex>
+#include <iterator>
 
 #include <sys/time.h>
 #include <ctime>
@@ -866,6 +867,28 @@ void controller::reload_range(unsigned int start, unsigned int end, unsigned int
 	}
 }
 
+void controller::reload_queue_mutex(std::queue<unsigned int> &feeds,
+									std::mutex &feeds_mutex,
+									unsigned int size,
+									bool unattended) {
+	curl_handle easyhandle;
+
+	while (true) {
+		unsigned int idx_feed;
+		{
+			std::lock_guard<std::mutex> lock(feeds_mutex);
+			if (feeds.empty()) {
+				break;
+			}
+			idx_feed = feeds.front();
+			feeds.pop();
+		}
+
+		LOG(LOG_DEBUG, "controller::reload_queue_mutex: reloading feed #%u", idx_feed);
+		this->reload(idx_feed, size, unattended, &easyhandle);
+	}
+}
+
 void controller::reload_all(bool unattended) {
 	unsigned int unread_feeds, unread_articles;
 	compute_unread_numbers(unread_feeds, unread_articles);
@@ -892,22 +915,35 @@ void controller::reload_all(bool unattended) {
 
 	t1 = time(NULL);
 
+	// First reload the feeds with a high probability that there is a new item.
+	// Not super fancy sort
+	std::vector<unsigned int> tmp;
+	for (unsigned int i = 0; i < size; i++) {
+		tmp.push_back(i);
+	}
+	std::sort(tmp.begin(), tmp.end(), [&](unsigned int a, unsigned int b) {
+		return this->feeds[a]->total_item_count() > this->feeds[b]->total_item_count();
+	});
+
+	std::queue<unsigned int> feeds_queue;
+	for (const auto& val : tmp) {
+		feeds_queue.push(val);
+	}
+
+	// No thread-safe queue in std, so we have to do the sync.
+	std::mutex feeds_mutex;
+
 	LOG(LOG_DEBUG,"controller::reload_all: starting with reload all...");
-	if (num_threads <= 1) {
-		this->reload_range(0, size-1, size, unattended);
-	} else {
-		std::vector<std::pair<unsigned int, unsigned int>> partitions = utils::partition_indexes(0, size-1, num_threads);
-		std::vector<std::thread> threads;
-		LOG(LOG_DEBUG, "controller::reload_all: starting reload threads...");
-		for (unsigned int i=0; i<num_threads-1; i++) {
-			threads.push_back(std::thread(reloadrangethread(this, partitions[i].first, partitions[i].second, size, unattended)));
-		}
-		LOG(LOG_DEBUG, "controller::reload_all: starting my own reload...");
-		this->reload_range(partitions[num_threads-1].first, partitions[num_threads-1].second, size, unattended);
-		LOG(LOG_DEBUG, "controller::reload_all: joining other threads...");
-		for (size_t i=0; i<threads.size(); i++) {
-			threads[i].join();
-		}
+	LOG(LOG_DEBUG, "controller::reload_all: starting reload threads...");
+	std::vector<std::thread> threads;
+	for (unsigned int i = 0; i < num_threads; i++) {
+		threads.push_back(std::thread([this, &feeds_queue, &feeds_mutex, size, unattended]() {
+			this->reload_queue_mutex(feeds_queue, feeds_mutex, size, unattended);
+		}));
+	}
+	LOG(LOG_DEBUG, "controller::reload_all: joining reload threads...");
+	for (auto& thread : threads) {
+		thread.join();
 	}
 
 	// refresh query feeds (update and sort)
