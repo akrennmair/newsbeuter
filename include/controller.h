@@ -9,6 +9,7 @@
 #include <colormanager.h>
 #include <regexmanager.h>
 #include <remote_api.h>
+#include <queue>
 #include <libxml/tree.h>
 
 namespace newsbeuter {
@@ -113,6 +114,10 @@ class controller {
 		void rec_find_rss_outlines(xmlNode * node, std::string tag);
 		void compute_unread_numbers(unsigned int&, unsigned int& );
 		void execute_commands(char ** argv, unsigned int i);
+		void reload_queue_mutex(std::queue<unsigned int> &feeds,
+								std::mutex &feeds_mutex,
+								unsigned int size,
+								bool unattended);
 
 		std::string prepare_message(unsigned int pos, unsigned int max);
 		void save_feed(std::shared_ptr<rss_feed> feed, unsigned int pos);
