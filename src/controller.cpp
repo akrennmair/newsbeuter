@@ -53,6 +53,8 @@
 #include <libxml/uri.h>
 #include <curl/curl.h>
 
+#include <stdio.h>
+
 namespace newsbeuter {
 
 #define LOCK_SUFFIX ".lock"
@@ -458,6 +460,7 @@ void controller::run(int argc, char * argv[]) {
 
 
 	std::string type = cfg.get_configvalue("urls-source");
+	std::cout << "Type is " << type << "\n";
 	if (type == "local") {
 		urlcfg = new file_urlreader(url_file);
 	} else if (type == "opml") {
@@ -484,6 +487,7 @@ void controller::run(int argc, char * argv[]) {
 	}
 
 	if (real_offline_mode) {
+	        printf("offline_mode\n");
 		if (!do_export) {
 			std::cout << _("Loading URLs from local cache...");
 			std::cout.flush();
@@ -494,11 +498,13 @@ void controller::run(int argc, char * argv[]) {
 			std::cout << _("done.") << std::endl;
 		}
 	} else {
+	        printf("online mode\n");
 		if (!do_export && !silent) {
-			std::cout << utils::strprintf(_("Loading URLs from %s..."), urlcfg->get_source().c_str());
+			std::cout << utils::strprintf(_("Loading URLs from %s... "), urlcfg->get_source().c_str());
 			std::cout.flush();
 		}
 		if (api) {
+		  printf("api\n");
 			if (!api->authenticate()) {
 				std::cout << "Authentication failed." << std::endl;
 				utils::remove_fs_lock(lock_file);
@@ -539,13 +545,14 @@ void controller::run(int argc, char * argv[]) {
 
 
 	if (do_vacuum) {
-		std::cout << _("done.") << std::endl;
-		std::cout << _("Cleaning up cache thoroughly...");
-		std::cout.flush();
-		rsscache->do_vacuum();
-		std::cout << _("done.") << std::endl;
-		utils::remove_fs_lock(lock_file);
-		return;
+	  printf("do_vacuum\n");
+	  std::cout << _("done.") << std::endl;
+	  std::cout << _("Cleaning up cache thoroughly...");
+	  std::cout.flush();
+	  rsscache->do_vacuum();
+	  std::cout << _("done.") << std::endl;
+	  utils::remove_fs_lock(lock_file);
+	  return;
 	}
 
 	unsigned int i=0;
