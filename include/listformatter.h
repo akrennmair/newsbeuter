@@ -25,11 +25,13 @@ class listformatter {
 		    unsigned int id = UINT_MAX, unsigned int width = 0);
 		inline void clear() { lines.clear(); }
 		std::string format_list(regexmanager * r = NULL,
-		    const std::string& location = "");
+		    const std::string& location = "",
+			const unsigned int& width = 0);
 		inline unsigned int get_lines_count() {
 			return lines.size();
 		}
 	private:
+		std::vector<std::string> wrap_line(std::string line, unsigned int width);
 		std::vector<line_id_pair> lines;
 		std::string format_cache;
 		bool refresh_cache;

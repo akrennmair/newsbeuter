@@ -61,21 +61,61 @@ void listformatter::add_lines(const std::vector<std::string>& thelines, unsigned
 	}
 }
 
-std::string listformatter::format_list(regexmanager * rxman, const std::string& location) {
+std::string listformatter::format_list(regexmanager * rxman, const std::string& location, const unsigned int &width) {
 	format_cache = "{list";
 	for (auto line : lines) {
 		std::string str = line.first;
+
 		if (rxman)
 			rxman->quote_and_highlight(str, location);
-		if (line.second == UINT_MAX) {
-			format_cache.append(utils::strprintf("{listitem text:%s}", stfl::quote(str).c_str()));
-		} else {
-			format_cache.append(utils::strprintf("{listitem[%u] text:%s}", line.second, stfl::quote(str).c_str()));
+
+		std::vector<std::string> wrapped_lines;
+		if (width > 0)
+			wrapped_lines = wrap_line(str, width);
+		else
+			wrapped_lines.push_back(str);
+
+		for (auto substr : wrapped_lines) {
+			if (line.second == UINT_MAX) {
+				format_cache.append(utils::strprintf("{listitem text:%s}", stfl::quote(substr).c_str()));
+			} else {
+				format_cache.append(utils::strprintf("{listitem[%u] text:%s}", line.second, stfl::quote(substr).c_str()));
+			}
 		}
 	}
 	format_cache.append(1, '}');
 	refresh_cache = false;
 	return format_cache;
+}
+
+std::vector<std::string> listformatter::wrap_line(std::string line, unsigned int width) {
+	std::vector<std::string> lines;
+	std::string::size_type pos;
+
+	while (line.length() > width) {
+		unsigned int i = width;
+		while (i > 0 && line[i] != ' ' && line[i] != '<')
+			--i;
+		if (line[i] == '<') {
+			i = width;
+			while ((i < line.length()) && (line[i] != '>'))
+				++i;
+			++i;
+		}
+		if (0 == i) {
+			i = width;
+		}
+		std::string subline = line.substr(0, i);
+		line.erase(0, i);
+		line.erase(0, line.find_first_not_of(" "));
+		subline.erase(0, subline.find_first_not_of(" "));
+		if(line.length() > 0)
+			lines.push_back(subline);
+	}
+
+	if ((line.length() > 0) || (lines.size() == 0))
+		lines.push_back(line);
+	return lines;
 }
 
 }
