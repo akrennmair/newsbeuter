@@ -91,6 +91,7 @@ std::string listformatter::format_list(regexmanager * rxman, const std::string& 
 std::vector<std::string> listformatter::wrap_line(std::string line, unsigned int width) {
 	std::vector<std::string> lines;
 	std::string::size_type pos;
+	LOG(LOG_DEBUG, "listformatter::wrap_line: `%s'", line.c_str());
 
 	while (line.length() > width) {
 		unsigned int i = width;
@@ -109,12 +110,16 @@ std::vector<std::string> listformatter::wrap_line(std::string line, unsigned int
 		line.erase(0, i);
 		line.erase(0, line.find_first_not_of(" "));
 		subline.erase(0, subline.find_first_not_of(" "));
-		if(line.length() > 0)
+		if(subline.length() > 0) {
+			LOG(LOG_DEBUG, "listformatter::wrap_line: --> `%s'", subline.c_str());
 			lines.push_back(subline);
+		}
 	}
 
-	if ((line.length() > 0) || (lines.size() == 0))
-		lines.push_back(line);
+	if ((line.length() > 0) || (lines.size() == 0)) {
+			LOG(LOG_DEBUG, "listformatter::wrap_line: --> `%s'", line.c_str());
+			lines.push_back(line);
+	}
 	return lines;
 }
 
