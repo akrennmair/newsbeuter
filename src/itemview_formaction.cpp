@@ -58,7 +58,7 @@ void itemview_formaction::prepare() {
 		if (widthstr.length() > 0)
 			render_width = utils::to_u(widthstr);
 		unsigned int text_width = v->get_cfg()->get_configvalue_as_int("text-width");
-		if (text_width < render_width)
+		if ((text_width != 0) && (text_width < render_width))
 			render_width = text_width;
 
 
