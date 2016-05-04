@@ -79,30 +79,30 @@ void itemview_formaction::prepare() {
 		}
 		if (feedtitle.length() > 0) {
 			feedheader = utils::strprintf("%s%s", _("Feed: "), feedtitle.c_str());
-			listfmt.add_line(feedheader, UINT_MAX, 0);
+			listfmt.add_line(feedheader, UINT_MAX);
 		}
 
 		if (item->title().length() > 0) {
 			std::string title = utils::strprintf("%s%s", _("Title: "), item->title().c_str());
-			listfmt.add_line(title, UINT_MAX, 0);
+			listfmt.add_line(title, UINT_MAX);
 		}
 
 		if (item->author().length() > 0) {
 			std::string author = utils::strprintf("%s%s", _("Author: "), item->author().c_str());
-			listfmt.add_line(author, UINT_MAX, 0);
+			listfmt.add_line(author, UINT_MAX);
 		}
 
 		if (item->link().length() > 0) {
 			std::string link = utils::strprintf("%s%s", _("Link: "), utils::censor_url(item->link()).c_str());
-			listfmt.add_line(link, UINT_MAX, 0);
+			listfmt.add_line(link, UINT_MAX);
 		}
 
 		std::string date = utils::strprintf("%s%s", _("Date: "), item->pubDate().c_str());
-		listfmt.add_line(date, UINT_MAX, 0);
+		listfmt.add_line(date, UINT_MAX);
 
 		if (item->flags().length() > 0) {
 			std::string flags = utils::strprintf("%s%s", _("Flags: "), item->flags().c_str());
-			listfmt.add_line(flags, UINT_MAX, 0);
+			listfmt.add_line(flags, UINT_MAX);
 		}
 
 		if (item->enclosure_url().length() > 0) {
@@ -110,7 +110,7 @@ void itemview_formaction::prepare() {
 			if (item->enclosure_type() != "") {
 				enc_url.append(utils::strprintf(" (%s%s)",  _("type: "), item->enclosure_type().c_str()));
 			}
-			listfmt.add_line(enc_url, UINT_MAX, 0);
+			listfmt.add_line(enc_url, UINT_MAX);
 		}
 
 		listfmt.add_line("");
@@ -129,7 +129,7 @@ void itemview_formaction::prepare() {
 		}
 
 		// listfmt.add_lines(lines, view_width);
-		listfmt.add_lines(lines, 0);
+		listfmt.add_lines(lines);
 
 		num_lines = listfmt.get_lines_count();
 

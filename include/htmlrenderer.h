@@ -21,7 +21,7 @@ typedef std::pair<std::string,link_type> linkpair;
 
 class htmlrenderer {
 	public:
-		htmlrenderer(unsigned int width = 80, bool raw = false);
+		htmlrenderer(bool raw = false);
 		void render(const std::string&, std::vector<std::string>& lines,  std::vector<linkpair>& links, const std::string& url);
 		void render(std::istream &, std::vector<std::string>& lines, std::vector<linkpair>& links, const std::string& url);
 		// only public for unit testing purposes:

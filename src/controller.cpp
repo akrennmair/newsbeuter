@@ -1408,10 +1408,7 @@ void controller::write_item(std::shared_ptr<rss_item> item, std::ostream& ostr) 
 
 	lines.push_back(std::string(""));
 
-	unsigned int width = cfg.get_configvalue_as_int("text-width");
-	if (width == 0)
-		width = 80;
-	htmlrenderer rnd(width, true);
+	htmlrenderer rnd(true);
 	rnd.render(item->description(), lines, links, item->feedurl());
 
 	for (auto l : lines) {

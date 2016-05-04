@@ -13,7 +13,7 @@
 
 namespace newsbeuter {
 
-htmlrenderer::htmlrenderer(unsigned int width, bool raw) : w(width), raw_(raw) {
+htmlrenderer::htmlrenderer(bool raw) : raw_(raw) {
 	tags["a"] = TAG_A;
 	tags["embed"] = TAG_EMBED;
 	tags["br"] = TAG_BR;
@@ -563,20 +563,8 @@ void htmlrenderer::render(std::istream& input, std::vector<std::string>& lines, 
 					} else {
 						std::vector<std::string> words2 = utils::tokenize_spaced(word);
 						unsigned int i=0;
-						bool new_line = false;
 						for (auto word2 : words2) {
-							if ((utils::strwidth_stfl(curline) + utils::strwidth_stfl(word2)) >= w) {
-								add_nonempty_line(curline, tables, lines);
-								prepare_newline(curline,  tables.size() ? 0 : indent_level);
-								new_line = true;
-							}
-							if (new_line) {
-								if (word2 != " ")
-									curline.append(word2);
-								new_line = false;
-							} else {
-								curline.append(word2);
-							}
+							curline.append(word2);
 							i++;
 						}
 					}
@@ -599,25 +587,12 @@ void htmlrenderer::render(std::istream& input, std::vector<std::string>& lines, 
 					s.erase(0, 1);
 				std::vector<std::string> words = utils::tokenize_spaced(s);
 
-				bool new_line = false;
-
 				if (!line_is_nonempty(curline) && !words.empty() && words[0] == " ") {
 					words.erase(words.begin());
 				}
 
 				for (auto word : words) {
-					if ((utils::strwidth_stfl(curline) + utils::strwidth_stfl(word)) >= w) {
-						add_nonempty_line(curline, tables, lines);
-						prepare_newline(curline, tables.size() ? 0 : indent_level);
-						new_line = true;
-					}
-					if (new_line) {
-						if (word != " ")
-							curline.append(word);
-						new_line = false;
-					} else {
-						curline.append(word);
-					}
+					curline.append(word);
 				}
 			}
 		}
