@@ -71,10 +71,7 @@ std::vector<std::string> listformatter::wrap_line(std::string line, unsigned int
 	std::vector<std::string> words = utils::tokenize_spaced(line);
 	std::string subline = "";
 
-	LOG(LOG_DEBUG, "listformatter::wrap_line: '%s'", line.c_str(), line.length(), utils::strwidth_stfl(line));
-
 	for( auto word : words ){
-		LOG(LOG_DEBUG, "listformatter::wrap_line: word:'%s'", word.c_str());
 		unsigned int wlength = utils::strwidth_stfl(word);
 		unsigned int llength = utils::strwidth_stfl(subline);
 
@@ -105,10 +102,6 @@ std::vector<std::string> listformatter::wrap_line(std::string line, unsigned int
 
 	if (subline.length() > 0)
 		lines.push_back(subline);
-
-	for (auto aline : lines) {
-		LOG(LOG_DEBUG, "listformatter::wrap_line: line:'%s'", aline.c_str());
-	}
 
 	return lines;
 }
