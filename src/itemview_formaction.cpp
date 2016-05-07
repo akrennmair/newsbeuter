@@ -52,14 +52,15 @@ void itemview_formaction::prepare() {
 		}
 
 		std::vector<std::string> lines;
+
 		std::string widthstr = f->get("article:w");
 		unsigned int render_width = 80;
-		unsigned int view_width = 0;
-		if (widthstr.length() > 0) {
-			view_width = render_width = utils::to_u(widthstr);
-			if (render_width - 5 > 0)
-				render_width -= 5;
-		}
+		if (widthstr.length() > 0)
+			render_width = utils::to_u(widthstr);
+		unsigned int text_width = v->get_cfg()->get_configvalue_as_int("text-width");
+		if ((text_width != 0) && (text_width < render_width))
+			render_width = text_width;
+
 
 		std::shared_ptr<rss_item> item = feed->get_item_by_guid(guid);
 		listformatter listfmt;
@@ -78,30 +79,30 @@ void itemview_formaction::prepare() {
 		}
 		if (feedtitle.length() > 0) {
 			feedheader = utils::strprintf("%s%s", _("Feed: "), feedtitle.c_str());
-			listfmt.add_line(feedheader, UINT_MAX, view_width);
+			listfmt.add_line(feedheader, UINT_MAX);
 		}
 
 		if (item->title().length() > 0) {
 			std::string title = utils::strprintf("%s%s", _("Title: "), item->title().c_str());
-			listfmt.add_line(title, UINT_MAX, view_width);
+			listfmt.add_line(title, UINT_MAX);
 		}
 
 		if (item->author().length() > 0) {
 			std::string author = utils::strprintf("%s%s", _("Author: "), item->author().c_str());
-			listfmt.add_line(author, UINT_MAX, view_width);
+			listfmt.add_line(author, UINT_MAX);
 		}
 
 		if (item->link().length() > 0) {
 			std::string link = utils::strprintf("%s%s", _("Link: "), utils::censor_url(item->link()).c_str());
-			listfmt.add_line(link, UINT_MAX, view_width);
+			listfmt.add_line(link, UINT_MAX);
 		}
 
 		std::string date = utils::strprintf("%s%s", _("Date: "), item->pubDate().c_str());
-		listfmt.add_line(date, UINT_MAX, view_width);
+		listfmt.add_line(date, UINT_MAX);
 
 		if (item->flags().length() > 0) {
 			std::string flags = utils::strprintf("%s%s", _("Flags: "), item->flags().c_str());
-			listfmt.add_line(flags, UINT_MAX, view_width);
+			listfmt.add_line(flags, UINT_MAX);
 		}
 
 		if (item->enclosure_url().length() > 0) {
@@ -109,7 +110,7 @@ void itemview_formaction::prepare() {
 			if (item->enclosure_type() != "") {
 				enc_url.append(utils::strprintf(" (%s%s)",  _("type: "), item->enclosure_type().c_str()));
 			}
-			listfmt.add_line(enc_url, UINT_MAX, view_width);
+			listfmt.add_line(enc_url, UINT_MAX);
 		}
 
 		listfmt.add_line("");
@@ -120,11 +121,6 @@ void itemview_formaction::prepare() {
 			unread_item_count--;
 		set_head(item->title(), feedtitle, unread_item_count, feed->items().size());
 
-		unsigned int textwidth = v->get_cfg()->get_configvalue_as_int("text-width");
-		if (textwidth > 0) {
-			render_width = textwidth;
-		}
-
 		if (show_source) {
 			render_source(lines, utils::quote_for_stfl(item->description()), render_width);
 		} else {
@@ -132,11 +128,12 @@ void itemview_formaction::prepare() {
 			lines = render_html(item->description(), links, baseurl, render_width);
 		}
 
-		listfmt.add_lines(lines, view_width);
+		// listfmt.add_lines(lines, view_width);
+		listfmt.add_lines(lines);
 
 		num_lines = listfmt.get_lines_count();
 
-		f->modify("article","replace_inner",listfmt.format_list(rxman, "article"));
+		f->modify("article","replace_inner",listfmt.format_list(rxman, "article", render_width));
 		f->set("articleoffset","0");
 
 		if (in_search) {

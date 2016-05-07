@@ -17,19 +17,19 @@ class listformatter {
 	public:
 		listformatter();
 		~listformatter();
-		void add_line(const std::string& text, unsigned int id = UINT_MAX,
-		    unsigned int width = 0);
-		void add_lines(const std::vector<std::string>& lines,
-		    unsigned int width = 0);
+		void add_line(const std::string& text, unsigned int id = UINT_MAX);
+		void add_lines(const std::vector<std::string>& lines);
 		void set_line(const unsigned int itempos, const std::string& text,
-		    unsigned int id = UINT_MAX, unsigned int width = 0);
+		    unsigned int id = UINT_MAX);
 		inline void clear() { lines.clear(); }
 		std::string format_list(regexmanager * r = NULL,
-		    const std::string& location = "");
+		    const std::string& location = "",
+			const unsigned int& width = 0);
 		inline unsigned int get_lines_count() {
 			return lines.size();
 		}
 	private:
+		std::vector<std::string> wrap_line(std::string line, unsigned int width);
 		std::vector<line_id_pair> lines;
 		std::string format_cache;
 };

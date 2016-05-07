@@ -693,8 +693,12 @@ size_t utils::strwidth_stfl(const std::string& str) {
 	if (len > 1) {
 		for (size_t idx=0; idx<len-1; ++idx) {
 			if (str[idx] == '<' && str[idx+1] != '>') {
-				reduce_count += 3;
-				idx += 3;
+				while(str[idx] != '>') {
+					++reduce_count;
+					++idx;
+				}
+				++reduce_count;
+				++idx;
 			}
 		}
 	}
