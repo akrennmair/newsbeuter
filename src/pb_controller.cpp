@@ -147,8 +147,8 @@ void pb_controller::setup_dirs(const char *custom_home){
 	config_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + config_file;
 	queue_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + queue_file;
 	lock_file = config_dir + std::string(NEWSBEUTER_PATH_SEP) + lock_file;
-	searchfile = utils::strprintf("%s%shistory.search", config_dir, NEWSBEUTER_PATH_SEP);
-	cmdlinefile = utils::strprintf("%s%shistory.cmdline", config_dir, NEWSBEUTER_PATH_SEP);
+	searchfile = utils::strprintf("%s%shistory.search", config_dir.c_str(), NEWSBEUTER_PATH_SEP);
+	cmdlinefile = utils::strprintf("%s%shistory.cmdline", config_dir.c_str(), NEWSBEUTER_PATH_SEP);
 }
 
 pb_controller::pb_controller() : v(0), config_file("config"), queue_file("queue"), cfg(0), view_update_(true),  max_dls(1), ql(0) {
