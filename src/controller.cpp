@@ -162,25 +162,33 @@ bool controller::setup_dirs_xdg(const char *env_home, bool silent) {
 	return true;
 }
 
-void controller::setup_dirs(bool silent) {
+void controller::setup_dirs(const char *custom_home, bool silent) {
 	const char * env_home;
-	if (!(env_home = ::getenv("HOME"))) {
-		struct passwd * spw = ::getpwuid(::getuid());
-		if (spw) {
-			env_home = spw->pw_dir;
-		} else {
-			std::cerr << _("Fatal error: couldn't determine home directory!") << std::endl;
-			std::cerr << utils::strprintf(_("Please set the HOME environment variable or add a valid user for UID %u!"), ::getuid()) << std::endl;
-			::exit(EXIT_FAILURE);
+	if(custom_home){
+		LOG(LOG_INFO, "controller::setup_dirs: Using home directory provided by the command line: %s", custom_home);
+		config_dir = custom_home;
+	}else if((env_home = ::getenv("NEWSBEUTERHOME"))){
+		LOG(LOG_INFO, "controller::setup_dirs: Using home directory provided by the NEWSBEUTERHOME environment variable: %s", env_home);
+		config_dir = env_home;
+	}else{
+		if (!(env_home = ::getenv("HOME"))) {
+			struct passwd * spw = ::getpwuid(::getuid());
+			if (spw) {
+				env_home = spw->pw_dir;
+			} else {
+				std::cerr << _("Fatal error: couldn't determine home directory!") << std::endl;
+				std::cerr << utils::strprintf(_("Please set the HOME environment variable or add a valid user for UID %u!"), ::getuid()) << std::endl;
+				::exit(EXIT_FAILURE);
+			}
 		}
+
+		config_dir = env_home;
+		config_dir.append(NEWSBEUTER_PATH_SEP);
+		config_dir.append(NEWSBEUTER_CONFIG_SUBDIR);
+
+		if (setup_dirs_xdg(env_home, silent))
+			return;
 	}
-
-	config_dir = env_home;
-	config_dir.append(NEWSBEUTER_PATH_SEP);
-	config_dir.append(NEWSBEUTER_CONFIG_SUBDIR);
-
-	if (setup_dirs_xdg(env_home, silent))
-		return;
 
 	mkdir(config_dir.c_str(),0700); // create configuration directory if it doesn't exist
 
@@ -229,10 +237,11 @@ void controller::run(int argc, char * argv[]) {
 	bool silent = false;
 	bool execute_cmds = false;
 
-	static const char getopt_str[] = "i:erhqu:c:C:d:l:vVoxXI:E:";
+	static const char getopt_str[] = "i:erhqu:c:C:H:d:l:vVoxXI:E:";
 	static const struct option longopts[] = {
 		{"cache-file"      , required_argument, 0, 'c'},
 		{"config-file"     , required_argument, 0, 'C'},
+		{"homedir"         , required_argument, 0, 'H'},
 		{"execute"         , required_argument, 0, 'x'},
 		{"export-to-file"  , required_argument, 0, 'E'},
 		{"export-to-opml"  , no_argument      , 0, 'e'},
@@ -252,14 +261,17 @@ void controller::run(int argc, char * argv[]) {
 
 	/* First of all, let's check for options that imply silencing of the
 	 * output: import, export, command execution and, well, quiet mode */
+	char *homedir = NULL;
 	while ((c = ::getopt_long(argc, argv, getopt_str, longopts, NULL)) != -1) {
 		if (strchr("iexq", c) != NULL) {
 			silent = true;
-			break;
+		}
+		if(strchr("H", c) != NULL){
+			homedir = optarg;
 		}
 	}
 
-	setup_dirs(silent);
+	setup_dirs(homedir, silent);
 
 	/* Now that silencing's set up, let's rewind to the beginning of argv and
 	 * process the options */
@@ -291,6 +303,8 @@ void controller::run(int argc, char * argv[]) {
 		case 'u':
 			url_file = optarg;
 			break;
+		case 'H':
+			break; //Homedir processing was done earlier.
 		case 'c':
 			cache_file = optarg;
 			lock_file = std::string(cache_file) + LOCK_SUFFIX;
