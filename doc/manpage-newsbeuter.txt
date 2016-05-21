@@ -41,7 +41,7 @@ OPTIONS
 -i opmlfile, --import-from-opml=opmlfile::
        Import an OPML file
 
--H homedir, --homedir=homedir::
+-H homedir, --home-dir=homedir::
        Use an alternative home directory, individual files can be overridden using -u, -c and -C as described bellow.
 
 -u urlfile, --url-file=urlfile::
