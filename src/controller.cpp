@@ -241,7 +241,7 @@ void controller::run(int argc, char * argv[]) {
 	static const struct option longopts[] = {
 		{"cache-file"      , required_argument, 0, 'c'},
 		{"config-file"     , required_argument, 0, 'C'},
-		{"homedir"         , required_argument, 0, 'H'},
+		{"home-dir"        , required_argument, 0, 'H'},
 		{"execute"         , required_argument, 0, 'x'},
 		{"export-to-file"  , required_argument, 0, 'E'},
 		{"export-to-opml"  , no_argument      , 0, 'e'},
@@ -259,8 +259,9 @@ void controller::run(int argc, char * argv[]) {
 		{0                 , 0                , 0,  0 }
 	};
 
-	/* First of all, let's check for options that imply silencing of the
-	 * output: import, export, command execution and, well, quiet mode */
+	/* First, lets check for options that imply output silencing i.e. import,
+	 * export command execution and, well, quiet mode. Additionally, check if a
+	 * custom home directory has been supplied so we can set it up early */
 	char *homedir = NULL;
 	while ((c = ::getopt_long(argc, argv, getopt_str, longopts, NULL)) != -1) {
 		if (strchr("iexq", c) != NULL) {
@@ -273,7 +274,7 @@ void controller::run(int argc, char * argv[]) {
 
 	setup_dirs(homedir, silent);
 
-	/* Now that silencing's set up, let's rewind to the beginning of argv and
+	/* Now that silencing and the home directory's set up, let's rewind to the beginning of argv and
 	 * process the options */
 	optind = 1;
 
@@ -1034,7 +1035,7 @@ void controller::version_information(const char * argv0, unsigned int level) {
 
 void controller::usage(char * argv0) {
 	auto msg =
-	    utils::strprintf(_("%s %s\nusage: %s [-i <file>|-e] [-u <urlfile>] "
+	    utils::strprintf(_("%s %s\nusage: %s [-H <homedir>] [-i <file>|-e] [-u <urlfile>] "
 	    "[-c <cachefile>] [-x <command> ...] [-h]\n"),
 	    PROGRAM_NAME,
 	    PROGRAM_VERSION,
@@ -1052,6 +1053,7 @@ void controller::usage(char * argv0) {
 		{ 'e', "export-to-opml"  , ""                , _s("export OPML feed to stdout") }                                                 ,
 		{ 'r', "refresh-on-start", ""                , _s("refresh feeds on start") }                                                     ,
 		{ 'i', "import-from-opml", _s("<file>")      , _s("import OPML file") }                                                           ,
+		{ 'H', "home-dir"        , _s("<homedir>")   , _s("set the home directory") }                                                     ,
 		{ 'u', "url-file"        , _s("<urlfile>")   , _s("read RSS feed URLs from <urlfile>") }                                          ,
 		{ 'c', "cache-file"      , _s("<cachefile>") , _s("use <cachefile> as cache file") }                                              ,
 		{ 'C', "config-file"     , _s("<configfile>"), _s("read configuration from <configfile>") }                                       ,

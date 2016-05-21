@@ -168,7 +168,7 @@ void pb_controller::run(int argc, char * argv[]) {
 	static const struct option longopts[] = {
 		{"config-file"     , required_argument, 0, 'C'},
 		{"queue-file"      , required_argument, 0, 'q'},
-		{"homedir"         , required_argument, 0, 'H'},
+		{"home-dir"        , required_argument, 0, 'H'},
 		{"log-file"        , required_argument, 0, 'd'},
 		{"log-level"       , required_argument, 0, 'l'},
 		{"help"            , no_argument      , 0, 'h'},
@@ -177,10 +177,8 @@ void pb_controller::run(int argc, char * argv[]) {
 		{0                 , 0                , 0,  0 }
 	};
 
-	/*
-	Lets check if there is a homedir argument first so individual files can
-	be properly overridden later.
-	*/
+	/* Lets check if there is a homedir argument first so individual files can
+	 * be properly overridden later. */
 	char *homedir = NULL;
 	while ((c = ::getopt_long(argc, argv, getopt_str, longopts, NULL)) != -1) {
 		if (strchr("H", c) != NULL) {
@@ -302,7 +300,7 @@ void pb_controller::run(int argc, char * argv[]) {
 
 void pb_controller::usage(const char * argv0) {
 	auto msg =
-	    utils::strprintf(_("%s %s\nusage %s [-C <file>] [-q <file>] [-h]\n"),
+	    utils::strprintf(_("%s %s\nusage %s [-H <homedir>] [-C <file>] [-q <file>] [-h]\n"),
 	    "podbeuter",
 	    PROGRAM_VERSION,
 	    argv0);
@@ -316,6 +314,7 @@ void pb_controller::usage(const char * argv0) {
 	};
 
 	static const std::vector<arg> args = {
+		{ 'H', "home-dir"    , _s("<homedir>")   , _s("set the home directory") }                                    ,
 		{ 'C', "config-file" , _s("<configfile>"), _s("read configuration from <configfile>") }                      ,
 		{ 'q', "queue-file"  , _s("<queuefile>") , _s("use <queuefile> as queue file") }                             ,
 		{ 'a', "autodownload", ""                , _s("start download on startup") }                                 ,
