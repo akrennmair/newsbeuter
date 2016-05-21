@@ -116,13 +116,13 @@ bool pb_controller::setup_dirs_xdg(const char *env_home) {
 
 void pb_controller::setup_dirs(const char *custom_home){
 	char * cfgdir;
-	if(custom_home){
+	if (custom_home) {
 		LOG(LOG_INFO, "pb_controller::setup_dirs: Using home directory provided by the command line: %s", custom_home);
 		config_dir = custom_home;
-	}else if((cfgdir = ::getenv("NEWSBEUTERHOME"))){
-		LOG(LOG_INFO, "pb_controller::setup_dirs: Using home directory provided by the NEWSBEUTERHOME environment variable: %s", cfgdir);
+	} else if ((cfgdir = ::getenv("NEWSBEUTER_HOME"))) {
+		LOG(LOG_INFO, "pb_controller::setup_dirs: Using home directory provided by the NEWSBEUTER_HOME environment variable: %s", cfgdir);
 		config_dir = cfgdir;
-	}else{
+	} else {
 		if (!(cfgdir = ::getenv("HOME"))) {
 			struct passwd * spw = ::getpwuid(::getuid());
 			if (spw) {
@@ -183,7 +183,7 @@ void pb_controller::run(int argc, char * argv[]) {
 	*/
 	char *homedir = NULL;
 	while ((c = ::getopt_long(argc, argv, getopt_str, longopts, NULL)) != -1) {
-		if(strchr("H", c) != NULL){
+		if (strchr("H", c) != NULL) {
 			homedir = optarg;
 			break;
 		}

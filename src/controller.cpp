@@ -164,13 +164,13 @@ bool controller::setup_dirs_xdg(const char *env_home, bool silent) {
 
 void controller::setup_dirs(const char *custom_home, bool silent) {
 	const char * env_home;
-	if(custom_home){
+	if (custom_home) {
 		LOG(LOG_INFO, "controller::setup_dirs: Using home directory provided by the command line: %s", custom_home);
 		config_dir = custom_home;
-	}else if((env_home = ::getenv("NEWSBEUTERHOME"))){
-		LOG(LOG_INFO, "controller::setup_dirs: Using home directory provided by the NEWSBEUTERHOME environment variable: %s", env_home);
+	} else if ((env_home = ::getenv("NEWSBEUTER_HOME"))) {
+		LOG(LOG_INFO, "controller::setup_dirs: Using home directory provided by the NEWSBEUTER_HOME environment variable: %s", env_home);
 		config_dir = env_home;
-	}else{
+	} else {
 		if (!(env_home = ::getenv("HOME"))) {
 			struct passwd * spw = ::getpwuid(::getuid());
 			if (spw) {
@@ -266,7 +266,7 @@ void controller::run(int argc, char * argv[]) {
 		if (strchr("iexq", c) != NULL) {
 			silent = true;
 		}
-		if(strchr("H", c) != NULL){
+		if (strchr("H", c) != NULL) {
 			homedir = optarg;
 		}
 	}
