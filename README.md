@@ -11,7 +11,7 @@ Newsbeuter is an RSS feed reader for the text console. Zed Shaw
 [called](http://zedshaw.com/archive/i-want-the-mutt-of-feed-readers/) it "The
 Mutt of Feed Readers".
 
-It is designed to run on Unix-like operating systems such as Linux. NetBSD is
+It is designed to run on Unix-like operating systems such as GNU/Linux. NetBSD is
 currently not supported, due to technical limitations.
 
 Downloading
