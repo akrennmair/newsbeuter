@@ -23,7 +23,8 @@ TEST_CASE("process_op()", "[itemlist_formaction]") {
 	std::string test_author = "Article Author";
 	std::string test_description = "Article Description";
 	time_t test_pubDate = 42;
-	std::string test_puDate_str = "Thu, 01 Jan 1970 01:00:42 +0100";
+	char test_pubDate_str[128];
+	strftime(test_pubDate_str, sizeof(test_pubDate_str), "%a, %d %b %Y %H:%M:%S %z", localtime(&test_pubDate));
 
 	std::string pager_prefix_title = "Title: ";
 	std::string pager_prefix_author = "Author: ";
@@ -73,7 +74,7 @@ TEST_CASE("process_op()", "[itemlist_formaction]") {
 		REQUIRE(articleLine == pager_prefix_author + test_author);
 
 		REQUIRE( std::getline (pagerFileStream,articleLine) );
-		REQUIRE(articleLine == pager_prefix_date + test_puDate_str);
+		REQUIRE(articleLine == pager_prefix_date + test_pubDate_str);
 
 		REQUIRE( std::getline (pagerFileStream,articleLine) );
 		REQUIRE(articleLine.find(pager_prefix_link + test_url) == 0);
