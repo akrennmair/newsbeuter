@@ -12,6 +12,7 @@ using namespace newsbeuter;
 
 
 TEST_CASE("process_op(OP_OPEN)", "[itemlist_formaction]") {
+	INFO("Opens an article and display its attribute. This is achieved by setting the pager command to echo the article attributes to a temporary file and parsing it.")
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile pagerfile;
@@ -35,7 +36,7 @@ TEST_CASE("process_op(OP_OPEN)", "[itemlist_formaction]") {
 	cache rsscache(":memory:", &cfg);
 	cfg.set_configvalue("pager", "cat %f > " + pagerfile.getPath());
 
-	std::shared_ptr<rss_feed> feed(new rss_feed(&rsscache));
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
 
 	std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
 	item->set_link(test_url);
@@ -75,14 +76,14 @@ TEST_CASE("process_op(OP_OPEN)", "[itemlist_formaction]") {
 
 	REQUIRE( std::getline (pagerFileStream,line) );
 	REQUIRE(line == "");
-
-	pagerFileStream.close();
 }
+
 TEST_CASE("process_op(OP_DELETE)", "[itemlist_formaction]") {
 	//REQUIRE_NOTHROW(itemlist.process_op(OP_DELETE));
 	//REQUIRE(feed->total_item_count() == itemCount -1);
 	//Crash, to investigate
 }
+
 TEST_CASE("process_op(OP_PURGE_DELETED)", "[itemlist_formaction]") {
 	//Does not do much for now, 
 	//Trigger deletion before in order to test properly...
@@ -90,7 +91,7 @@ TEST_CASE("process_op(OP_PURGE_DELETED)", "[itemlist_formaction]") {
 	newsbeuter::view v(&c);
 	configcontainer cfg;
 	cache rsscache(":memory:", &cfg);
-	std::shared_ptr<rss_feed> feed(new rss_feed(&rsscache));
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
 
 	v.set_config_container(&cfg);
 	c.set_view(&v);
@@ -99,7 +100,9 @@ TEST_CASE("process_op(OP_PURGE_DELETED)", "[itemlist_formaction]") {
 	itemlist.set_feed(feed);
 	REQUIRE_NOTHROW(itemlist.process_op(OP_PURGE_DELETED));
 }
+
 TEST_CASE("process_op(OP_OPENBROWSER_AND_MARK)", "[itemlist_formaction]") {
+	INFO("Tests item opening in browser by setting the browser option to echo to a temporary file, that is then parsed.");
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile browserfile;
@@ -112,7 +115,7 @@ TEST_CASE("process_op(OP_OPENBROWSER_AND_MARK)", "[itemlist_formaction]") {
 
 	cache rsscache(":memory:", &cfg);
 
-	std::shared_ptr<rss_feed> feed(new rss_feed(&rsscache));
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
 	std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
 	item->set_link(test_url);
 	item->set_unread(true);
@@ -126,13 +129,14 @@ TEST_CASE("process_op(OP_OPENBROWSER_AND_MARK)", "[itemlist_formaction]") {
 	itemlist.process_op(OP_OPENBROWSER_AND_MARK);
 	std::ifstream browserFileStream (browserfile.getPath());
 
-	REQUIRE ( std::getline (browserFileStream,line) );
+	REQUIRE(std::getline (browserFileStream,line));
 	REQUIRE(line == test_url);
-	browserFileStream.close();
 
 	REQUIRE(feed->unread_item_count() == 0);
 }
+
 TEST_CASE("process_op(OP_OPENINBROWSER)", "[itemlist_formaction]") {
+	INFO("Tests item opening in browser by setting the browser option to echo to a temporary file, that is then parsed.");
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile browserfile;
@@ -144,7 +148,7 @@ TEST_CASE("process_op(OP_OPENINBROWSER)", "[itemlist_formaction]") {
 
 	cache rsscache(":memory:", &cfg);
 
-	std::shared_ptr<rss_feed> feed(new rss_feed(&rsscache));
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
 	std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
 	item->set_link(test_url);
 	feed->add_item(item);
@@ -157,11 +161,12 @@ TEST_CASE("process_op(OP_OPENINBROWSER)", "[itemlist_formaction]") {
 	itemlist.process_op(OP_OPENINBROWSER);
 	std::ifstream browserFileStream (browserfile.getPath());
 
-	REQUIRE ( std::getline (browserFileStream,line) );
+	REQUIRE(std::getline (browserFileStream,line));
 	REQUIRE(line == test_url);
-	browserFileStream.close();
 }
+
 TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER)", "[itemlist_formaction]"){
+	INFO("Tests multiple item opening in browser by setting the browser option to echo to a temporary file, that is then parsed. Each item is set to a different url but no assertion is made regarding the opening order");
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile browserfile;
@@ -175,7 +180,7 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER)", "[itemlist_formaction]"){
 
 	cache rsscache(":memory:", &cfg);
 
-	std::shared_ptr<rss_feed> feed(new rss_feed(&rsscache));
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
 
 	for (int i = 0; i < itemCount; i++) {
 		std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
@@ -207,7 +212,6 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER)", "[itemlist_formaction]"){
 				url_set.erase(url_set.find(line));
 				openedItemsCount += 1;
 			}
-			browserFileStream.close();
 		}
 		REQUIRE(openedItemsCount == maxItemsToOpen);
 	}
@@ -227,12 +231,13 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER)", "[itemlist_formaction]"){
 				url_set.erase(url_set.find(line));
 				openedItemsCount += 1;
 			}
-			browserFileStream.close();
 		}
 		REQUIRE(openedItemsCount == itemCount);
 	}
 }
+
 TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER_AND_MARK"){
+	INFO("Tests multiple item opening in browser by setting the browser option to echo to a temporary file, that is then parsed. Each item is set to a different url but no assertion is made regarding the opening order");
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile browserfile;
@@ -246,7 +251,7 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER_AND_MARK"){
 
 	cache rsscache(":memory:", &cfg);
 
-	std::shared_ptr<rss_feed> feed(new rss_feed(&rsscache));
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
 
 	for (int i = 0; i < itemCount; i++) {
 		std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
@@ -277,7 +282,6 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER_AND_MARK"){
 				url_set.erase(url_set.find(line));
 				openedItemsCount += 1;
 			}
-			browserFileStream.close();
 		}
 		REQUIRE(openedItemsCount == maxItemsToOpen);
 		REQUIRE(feed->unread_item_count() == itemCount - maxItemsToOpen);
@@ -298,24 +302,24 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER_AND_MARK"){
 				url_set.erase(url_set.find(line));
 				openedItemsCount += 1;
 			}
-			browserFileStream.close();
 		}
 		REQUIRE(openedItemsCount == itemCount);
 		REQUIRE(feed->unread_item_count() == 0);
 	}
 }
+
 TEST_CASE("process_op(OP_TOGGLEITEMREAD)", "[itemlist_formaction]") {
 #if 0
+	INFO("Tests read status toggling command, from read to unread and unread to read");
 	controller c;
 	newsbeuter::view v(&c);
 	configcontainer cfg;
-	TestHelpers::TempFile dbfile;
 	cache rsscache(":memory:", &cfg);
 
 	v.set_config_container(&cfg);
 	c.set_view(&v);
 
-	std::shared_ptr<rss_feed> feed(new rss_feed(&rsscache));
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
 	std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
 
 	SECTION("Toggle item from read to unread") {
@@ -336,99 +340,207 @@ TEST_CASE("process_op(OP_TOGGLEITEMREAD)", "[itemlist_formaction]") {
 		REQUIRE_NOTHROW(itemlist.process_op(OP_TOGGLEITEMREAD));
 		REQUIRE(feed->unread_item_count() == 0);
 	}
+	SECTION("toggleitemread-jumps-to-next-unread") {
+		//NOTIMPL
+	}
 #endif
 }
 
 TEST_CASE("process_op(OP_SHOWURLS)", "[itemlist_formaction]") {
-	//NOTIMPL
+	INFO("Test");
+	controller c;
+	newsbeuter::view v(&c);
+	configcontainer cfg;
+	cache rsscache(":memory:", &cfg);
+	TestHelpers::TempFile urlFile;
+	std::string line;
+
+	std::string test_url = "http://test_url";
+	std::string test_title = "Article Title";
+	std::string test_author = "Article Author";
+	std::string test_description = "Article Description";
+	time_t test_pubDate = 42;
+	char test_pubDate_str[128];
+	strftime(test_pubDate_str, sizeof(test_pubDate_str), "%a, %d %b %Y %H:%M:%S %z", localtime(&test_pubDate));
+
+	std::string pager_prefix_title = "Title: ";
+	std::string pager_prefix_author = "Author: ";
+	std::string pager_prefix_date = "Date: ";
+	std::string pager_prefix_link = "Link: ";
+
+	v.set_config_container(&cfg);
+	c.set_view(&v);
+
+
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
+	std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
+
+	item->set_link(test_url);
+	item->set_title(test_title);
+	item->set_author(test_author);
+	item->set_description(test_description);
+	item->set_pubDate(test_pubDate);
+	itemlist_formaction itemlist(&v, itemlist_str);
+
+
+	SECTION("OP_SHOWURLS with external-url-viewer"){
+		feed->add_item(item);
+		itemlist.set_feed(feed);
+		cfg.set_configvalue("external-url-viewer", "tee > " + urlFile.getPath());
+	
+		REQUIRE_NOTHROW(itemlist.process_op(OP_SHOWURLS));
+
+		std::ifstream urlFileStream (urlFile.getPath());
+		REQUIRE( std::getline (urlFileStream,line) );
+		REQUIRE(line == pager_prefix_title + test_title);
+
+		REQUIRE( std::getline (urlFileStream,line) );
+		REQUIRE(line == pager_prefix_author + test_author);
+
+		REQUIRE( std::getline (urlFileStream,line) );
+		REQUIRE(line == pager_prefix_date + test_pubDate_str);
+
+		REQUIRE( std::getline (urlFileStream,line) );
+		REQUIRE(line == pager_prefix_link + test_url);
+
+		REQUIRE( std::getline (urlFileStream,line) );
+		REQUIRE(line == " ");
+
+		REQUIRE( std::getline (urlFileStream,line) );
+		REQUIRE(line == test_description);
+
+		REQUIRE( std::getline (urlFileStream,line) );
+		REQUIRE(line == "");
+	}
+
+	SECTION("OP_SHOWURLS default behaviour"){
+		feed->add_item(item);
+		itemlist.set_feed(feed);
+		REQUIRE_NOTHROW(itemlist.process_op(OP_SHOWURLS));
+	}
+
+	SECTION("OP_SHOWURLS empty feed"){
+		REQUIRE_NOTHROW(itemlist.process_op(OP_SHOWURLS));
+	}
+	
 }
+
 TEST_CASE("process_op(OP_BOOKMARK)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_EDITFLAGS)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_SAVE)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_HELP)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_RELOAD)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_QUIT)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_HARDQUIT)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_NEXTUNREAD)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_PREVUNREAD)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_NEXT)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_PREV)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_RANDOMUNREAD)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_NEXTUNREADFEED)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_PREVUNREADFEED)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_NEXTFEED)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_PREVFEED)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_MARKFEEDREAD)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_TOGGLESHOWREAD)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_PIPE_TO)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_SEARCH)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_EDIT_URLS)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_SELECTFILTER)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_SETFILTER)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_CLEARFILTER)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_SORT)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_REVSORT)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_INT_RESIZE)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_INT_END_SETFILTER)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_INT_EDITFLAGS_END)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 TEST_CASE("process_op(OP_INT_START_SEARCH)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
