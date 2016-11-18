@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: newsbeuter 1.3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-10-25 14:43+0300\n"
-"PO-Revision-Date: 2008-11-18 17:38+0300\n"
+"PO-Revision-Date: 2016-11-19 01:59+0300\n"
 "Last-Translator: Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>\n"
 "Language-Team: ru <sergey.dryabzhinsky@gmail.com>\n"
 "Language: \n"
@@ -156,7 +156,7 @@ msgstr "сделано."
 
 #: src/controller.cpp:441 src/controller.cpp:521
 msgid "Opening cache..."
-msgstr "Открываю кеш..."
+msgstr "Открываю кэш..."
 
 #: src/controller.cpp:447
 #, c-format
@@ -211,11 +211,11 @@ msgstr ""
 
 #: src/controller.cpp:519
 msgid "Loading articles from cache..."
-msgstr "Загружаю заметки из кеша..."
+msgstr "Загружаю заметки из кэша..."
 
 #: src/controller.cpp:527
 msgid "Cleaning up cache thoroughly..."
-msgstr "Тщательно очищаю кеш..."
+msgstr "Тщательно очищаю кэш..."
 
 #: src/controller.cpp:545
 msgid "Error while loading feeds from database: "
@@ -240,7 +240,7 @@ msgstr "Экспортирую список прочитанных замето�
 
 #: src/controller.cpp:627
 msgid "Cleaning up cache..."
-msgstr "Очищаю кеш..."
+msgstr "Очищаю кэш..."
 
 #: src/controller.cpp:639
 msgid "failed: "
@@ -287,7 +287,7 @@ msgid ""
 "[-h]\n"
 msgstr ""
 "%s %s\n"
-"Использование: %s [-i <файл>|-e] [-u <файл с сылками>] [-c <файл кеша>] [-x "
+"Использование: %s [-i <файл>|-e] [-u <файл с сылками>] [-c <файл кэша>] [-x "
 "<команда> ...] [-h]\n"
 
 #: src/controller.cpp:1013
@@ -316,11 +316,11 @@ msgstr "загрузить список ссылок на ленты RSS из <�
 
 #: src/controller.cpp:1017
 msgid "<cachefile>"
-msgstr "<файл кеша>"
+msgstr "<файл кэша>"
 
 #: src/controller.cpp:1017
 msgid "use <cachefile> as cache file"
-msgstr "использовать <файл кеша> как файл для кеша"
+msgstr "использовать <файл кэша> как файл для кэша"
 
 #: src/controller.cpp:1018 src/pb_controller.cpp:285
 msgid "<configfile>"
@@ -1314,7 +1314,7 @@ msgid ""
 "usage %s [-C <file>] [-q <file>] [-h]\n"
 msgstr ""
 "%s %s\n"
-"Использование: %s [-i <файл>|-e] [-u <файл с сылками>] [-c <файл кеша>] [-x "
+"Использование: %s [-i <файл>|-e] [-u <файл с сылками>] [-c <файл кэша>] [-x "
 "<команда> ...] [-h]\n"
 
 #: src/pb_controller.cpp:286
@@ -1325,7 +1325,7 @@ msgstr "<файл>"
 #: src/pb_controller.cpp:286
 #, fuzzy
 msgid "use <queuefile> as queue file"
-msgstr "использовать <файл кеша> как файл для кеша"
+msgstr "использовать <файл кэша> как файл для кэша"
 
 #: src/pb_controller.cpp:287
 msgid "start download on startup"
