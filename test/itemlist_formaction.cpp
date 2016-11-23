@@ -11,8 +11,7 @@
 using namespace newsbeuter;
 
 
-TEST_CASE("process_op(OP_OPEN)", "[itemlist_formaction]") {
-	INFO("Opens an article and display its attribute. This is achieved by setting the pager command to echo the article attributes to a temporary file and parsing it.")
+TEST_CASE("OP_OPEN properly displays article elements", "[itemlist_formaction]") {
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile pagerfile;
@@ -56,35 +55,35 @@ TEST_CASE("process_op(OP_OPEN)", "[itemlist_formaction]") {
 	REQUIRE_NOTHROW(itemlist.process_op(OP_OPEN));
 
 	std::ifstream pagerFileStream (pagerfile.getPath());
-	REQUIRE( std::getline (pagerFileStream,line) );
+	REQUIRE(std::getline (pagerFileStream,line));
 	REQUIRE(line == pager_prefix_title + test_title);
 
-	REQUIRE( std::getline (pagerFileStream,line) );
+	REQUIRE(std::getline (pagerFileStream,line));
 	REQUIRE(line == pager_prefix_author + test_author);
 
-	REQUIRE( std::getline (pagerFileStream,line) );
+	REQUIRE(std::getline (pagerFileStream,line));
 	REQUIRE(line == pager_prefix_date + test_pubDate_str);
 
-	REQUIRE( std::getline (pagerFileStream,line) );
+	REQUIRE(std::getline (pagerFileStream,line));
 	REQUIRE(line == pager_prefix_link + test_url);
 
-	REQUIRE( std::getline (pagerFileStream,line) );
+	REQUIRE(std::getline (pagerFileStream,line));
 	REQUIRE(line == " ");
 
-	REQUIRE( std::getline (pagerFileStream,line) );
+	REQUIRE(std::getline (pagerFileStream,line));
 	REQUIRE(line == test_description);
 
-	REQUIRE( std::getline (pagerFileStream,line) );
+	REQUIRE(std::getline (pagerFileStream,line));
 	REQUIRE(line == "");
 }
 
-TEST_CASE("process_op(OP_DELETE)", "[itemlist_formaction]") {
+TEST_CASE("OP_DELETE", "[itemlist_formaction]") {
 	//REQUIRE_NOTHROW(itemlist.process_op(OP_DELETE));
 	//REQUIRE(feed->total_item_count() == itemCount -1);
 	//Crash, to investigate
 }
 
-TEST_CASE("process_op(OP_PURGE_DELETED)", "[itemlist_formaction]") {
+TEST_CASE("OP_PURGE_DELETED works properly", "[itemlist_formaction]") {
 	//Does not do much for now, 
 	//Trigger deletion before in order to test properly...
 	controller c;
@@ -101,8 +100,7 @@ TEST_CASE("process_op(OP_PURGE_DELETED)", "[itemlist_formaction]") {
 	REQUIRE_NOTHROW(itemlist.process_op(OP_PURGE_DELETED));
 }
 
-TEST_CASE("process_op(OP_OPENBROWSER_AND_MARK)", "[itemlist_formaction]") {
-	INFO("Tests item opening in browser by setting the browser option to echo to a temporary file, that is then parsed.");
+TEST_CASE("OP_OPENBROWSER_AND_MARK passes the proper url to the browser and marks read", "[itemlist_formaction]") {
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile browserfile;
@@ -135,8 +133,7 @@ TEST_CASE("process_op(OP_OPENBROWSER_AND_MARK)", "[itemlist_formaction]") {
 	REQUIRE(feed->unread_item_count() == 0);
 }
 
-TEST_CASE("process_op(OP_OPENINBROWSER)", "[itemlist_formaction]") {
-	INFO("Tests item opening in browser by setting the browser option to echo to a temporary file, that is then parsed.");
+TEST_CASE("OP_OPENINBROWSER passes the proper url to the browser", "[itemlist_formaction]") {
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile browserfile;
@@ -165,8 +162,7 @@ TEST_CASE("process_op(OP_OPENINBROWSER)", "[itemlist_formaction]") {
 	REQUIRE(line == test_url);
 }
 
-TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER)", "[itemlist_formaction]"){
-	INFO("Tests multiple item opening in browser by setting the browser option to echo to a temporary file, that is then parsed. Each item is set to a different url but no assertion is made regarding the opening order");
+TEST_CASE("OP_OPENALLUNREADINBROWSER passes the proper url list to the browser", "[itemlist_formaction]"){
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile browserfile;
@@ -196,7 +192,7 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER)", "[itemlist_formaction]"){
 	itemlist_formaction itemlist(&v, itemlist_str);
 	itemlist.set_feed(feed);
 
-	SECTION("Open all unread in browser, unread >= max-browser-tabs"){
+	SECTION("unread >= max-browser-tabs"){
 		int maxItemsToOpen = 4;
 		int openedItemsCount = 0;
 		cfg.set_configvalue("max-browser-tabs", std::to_string(maxItemsToOpen));
@@ -206,7 +202,7 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER)", "[itemlist_formaction]"){
 		std::ifstream browserFileStream (browserfile.getPath());
 		openedItemsCount = 0;
 		if (browserFileStream.is_open()) {
-			while ( std::getline (browserFileStream,line) ) {
+			while ( std::getline (browserFileStream,line)) {
 				INFO("Each URL should be present exactly once. Erase urls after first match to fail if an item opens twice.")
 				REQUIRE(url_set.count(line) == 1);
 				url_set.erase(url_set.find(line));
@@ -216,7 +212,7 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER)", "[itemlist_formaction]"){
 		REQUIRE(openedItemsCount == maxItemsToOpen);
 	}
 
-	SECTION("Open all unread in browser, unread < max-browser-tabs"){
+	SECTION("unread < max-browser-tabs"){
 		int maxItemsToOpen = 9;
 		int openedItemsCount = 0;
 		cfg.set_configvalue("max-browser-tabs", std::to_string(maxItemsToOpen));
@@ -225,7 +221,7 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER)", "[itemlist_formaction]"){
 
 		std::ifstream browserFileStream (browserfile.getPath());
 		if (browserFileStream.is_open()) {
-			while ( std::getline (browserFileStream,line) ) {
+			while ( std::getline (browserFileStream,line)) {
 				INFO("Each URL should be present exactly once. Erase urls after first match to fail if an item opens twice.")
 				REQUIRE(url_set.count(line) == 1);
 				url_set.erase(url_set.find(line));
@@ -236,8 +232,7 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER)", "[itemlist_formaction]"){
 	}
 }
 
-TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER_AND_MARK"){
-	INFO("Tests multiple item opening in browser by setting the browser option to echo to a temporary file, that is then parsed. Each item is set to a different url but no assertion is made regarding the opening order");
+TEST_CASE("OP_OPENALLUNREADINBROWSER_AND_MARK passes the proper url list to the browser and marks them read", "[itemlist_formaction]"){
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile browserfile;
@@ -267,7 +262,7 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER_AND_MARK"){
 	itemlist_formaction itemlist(&v, itemlist_str);
 	itemlist.set_feed(feed);
 
-	SECTION("Open all unread in browser and mark read, unread >= max-browser-tabs"){
+	SECTION("unread >= max-browser-tabs"){
 		int maxItemsToOpen = 4;
 		int openedItemsCount = 0;
 		cfg.set_configvalue("max-browser-tabs", std::to_string(maxItemsToOpen));
@@ -276,7 +271,7 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER_AND_MARK"){
 
 		std::ifstream browserFileStream (browserfile.getPath());
 		if (browserFileStream.is_open()) {
-			while ( std::getline (browserFileStream,line) ) {
+			while ( std::getline (browserFileStream,line)) {
 				INFO("Each URL should be present exactly once. Erase urls after first match to fail if an item opens twice.")
 				REQUIRE(url_set.count(line) == 1);
 				url_set.erase(url_set.find(line));
@@ -287,7 +282,7 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER_AND_MARK"){
 		REQUIRE(feed->unread_item_count() == itemCount - maxItemsToOpen);
 	}
 
-	SECTION("Open all unread in browser and mark read, unread < max-browser-tabs"){
+	SECTION("unread < max-browser-tabs"){
 		int maxItemsToOpen = 9;
 		int openedItemsCount = 0;
 		cfg.set_configvalue("max-browser-tabs", std::to_string(maxItemsToOpen));
@@ -296,7 +291,7 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER_AND_MARK"){
 
 		std::ifstream browserFileStream (browserfile.getPath());
 		if (browserFileStream.is_open()) {
-			while ( std::getline (browserFileStream,line) ) {
+			while ( std::getline (browserFileStream,line)) {
 				INFO("Each URL should be present exactly once. Erase urls after first match to fail if an item opens twice.")
 				REQUIRE(url_set.count(line) == 1);
 				url_set.erase(url_set.find(line));
@@ -308,9 +303,8 @@ TEST_CASE("process_op(OP_OPENALLUNREADINBROWSER_AND_MARK"){
 	}
 }
 
-TEST_CASE("process_op(OP_TOGGLEITEMREAD)", "[itemlist_formaction]") {
+TEST_CASE("OP_TOGGLEITEMREAD properly switches the read status", "[itemlist_formaction]") {
 #if 0
-	INFO("Tests read status toggling command, from read to unread and unread to read");
 	controller c;
 	newsbeuter::view v(&c);
 	configcontainer cfg;
@@ -346,8 +340,7 @@ TEST_CASE("process_op(OP_TOGGLEITEMREAD)", "[itemlist_formaction]") {
 #endif
 }
 
-TEST_CASE("process_op(OP_SHOWURLS)", "[itemlist_formaction]") {
-	INFO("Test");
+TEST_CASE("OP_SHOWURLS properly shows the article's properties", "[itemlist_formaction]") {
 	controller c;
 	newsbeuter::view v(&c);
 	configcontainer cfg;
@@ -383,7 +376,7 @@ TEST_CASE("process_op(OP_SHOWURLS)", "[itemlist_formaction]") {
 	itemlist_formaction itemlist(&v, itemlist_str);
 
 
-	SECTION("OP_SHOWURLS with external-url-viewer"){
+	SECTION("with external-url-viewer"){
 		feed->add_item(item);
 		itemlist.set_feed(feed);
 		cfg.set_configvalue("external-url-viewer", "tee > " + urlFile.getPath());
@@ -391,42 +384,80 @@ TEST_CASE("process_op(OP_SHOWURLS)", "[itemlist_formaction]") {
 		REQUIRE_NOTHROW(itemlist.process_op(OP_SHOWURLS));
 
 		std::ifstream urlFileStream (urlFile.getPath());
-		REQUIRE( std::getline (urlFileStream,line) );
+		REQUIRE(std::getline (urlFileStream,line));
 		REQUIRE(line == pager_prefix_title + test_title);
 
-		REQUIRE( std::getline (urlFileStream,line) );
+		REQUIRE(std::getline (urlFileStream,line));
 		REQUIRE(line == pager_prefix_author + test_author);
 
-		REQUIRE( std::getline (urlFileStream,line) );
+		REQUIRE(std::getline (urlFileStream,line));
 		REQUIRE(line == pager_prefix_date + test_pubDate_str);
 
-		REQUIRE( std::getline (urlFileStream,line) );
+		REQUIRE(std::getline (urlFileStream,line));
 		REQUIRE(line == pager_prefix_link + test_url);
 
-		REQUIRE( std::getline (urlFileStream,line) );
+		REQUIRE(std::getline (urlFileStream,line));
 		REQUIRE(line == " ");
 
-		REQUIRE( std::getline (urlFileStream,line) );
+		REQUIRE(std::getline (urlFileStream,line));
 		REQUIRE(line == test_description);
 
-		REQUIRE( std::getline (urlFileStream,line) );
+		REQUIRE(std::getline (urlFileStream,line));
 		REQUIRE(line == "");
 	}
 
-	SECTION("OP_SHOWURLS default behaviour"){
+	SECTION("default behaviour"){
 		feed->add_item(item);
 		itemlist.set_feed(feed);
 		REQUIRE_NOTHROW(itemlist.process_op(OP_SHOWURLS));
 	}
 
-	SECTION("OP_SHOWURLS empty feed"){
+	SECTION("no feed in formaction"){
 		REQUIRE_NOTHROW(itemlist.process_op(OP_SHOWURLS));
 	}
 	
 }
 
-TEST_CASE("process_op(OP_BOOKMARK)", "[itemlist_formaction]") {
-	//NOTIMPL
+TEST_CASE("OP_BOOKMARK works properly", "[itemlist_formaction]") {
+	controller c;
+	newsbeuter::view v(&c);
+	configcontainer * cfg = c.get_cfg();
+	cache rsscache(":memory:", cfg);
+	TestHelpers::TempFile bookmarkFile;
+	std::string line;
+	std::vector<std::string> bookmark_args;
+
+	std::string test_url = "http://test_url";
+	std::string test_title = "Article Title";
+	std::string feed_title = "Feed Title";
+	std::string separator = " ";
+	std::string extra_arg = "extra arg";
+
+	v.set_config_container(cfg);
+	c.set_view(&v);
+
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
+	feed->set_title(feed_title);
+
+	std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
+	item->set_link(test_url);
+	item->set_title(test_title);
+
+	itemlist_formaction itemlist(&v, itemlist_str);
+
+	feed->add_item(item);
+	itemlist.set_feed(feed);
+	
+	cfg->set_configvalue("bookmark-cmd", "echo > "+ bookmarkFile.getPath());
+
+	bookmark_args.push_back(extra_arg);
+	REQUIRE_NOTHROW(itemlist.process_op(OP_BOOKMARK, true,  &bookmark_args));
+
+	std::ifstream browserFileStream (bookmarkFile.getPath());
+
+	REQUIRE(std::getline (browserFileStream,line));
+	REQUIRE(line == test_url + separator + test_title + separator + extra_arg + separator + feed_title);
+
 }
 
 TEST_CASE("process_op(OP_EDITFLAGS)", "[itemlist_formaction]") {
