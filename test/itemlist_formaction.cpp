@@ -11,7 +11,7 @@
 using namespace newsbeuter;
 
 
-TEST_CASE("OP_OPEN properly displays article elements", "[itemlist_formaction]") {
+TEST_CASE("OP_OPEN displays article using an external pager", "[itemlist_formaction]") {
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile pagerfile;
@@ -83,7 +83,7 @@ TEST_CASE("OP_DELETE", "[itemlist_formaction]") {
 	//Crash, to investigate
 }
 
-TEST_CASE("OP_PURGE_DELETED works properly", "[itemlist_formaction]") {
+TEST_CASE("OP_PURGE_DELETED", "[itemlist_formaction]") {
 	//Does not do much for now, 
 	//Trigger deletion before in order to test properly...
 	controller c;
@@ -100,7 +100,7 @@ TEST_CASE("OP_PURGE_DELETED works properly", "[itemlist_formaction]") {
 	REQUIRE_NOTHROW(itemlist.process_op(OP_PURGE_DELETED));
 }
 
-TEST_CASE("OP_OPENBROWSER_AND_MARK passes the proper url to the browser and marks read", "[itemlist_formaction]") {
+TEST_CASE("OP_OPENBROWSER_AND_MARK passes the url to the browser and marks read", "[itemlist_formaction]") {
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile browserfile;
@@ -133,7 +133,7 @@ TEST_CASE("OP_OPENBROWSER_AND_MARK passes the proper url to the browser and mark
 	REQUIRE(feed->unread_item_count() == 0);
 }
 
-TEST_CASE("OP_OPENINBROWSER passes the proper url to the browser", "[itemlist_formaction]") {
+TEST_CASE("OP_OPENINBROWSER passes the url to the browser", "[itemlist_formaction]") {
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile browserfile;
@@ -162,7 +162,7 @@ TEST_CASE("OP_OPENINBROWSER passes the proper url to the browser", "[itemlist_fo
 	REQUIRE(line == test_url);
 }
 
-TEST_CASE("OP_OPENALLUNREADINBROWSER passes the proper url list to the browser", "[itemlist_formaction]"){
+TEST_CASE("OP_OPENALLUNREADINBROWSER passes the url list to the browser", "[itemlist_formaction]"){
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile browserfile;
@@ -202,7 +202,7 @@ TEST_CASE("OP_OPENALLUNREADINBROWSER passes the proper url list to the browser",
 		std::ifstream browserFileStream (browserfile.getPath());
 		openedItemsCount = 0;
 		if (browserFileStream.is_open()) {
-			while ( std::getline (browserFileStream,line)) {
+			while ( std::getline (browserFileStream,line) ) {
 				INFO("Each URL should be present exactly once. Erase urls after first match to fail if an item opens twice.")
 				REQUIRE(url_set.count(line) == 1);
 				url_set.erase(url_set.find(line));
@@ -221,7 +221,7 @@ TEST_CASE("OP_OPENALLUNREADINBROWSER passes the proper url list to the browser",
 
 		std::ifstream browserFileStream (browserfile.getPath());
 		if (browserFileStream.is_open()) {
-			while ( std::getline (browserFileStream,line)) {
+			while ( std::getline (browserFileStream,line) ) {
 				INFO("Each URL should be present exactly once. Erase urls after first match to fail if an item opens twice.")
 				REQUIRE(url_set.count(line) == 1);
 				url_set.erase(url_set.find(line));
@@ -232,7 +232,7 @@ TEST_CASE("OP_OPENALLUNREADINBROWSER passes the proper url list to the browser",
 	}
 }
 
-TEST_CASE("OP_OPENALLUNREADINBROWSER_AND_MARK passes the proper url list to the browser and marks them read", "[itemlist_formaction]"){
+TEST_CASE("OP_OPENALLUNREADINBROWSER_AND_MARK passes the url list to the browser and marks them read", "[itemlist_formaction]"){
 	controller c;
 	newsbeuter::view v(&c);
 	TestHelpers::TempFile browserfile;
@@ -271,7 +271,7 @@ TEST_CASE("OP_OPENALLUNREADINBROWSER_AND_MARK passes the proper url list to the 
 
 		std::ifstream browserFileStream (browserfile.getPath());
 		if (browserFileStream.is_open()) {
-			while ( std::getline (browserFileStream,line)) {
+			while ( std::getline (browserFileStream,line) ) {
 				INFO("Each URL should be present exactly once. Erase urls after first match to fail if an item opens twice.")
 				REQUIRE(url_set.count(line) == 1);
 				url_set.erase(url_set.find(line));
@@ -291,7 +291,7 @@ TEST_CASE("OP_OPENALLUNREADINBROWSER_AND_MARK passes the proper url list to the 
 
 		std::ifstream browserFileStream (browserfile.getPath());
 		if (browserFileStream.is_open()) {
-			while ( std::getline (browserFileStream,line)) {
+			while ( std::getline (browserFileStream,line) ) {
 				INFO("Each URL should be present exactly once. Erase urls after first match to fail if an item opens twice.")
 				REQUIRE(url_set.count(line) == 1);
 				url_set.erase(url_set.find(line));
@@ -303,7 +303,7 @@ TEST_CASE("OP_OPENALLUNREADINBROWSER_AND_MARK passes the proper url list to the 
 	}
 }
 
-TEST_CASE("OP_TOGGLEITEMREAD properly switches the read status", "[itemlist_formaction]") {
+TEST_CASE("OP_TOGGLEITEMREAD switches the read status", "[itemlist_formaction]") {
 #if 0
 	controller c;
 	newsbeuter::view v(&c);
@@ -340,7 +340,7 @@ TEST_CASE("OP_TOGGLEITEMREAD properly switches the read status", "[itemlist_form
 #endif
 }
 
-TEST_CASE("OP_SHOWURLS properly shows the article's properties", "[itemlist_formaction]") {
+TEST_CASE("OP_SHOWURLS shows the article's properties", "[itemlist_formaction]") {
 	controller c;
 	newsbeuter::view v(&c);
 	configcontainer cfg;
@@ -406,7 +406,7 @@ TEST_CASE("OP_SHOWURLS properly shows the article's properties", "[itemlist_form
 		REQUIRE(line == "");
 	}
 
-	SECTION("default behaviour"){
+	SECTION("internal url viewer"){
 		feed->add_item(item);
 		itemlist.set_feed(feed);
 		REQUIRE_NOTHROW(itemlist.process_op(OP_SHOWURLS));
@@ -418,7 +418,7 @@ TEST_CASE("OP_SHOWURLS properly shows the article's properties", "[itemlist_form
 	
 }
 
-TEST_CASE("OP_BOOKMARK works properly", "[itemlist_formaction]") {
+TEST_CASE("OP_BOOKMARK pipes articles url and title to bookmark-command", "[itemlist_formaction]") {
 	controller c;
 	newsbeuter::view v(&c);
 	configcontainer * cfg = c.get_cfg();
@@ -460,8 +460,80 @@ TEST_CASE("OP_BOOKMARK works properly", "[itemlist_formaction]") {
 
 }
 
-TEST_CASE("process_op(OP_EDITFLAGS)", "[itemlist_formaction]") {
-	//NOTIMPL
+TEST_CASE("OP_EDITFLAGS arguments are added to an item's flags", "[itemlist_formaction]") {
+	controller c;
+	newsbeuter::view v(&c);
+	configcontainer * cfg = c.get_cfg();
+	cache rsscache(":memory:", cfg);
+
+	std::vector<std::string> op_args;
+
+	v.set_config_container(cfg);
+	c.set_view(&v);
+
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
+	std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
+
+	itemlist_formaction itemlist(&v, itemlist_str);
+
+	feed->add_item(item);
+	itemlist.set_feed(feed);
+	
+	SECTION("Single flag"){
+		std::string flags = "G";
+		op_args.push_back(flags);
+	
+		REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
+		REQUIRE(item->flags() == flags);
+	}
+
+	SECTION("Unordered flags"){
+		std::string flags = "abdefc";
+		std::string ordered_flags = "abcdef";
+		op_args.push_back(flags);
+	
+		REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
+		REQUIRE(item->flags() == ordered_flags);
+	}
+
+	SECTION("Duplicate flag in argument"){
+		std::string flags = "Abd";
+		op_args.push_back(flags + "ddd");
+	
+		REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
+		REQUIRE(item->flags() == flags);
+	}
+
+	SECTION("Unauthorized values in arguments"){
+		std::string flags = "Abd";
+		SECTION("Numbers"){
+			op_args.push_back(flags + "1236");
+	
+			REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
+			REQUIRE(item->flags() == flags);
+		}
+		SECTION("Symbols"){
+			op_args.push_back(flags + "%^\\*;\'\"&~#{([-|`_/@)]=}$£€µ,;:!?./§");
+	
+			REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
+			REQUIRE(item->flags() == flags);
+		}
+		SECTION("Accents"){
+			op_args.push_back(flags + "¨^");
+	
+			REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
+			REQUIRE(item->flags() == flags);
+		}
+	}
+
+	SECTION("All possible flags at once"){
+		std::string flags = "ABCDEFGHIFKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		op_args.push_back(flags);
+	
+		REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
+		REQUIRE(item->flags() == flags);
+	}
+
 }
 
 TEST_CASE("process_op(OP_SAVE)", "[itemlist_formaction]") {
