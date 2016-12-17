@@ -77,27 +77,31 @@ TEST_CASE("OP_OPEN displays article using an external pager", "[itemlist_formact
 	REQUIRE(line == "");
 }
 
-TEST_CASE("OP_DELETE", "[itemlist_formaction]") {
-	//REQUIRE_NOTHROW(itemlist.process_op(OP_DELETE));
-	//REQUIRE(feed->total_item_count() == itemCount -1);
-	//Crash, to investigate
-}
-
-TEST_CASE("OP_PURGE_DELETED", "[itemlist_formaction]") {
-	//Does not do much for now, 
-	//Trigger deletion before in order to test properly...
+TEST_CASE("OP_PURGE_DELETED purges previously deleted items", "[itemlist_formaction]") {
 	controller c;
 	newsbeuter::view v(&c);
 	configcontainer cfg;
 	cache rsscache(":memory:", &cfg);
 	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
+	std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
+	feed->add_item(item);
 
 	v.set_config_container(&cfg);
 	c.set_view(&v);
 
 	itemlist_formaction itemlist(&v, itemlist_str);
 	itemlist.set_feed(feed);
-	REQUIRE_NOTHROW(itemlist.process_op(OP_PURGE_DELETED));
+
+	SECTION("No items to purge") {
+		REQUIRE_NOTHROW(itemlist.process_op(OP_PURGE_DELETED));
+		REQUIRE(feed->total_item_count() == 1);
+	}
+
+	SECTION("Deleted items are purged") {
+		item->set_deleted(true);
+		REQUIRE_NOTHROW(itemlist.process_op(OP_PURGE_DELETED));
+		REQUIRE(feed->total_item_count() == 0);
+	}
 }
 
 TEST_CASE("OP_OPENBROWSER_AND_MARK passes the url to the browser and marks read", "[itemlist_formaction]") {
@@ -303,43 +307,6 @@ TEST_CASE("OP_OPENALLUNREADINBROWSER_AND_MARK passes the url list to the browser
 	}
 }
 
-TEST_CASE("OP_TOGGLEITEMREAD switches the read status", "[itemlist_formaction]") {
-#if 0
-	controller c;
-	newsbeuter::view v(&c);
-	configcontainer cfg;
-	cache rsscache(":memory:", &cfg);
-
-	v.set_config_container(&cfg);
-	c.set_view(&v);
-
-	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
-	std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
-
-	SECTION("Toggle item from read to unread") {
-		item->set_unread(false);
-		feed->add_item(item);
-		itemlist_formaction itemlist(&v, itemlist_str);
-		itemlist.set_feed(feed);
-
-		REQUIRE_NOTHROW(itemlist.process_op(OP_TOGGLEITEMREAD));
-		REQUIRE(feed->unread_item_count() == 1);
-	}
-	SECTION("Toggle item from unread to read") {
-		item->set_unread(true);
-		feed->add_item(item);
-		itemlist_formaction itemlist(&v, itemlist_str);
-		itemlist.set_feed(feed);
-
-		REQUIRE_NOTHROW(itemlist.process_op(OP_TOGGLEITEMREAD));
-		REQUIRE(feed->unread_item_count() == 0);
-	}
-	SECTION("toggleitemread-jumps-to-next-unread") {
-		//NOTIMPL
-	}
-#endif
-}
-
 TEST_CASE("OP_SHOWURLS shows the article's properties", "[itemlist_formaction]") {
 	controller c;
 	newsbeuter::view v(&c);
@@ -527,7 +494,7 @@ TEST_CASE("OP_EDITFLAGS arguments are added to an item's flags", "[itemlist_form
 	}
 
 	SECTION("All possible flags at once"){
-		std::string flags = "ABCDEFGHIFKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		std::string flags = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 		op_args.push_back(flags);
 	
 		REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
@@ -536,8 +503,71 @@ TEST_CASE("OP_EDITFLAGS arguments are added to an item's flags", "[itemlist_form
 
 }
 
-TEST_CASE("process_op(OP_SAVE)", "[itemlist_formaction]") {
-	//NOTIMPL
+TEST_CASE("OP_SAVE writes an article's attributes to the specified file", "[itemlist_formaction]") {
+	controller c;
+	newsbeuter::view v(&c);
+	TestHelpers::TempFile saveFile;
+	configcontainer * cfg = c.get_cfg();
+	cache rsscache(":memory:", cfg);
+
+	std::vector<std::string> op_args;
+	op_args.push_back(saveFile.getPath());
+
+	std::string test_url = "http://test_url";
+	std::string test_title = "Article Title";
+	std::string test_author = "Article Author";
+	std::string test_description = "Article Description";
+	time_t test_pubDate = 42;
+	char test_pubDate_str[128];
+	strftime(test_pubDate_str, sizeof(test_pubDate_str), "%a, %d %b %Y %H:%M:%S %z", localtime(&test_pubDate));
+
+	std::string prefix_title = "Title: ";
+	std::string prefix_author = "Author: ";
+	std::string prefix_date = "Date: ";
+	std::string prefix_link = "Link: ";
+
+	std::string line;
+
+	v.set_config_container(cfg);
+	c.set_view(&v);
+
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
+
+	std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
+	item->set_link(test_url);
+	item->set_title(test_title);
+	item->set_author(test_author);
+	item->set_pubDate(test_pubDate);
+	item->set_description(test_description);
+
+	itemlist_formaction itemlist(&v, itemlist_str);
+
+	feed->add_item(item);
+	itemlist.set_feed(feed);
+
+	REQUIRE_NOTHROW(itemlist.process_op(OP_SAVE, true, &op_args));
+
+	std::ifstream saveFileStream (saveFile.getPath());
+	REQUIRE(std::getline (saveFileStream,line));
+	REQUIRE(line == prefix_title + test_title);
+
+	REQUIRE(std::getline (saveFileStream,line));
+	REQUIRE(line == prefix_author + test_author);
+
+	REQUIRE(std::getline (saveFileStream,line));
+	REQUIRE(line == prefix_date + test_pubDate_str);
+
+	REQUIRE(std::getline (saveFileStream,line));
+	REQUIRE(line == prefix_link + test_url);
+
+	REQUIRE(std::getline (saveFileStream,line));
+	REQUIRE(line == " ");
+
+	REQUIRE(std::getline (saveFileStream,line));
+	REQUIRE(line == test_description);
+
+	REQUIRE(std::getline (saveFileStream,line));
+	REQUIRE(line == "");
 }
 
 TEST_CASE("process_op(OP_HELP)", "[itemlist_formaction]") {
