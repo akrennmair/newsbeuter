@@ -5,6 +5,7 @@
 #include <itemlist_formaction.h>
 #include <keymap.h>
 #include <itemlist.h>
+#include <regexmanager.h>
 
 #include <unistd.h>
 
@@ -570,8 +571,31 @@ TEST_CASE("OP_SAVE writes an article's attributes to the specified file", "[item
 	REQUIRE(line == "");
 }
 
-TEST_CASE("process_op(OP_HELP)", "[itemlist_formaction]") {
-	//NOTIMPL
+TEST_CASE("OP_HELP command is processed", "[itemlist_formaction]") {
+	controller c;
+	regexmanager regman;
+	newsbeuter::view v(&c);
+	configcontainer * cfg = c.get_cfg();
+	cache rsscache(":memory:", cfg);
+
+	keymap k(KM_NEWSBEUTER);
+	v.set_keymap(&k);
+	
+	v.set_regexmanager(&regman);
+	v.set_config_container(cfg);
+	c.set_view(&v);
+
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
+	std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
+
+	itemlist_formaction itemlist(&v, itemlist_str);
+	feed->add_item(item);
+	itemlist.set_feed(feed);
+
+	v.push_itemlist(feed);
+
+	REQUIRE_NOTHROW(itemlist.process_op(OP_HELP));
+
 }
 
 TEST_CASE("process_op(OP_RELOAD)", "[itemlist_formaction]") {
