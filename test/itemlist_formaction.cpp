@@ -595,11 +595,44 @@ TEST_CASE("OP_HELP command is processed", "[itemlist_formaction]") {
 	v.push_itemlist(feed);
 
 	REQUIRE_NOTHROW(itemlist.process_op(OP_HELP));
-
 }
 
-TEST_CASE("process_op(OP_RELOAD)", "[itemlist_formaction]") {
-	//NOTIMPL
+TEST_CASE("OP_RELOAD updates the content of a feed", "[itemlist_formaction]") {
+	controller c;
+	regexmanager regman;
+	newsbeuter::view v(&c);
+	configcontainer * cfg = c.get_cfg();
+	cache rsscache(":memory:", cfg);
+
+	std::string fake_feed_url = "http://feed_url";
+	std::string feed_title = "Feed Title";
+	std::string feed_description = "Feed Description";
+	std::string item_title = "Article Title";
+	std::string item_url = "http://item_url";
+	std::string item_description = "Article Description";
+
+	INFO("We use an exec: as un URL, in order to echo a minimal rss syntax when the feed is reloaded")
+	std::string actual_feed_url = "exec:echo '<?xml version=\"1.0\" encoding=\"UTF-8\" ?> <rss version=\"2.0\"> <channel> <title>" + feed_title + "</title> <link>" + fake_feed_url + "</link> <description>" + feed_description + "</description> <item> <title>" + item_title + "</title> <link>" + item_url + "</link> <description>" + item_description + "</description> </item> </channel> </rss>'";
+
+	keymap k(KM_NEWSBEUTER);
+	v.set_keymap(&k);
+
+	v.set_regexmanager(&regman);
+	v.set_config_container(cfg);
+	c.set_view(&v);
+
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
+	feed->set_link(actual_feed_url);
+
+	itemlist_formaction itemlist(&v, itemlist_str);
+	itemlist.set_feed(feed);
+
+	v.push_itemlist(feed);
+
+	REQUIRE(feed->total_item_count() == 0);
+	REQUIRE_NOTHROW(itemlist.process_op(OP_RELOAD));
+	REQUIRE(itemlist.get_feed()->total_item_count() == 1);
+
 }
 
 TEST_CASE("process_op(OP_QUIT)", "[itemlist_formaction]") {
