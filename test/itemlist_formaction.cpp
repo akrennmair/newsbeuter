@@ -3,8 +3,10 @@
 
 #include <cache.h>
 #include <itemlist_formaction.h>
+#include <feedlist_formaction.h>
 #include <keymap.h>
 #include <itemlist.h>
+#include <feedlist.h>
 #include <regexmanager.h>
 
 #include <unistd.h>
@@ -597,66 +599,86 @@ TEST_CASE("OP_HELP command is processed", "[itemlist_formaction]") {
 	REQUIRE_NOTHROW(itemlist.process_op(OP_HELP));
 }
 
-TEST_CASE("OP_RELOAD updates the content of a feed", "[itemlist_formaction]") {
+TEST_CASE("OP_HARDQUIT command is processed", "[itemlist_formaction]") {
 	controller c;
 	regexmanager regman;
 	newsbeuter::view v(&c);
 	configcontainer * cfg = c.get_cfg();
 	cache rsscache(":memory:", cfg);
 
-	std::string fake_feed_url = "http://feed_url";
-	std::string feed_title = "Feed Title";
-	std::string feed_description = "Feed Description";
-	std::string item_title = "Article Title";
-	std::string item_url = "http://item_url";
-	std::string item_description = "Article Description";
-
-	INFO("We use an exec: as un URL, in order to echo a minimal rss syntax when the feed is reloaded")
-	std::string actual_feed_url = "exec:echo '<?xml version=\"1.0\" encoding=\"UTF-8\" ?> <rss version=\"2.0\"> <channel> <title>" + feed_title + "</title> <link>" + fake_feed_url + "</link> <description>" + feed_description + "</description> <item> <title>" + item_title + "</title> <link>" + item_url + "</link> <description>" + item_description + "</description> </item> </channel> </rss>'";
-
 	keymap k(KM_NEWSBEUTER);
 	v.set_keymap(&k);
-
+	
 	v.set_regexmanager(&regman);
 	v.set_config_container(cfg);
 	c.set_view(&v);
 
 	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
-	feed->set_link(actual_feed_url);
 
 	itemlist_formaction itemlist(&v, itemlist_str);
 	itemlist.set_feed(feed);
 
 	v.push_itemlist(feed);
 
-	REQUIRE(feed->total_item_count() == 0);
-	REQUIRE_NOTHROW(itemlist.process_op(OP_RELOAD));
-	REQUIRE(itemlist.get_feed()->total_item_count() == 1);
-
+	REQUIRE_NOTHROW(itemlist.process_op(OP_HARDQUIT));
 }
 
-TEST_CASE("process_op(OP_QUIT)", "[itemlist_formaction]") {
-	//NOTIMPL
-}
+TEST_CASE("Navigate back and forth using OP_NEXT and OP_PREVIOUS", "[itemlist_formaction]") {
+	INFO("We are using the OP_SHOWURLS command to print the current article'attibutes to a file, and assert the position was indeed updated.");
+	controller c;
+	TestHelpers::TempFile articleFile;
+	regexmanager regman;
+	newsbeuter::view v(&c);
+	configcontainer * cfg = c.get_cfg();
+	cfg->set_configvalue("external-url-viewer", "tee > " + articleFile.getPath());
+	cache rsscache(":memory:", cfg);
+	std::vector<std::shared_ptr<rss_feed>> feeds;
+	std::string line;
 
-TEST_CASE("process_op(OP_HARDQUIT)", "[itemlist_formaction]") {
-	//NOTIMPL
-}
+	std::string first_article_title = "First_Article";
+	std::string second_article_title = "Second_Article";
+	std::string prefix_title = "Title: ";
 
-TEST_CASE("process_op(OP_NEXTUNREAD)", "[itemlist_formaction]") {
-	//NOTIMPL
-}
+	keymap k(KM_NEWSBEUTER);
+	v.set_keymap(&k);
+	
+	v.set_regexmanager(&regman);
+	v.set_config_container(cfg);
+	c.set_view(&v);
 
-TEST_CASE("process_op(OP_PREVUNREAD)", "[itemlist_formaction]") {
-	//NOTIMPL
-}
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
 
-TEST_CASE("process_op(OP_NEXT)", "[itemlist_formaction]") {
-	//NOTIMPL
-}
+	std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
+	item->set_title(first_article_title);
+	feed->add_item(item);
 
-TEST_CASE("process_op(OP_PREV)", "[itemlist_formaction]") {
-	//NOTIMPL
+	std::shared_ptr<rss_item> item2 = std::make_shared<rss_item>(&rsscache);
+	item2->set_title(second_article_title);
+	feed->add_item(item2);
+
+	itemlist_formaction itemlist(&v, itemlist_str);
+	itemlist.set_feed(feed);
+
+	feeds.push_back(feed);
+	feedlist_formaction feedlist(&v, feedlist_str);
+	feedlist.set_feedlist(feeds);
+
+	v.set_feedlist(feeds);
+	v.push_itemlist(feed);
+
+	REQUIRE_NOTHROW(itemlist.process_op(OP_NEXT));
+	itemlist.process_op(OP_SHOWURLS);
+
+	std::ifstream fileStream (articleFile.getPath());
+	std::getline (fileStream,line);
+	REQUIRE(line == prefix_title + second_article_title);
+
+	REQUIRE_NOTHROW(itemlist.process_op(OP_PREV));
+	itemlist.process_op(OP_SHOWURLS);
+
+	fileStream.seekg(0);
+	std::getline (fileStream,line);
+	REQUIRE(line == prefix_title + first_article_title);
 }
 
 TEST_CASE("process_op(OP_RANDOMUNREAD)", "[itemlist_formaction]") {
