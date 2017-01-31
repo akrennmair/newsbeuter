@@ -632,7 +632,6 @@ TEST_CASE("Navigate back and forth using OP_NEXT and OP_PREVIOUS", "[itemlist_fo
 	configcontainer * cfg = c.get_cfg();
 	cfg->set_configvalue("external-url-viewer", "tee > " + articleFile.getPath());
 	cache rsscache(":memory:", cfg);
-	std::vector<std::shared_ptr<rss_feed>> feeds;
 	std::string line;
 
 	std::string first_article_title = "First_Article";
@@ -659,11 +658,6 @@ TEST_CASE("Navigate back and forth using OP_NEXT and OP_PREVIOUS", "[itemlist_fo
 	itemlist_formaction itemlist(&v, itemlist_str);
 	itemlist.set_feed(feed);
 
-	feeds.push_back(feed);
-	feedlist_formaction feedlist(&v, feedlist_str);
-	feedlist.set_feedlist(feeds);
-
-	v.set_feedlist(feeds);
 	v.push_itemlist(feed);
 
 	REQUIRE_NOTHROW(itemlist.process_op(OP_NEXT));
