@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <string>
 #include <exception>
+#include <fstream>
 
 namespace TestHelpers {
 
@@ -112,6 +113,42 @@ namespace TestHelpers {
 
 			std::string tempdir;
 			std::string filepath;
+	};
+
+	/*
+	 * The AssertArticleFileContent opens a file where the content of an article
+	 * was previously dumped (using for example OP_SHOWURL, or OP_OPEN with an
+	 * appropriate "pager" config value ) and checks the differents lines according
+	 * to the expected values passed as parameters.
+	 */
+	inline void AssertArticleFileContent( std::string path, std::string title, std::string author, std::string date, std::string url, std::string description) {
+		std::string prefix_title = "Title: ";
+		std::string prefix_author = "Author: ";
+		std::string prefix_date = "Date: ";
+		std::string prefix_link = "Link: ";
+
+		std::string line;
+		std::ifstream articleFileStream (path);
+		REQUIRE(std::getline (articleFileStream,line));
+		REQUIRE(line == prefix_title + title);
+
+		REQUIRE(std::getline (articleFileStream,line));
+		REQUIRE(line == prefix_author + author);
+
+		REQUIRE(std::getline (articleFileStream,line));
+		REQUIRE(line == prefix_date + date);
+
+		REQUIRE(std::getline (articleFileStream,line));
+		REQUIRE(line == prefix_link + url);
+
+		REQUIRE(std::getline (articleFileStream,line));
+		REQUIRE(line == " ");
+
+		REQUIRE(std::getline (articleFileStream,line));
+		REQUIRE(line == description);
+
+		REQUIRE(std::getline (articleFileStream,line));
+		REQUIRE(line == "");
 	};
 }
 

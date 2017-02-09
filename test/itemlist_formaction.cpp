@@ -57,27 +57,7 @@ TEST_CASE("OP_OPEN displays article using an external pager", "[itemlist_formact
 
 	REQUIRE_NOTHROW(itemlist.process_op(OP_OPEN));
 
-	std::ifstream pagerFileStream (pagerfile.getPath());
-	REQUIRE(std::getline (pagerFileStream,line));
-	REQUIRE(line == pager_prefix_title + test_title);
-
-	REQUIRE(std::getline (pagerFileStream,line));
-	REQUIRE(line == pager_prefix_author + test_author);
-
-	REQUIRE(std::getline (pagerFileStream,line));
-	REQUIRE(line == pager_prefix_date + test_pubDate_str);
-
-	REQUIRE(std::getline (pagerFileStream,line));
-	REQUIRE(line == pager_prefix_link + test_url);
-
-	REQUIRE(std::getline (pagerFileStream,line));
-	REQUIRE(line == " ");
-
-	REQUIRE(std::getline (pagerFileStream,line));
-	REQUIRE(line == test_description);
-
-	REQUIRE(std::getline (pagerFileStream,line));
-	REQUIRE(line == "");
+	TestHelpers::AssertArticleFileContent(pagerfile.getPath(), test_title, test_author, test_pubDate_str, test_url, test_description);
 }
 
 TEST_CASE("OP_PURGE_DELETED purges previously deleted items", "[itemlist_formaction]") {
@@ -350,30 +330,10 @@ TEST_CASE("OP_SHOWURLS shows the article's properties", "[itemlist_formaction]")
 		feed->add_item(item);
 		itemlist.set_feed(feed);
 		cfg.set_configvalue("external-url-viewer", "tee > " + urlFile.getPath());
-	
+
 		REQUIRE_NOTHROW(itemlist.process_op(OP_SHOWURLS));
 
-		std::ifstream urlFileStream (urlFile.getPath());
-		REQUIRE(std::getline (urlFileStream,line));
-		REQUIRE(line == pager_prefix_title + test_title);
-
-		REQUIRE(std::getline (urlFileStream,line));
-		REQUIRE(line == pager_prefix_author + test_author);
-
-		REQUIRE(std::getline (urlFileStream,line));
-		REQUIRE(line == pager_prefix_date + test_pubDate_str);
-
-		REQUIRE(std::getline (urlFileStream,line));
-		REQUIRE(line == pager_prefix_link + test_url);
-
-		REQUIRE(std::getline (urlFileStream,line));
-		REQUIRE(line == " ");
-
-		REQUIRE(std::getline (urlFileStream,line));
-		REQUIRE(line == test_description);
-
-		REQUIRE(std::getline (urlFileStream,line));
-		REQUIRE(line == "");
+		TestHelpers::AssertArticleFileContent(urlFile.getPath(), test_title, test_author, test_pubDate_str, test_url, test_description);
 	}
 
 	SECTION("internal url viewer"){
@@ -385,7 +345,7 @@ TEST_CASE("OP_SHOWURLS shows the article's properties", "[itemlist_formaction]")
 	SECTION("no feed in formaction"){
 		REQUIRE_NOTHROW(itemlist.process_op(OP_SHOWURLS));
 	}
-	
+
 }
 
 TEST_CASE("OP_BOOKMARK pipes articles url and title to bookmark-command", "[itemlist_formaction]") {
@@ -417,7 +377,7 @@ TEST_CASE("OP_BOOKMARK pipes articles url and title to bookmark-command", "[item
 
 	feed->add_item(item);
 	itemlist.set_feed(feed);
-	
+
 	cfg->set_configvalue("bookmark-cmd", "echo > "+ bookmarkFile.getPath());
 
 	bookmark_args.push_back(extra_arg);
@@ -448,11 +408,11 @@ TEST_CASE("OP_EDITFLAGS arguments are added to an item's flags", "[itemlist_form
 
 	feed->add_item(item);
 	itemlist.set_feed(feed);
-	
+
 	SECTION("Single flag"){
 		std::string flags = "G";
 		op_args.push_back(flags);
-	
+
 		REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
 		REQUIRE(item->flags() == flags);
 	}
@@ -461,7 +421,7 @@ TEST_CASE("OP_EDITFLAGS arguments are added to an item's flags", "[itemlist_form
 		std::string flags = "abdefc";
 		std::string ordered_flags = "abcdef";
 		op_args.push_back(flags);
-	
+
 		REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
 		REQUIRE(item->flags() == ordered_flags);
 	}
@@ -469,7 +429,7 @@ TEST_CASE("OP_EDITFLAGS arguments are added to an item's flags", "[itemlist_form
 	SECTION("Duplicate flag in argument"){
 		std::string flags = "Abd";
 		op_args.push_back(flags + "ddd");
-	
+
 		REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
 		REQUIRE(item->flags() == flags);
 	}
@@ -478,19 +438,19 @@ TEST_CASE("OP_EDITFLAGS arguments are added to an item's flags", "[itemlist_form
 		std::string flags = "Abd";
 		SECTION("Numbers"){
 			op_args.push_back(flags + "1236");
-	
+
 			REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
 			REQUIRE(item->flags() == flags);
 		}
 		SECTION("Symbols"){
 			op_args.push_back(flags + "%^\\*;\'\"&~#{([-|`_/@)]=}$£€µ,;:!?./§");
-	
+
 			REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
 			REQUIRE(item->flags() == flags);
 		}
 		SECTION("Accents"){
 			op_args.push_back(flags + "¨^");
-	
+
 			REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
 			REQUIRE(item->flags() == flags);
 		}
@@ -499,7 +459,7 @@ TEST_CASE("OP_EDITFLAGS arguments are added to an item's flags", "[itemlist_form
 	SECTION("All possible flags at once"){
 		std::string flags = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 		op_args.push_back(flags);
-	
+
 		REQUIRE_NOTHROW(itemlist.process_op(OP_EDITFLAGS, true, &op_args));
 		REQUIRE(item->flags() == flags);
 	}
@@ -550,27 +510,7 @@ TEST_CASE("OP_SAVE writes an article's attributes to the specified file", "[item
 
 	REQUIRE_NOTHROW(itemlist.process_op(OP_SAVE, true, &op_args));
 
-	std::ifstream saveFileStream (saveFile.getPath());
-	REQUIRE(std::getline (saveFileStream,line));
-	REQUIRE(line == prefix_title + test_title);
-
-	REQUIRE(std::getline (saveFileStream,line));
-	REQUIRE(line == prefix_author + test_author);
-
-	REQUIRE(std::getline (saveFileStream,line));
-	REQUIRE(line == prefix_date + test_pubDate_str);
-
-	REQUIRE(std::getline (saveFileStream,line));
-	REQUIRE(line == prefix_link + test_url);
-
-	REQUIRE(std::getline (saveFileStream,line));
-	REQUIRE(line == " ");
-
-	REQUIRE(std::getline (saveFileStream,line));
-	REQUIRE(line == test_description);
-
-	REQUIRE(std::getline (saveFileStream,line));
-	REQUIRE(line == "");
+	TestHelpers::AssertArticleFileContent(saveFile.getPath(), test_title, test_author, test_pubDate_str, test_url, test_description);
 }
 
 TEST_CASE("OP_HELP command is processed", "[itemlist_formaction]") {
@@ -582,7 +522,7 @@ TEST_CASE("OP_HELP command is processed", "[itemlist_formaction]") {
 
 	keymap k(KM_NEWSBEUTER);
 	v.set_keymap(&k);
-	
+
 	v.set_regexmanager(&regman);
 	v.set_config_container(cfg);
 	c.set_view(&v);
@@ -608,7 +548,7 @@ TEST_CASE("OP_HARDQUIT command is processed", "[itemlist_formaction]") {
 
 	keymap k(KM_NEWSBEUTER);
 	v.set_keymap(&k);
-	
+
 	v.set_regexmanager(&regman);
 	v.set_config_container(cfg);
 	c.set_view(&v);
@@ -624,7 +564,8 @@ TEST_CASE("OP_HARDQUIT command is processed", "[itemlist_formaction]") {
 }
 
 TEST_CASE("Navigate back and forth using OP_NEXT and OP_PREVIOUS", "[itemlist_formaction]") {
-	INFO("We are using the OP_SHOWURLS command to print the current article'attibutes to a file, and assert the position was indeed updated.");
+	// We are using the OP_SHOWURLS command to print the current article'attibutes
+	// to a file, and assert the position was indeed updated.
 	controller c;
 	TestHelpers::TempFile articleFile;
 	regexmanager regman;
@@ -640,7 +581,7 @@ TEST_CASE("Navigate back and forth using OP_NEXT and OP_PREVIOUS", "[itemlist_fo
 
 	keymap k(KM_NEWSBEUTER);
 	v.set_keymap(&k);
-	
+
 	v.set_regexmanager(&regman);
 	v.set_config_container(cfg);
 	c.set_view(&v);
@@ -675,32 +616,39 @@ TEST_CASE("Navigate back and forth using OP_NEXT and OP_PREVIOUS", "[itemlist_fo
 	REQUIRE(line == prefix_title + first_article_title);
 }
 
-TEST_CASE("process_op(OP_RANDOMUNREAD)", "[itemlist_formaction]") {
-	//NOTIMPL
-}
+TEST_CASE("OP_TOGGLESHOWREAD switches the value of show-read-articles", "[itemlist_formaction]") {
+	controller c;
+	regexmanager regman;
+	newsbeuter::view v(&c);
+	configcontainer * cfg = c.get_cfg();
+	cache rsscache(":memory:", cfg);
 
-TEST_CASE("process_op(OP_NEXTUNREADFEED)", "[itemlist_formaction]") {
-	//NOTIMPL
-}
+	keymap k(KM_NEWSBEUTER);
+	v.set_keymap(&k);
 
-TEST_CASE("process_op(OP_PREVUNREADFEED)", "[itemlist_formaction]") {
-	//NOTIMPL
-}
+	v.set_regexmanager(&regman);
+	v.set_config_container(cfg);
+	c.set_view(&v);
 
-TEST_CASE("process_op(OP_NEXTFEED)", "[itemlist_formaction]") {
-	//NOTIMPL
-}
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
 
-TEST_CASE("process_op(OP_PREVFEED)", "[itemlist_formaction]") {
-	//NOTIMPL
-}
+	std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
+	feed->add_item(item);
 
-TEST_CASE("process_op(OP_MARKFEEDREAD)", "[itemlist_formaction]") {
-	//NOTIMPL
-}
+	itemlist_formaction itemlist(&v, itemlist_str);
+	itemlist.set_feed(feed);
+	v.push_itemlist(feed);
 
-TEST_CASE("process_op(OP_TOGGLESHOWREAD)", "[itemlist_formaction]") {
-	//NOTIMPL
+	SECTION("True to False"){
+		v.get_cfg()->set_configvalue("show-read-articles", "yes");
+		REQUIRE_NOTHROW(itemlist.process_op(OP_TOGGLESHOWREAD));
+		REQUIRE(!v.get_cfg()->get_configvalue_as_bool("show-read-articles"));
+	}
+	SECTION("False to True"){
+		v.get_cfg()->set_configvalue("show-read-articles", "no");
+		REQUIRE_NOTHROW(itemlist.process_op(OP_TOGGLESHOWREAD));
+		REQUIRE(v.get_cfg()->get_configvalue_as_bool("show-read-articles"));
+	}
 }
 
 TEST_CASE("process_op(OP_PIPE_TO)", "[itemlist_formaction]") {
