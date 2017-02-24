@@ -118,10 +118,10 @@ namespace TestHelpers {
 	/*
 	 * The AssertArticleFileContent opens a file where the content of an article
 	 * was previously dumped (using for example OP_SHOWURL, or OP_OPEN with an
-	 * appropriate "pager" config value ) and checks the differents lines according
+	 * appropriate "pager" config value ) and checks its content according
 	 * to the expected values passed as parameters.
 	 */
-	inline void AssertArticleFileContent( std::string path, std::string title, std::string author, std::string date, std::string url, std::string description) {
+	inline void AssertArticleFileContent( const std::string path, const std::string title, const std::string author, const std::string date, const std::string url, const std::string description) {
 		std::string prefix_title = "Title: ";
 		std::string prefix_author = "Author: ";
 		std::string prefix_date = "Date: ";

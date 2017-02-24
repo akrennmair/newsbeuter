@@ -27,12 +27,6 @@ TEST_CASE("OP_OPEN displays article using an external pager", "[itemlist_formact
 	char test_pubDate_str[128];
 	strftime(test_pubDate_str, sizeof(test_pubDate_str), "%a, %d %b %Y %H:%M:%S %z", localtime(&test_pubDate));
 
-	std::string pager_prefix_title = "Title: ";
-	std::string pager_prefix_author = "Author: ";
-	std::string pager_prefix_date = "Date: ";
-	std::string pager_prefix_link = "Link: ";
-
-	std::string line;
 	configcontainer cfg;
 
 	cache rsscache(":memory:", &cfg);
@@ -296,7 +290,6 @@ TEST_CASE("OP_SHOWURLS shows the article's properties", "[itemlist_formaction]")
 	configcontainer cfg;
 	cache rsscache(":memory:", &cfg);
 	TestHelpers::TempFile urlFile;
-	std::string line;
 
 	std::string test_url = "http://test_url";
 	std::string test_title = "Article Title";
@@ -305,11 +298,6 @@ TEST_CASE("OP_SHOWURLS shows the article's properties", "[itemlist_formaction]")
 	time_t test_pubDate = 42;
 	char test_pubDate_str[128];
 	strftime(test_pubDate_str, sizeof(test_pubDate_str), "%a, %d %b %Y %H:%M:%S %z", localtime(&test_pubDate));
-
-	std::string pager_prefix_title = "Title: ";
-	std::string pager_prefix_author = "Author: ";
-	std::string pager_prefix_date = "Date: ";
-	std::string pager_prefix_link = "Link: ";
 
 	v.set_config_container(&cfg);
 	c.set_view(&v);
@@ -484,13 +472,6 @@ TEST_CASE("OP_SAVE writes an article's attributes to the specified file", "[item
 	char test_pubDate_str[128];
 	strftime(test_pubDate_str, sizeof(test_pubDate_str), "%a, %d %b %Y %H:%M:%S %z", localtime(&test_pubDate));
 
-	std::string prefix_title = "Title: ";
-	std::string prefix_author = "Author: ";
-	std::string prefix_date = "Date: ";
-	std::string prefix_link = "Link: ";
-
-	std::string line;
-
 	v.set_config_container(cfg);
 	c.set_view(&v);
 
@@ -642,7 +623,7 @@ TEST_CASE("OP_TOGGLESHOWREAD switches the value of show-read-articles", "[itemli
 	SECTION("True to False"){
 		v.get_cfg()->set_configvalue("show-read-articles", "yes");
 		REQUIRE_NOTHROW(itemlist.process_op(OP_TOGGLESHOWREAD));
-		REQUIRE(!v.get_cfg()->get_configvalue_as_bool("show-read-articles"));
+		REQUIRE_FALSE(v.get_cfg()->get_configvalue_as_bool("show-read-articles"));
 	}
 	SECTION("False to True"){
 		v.get_cfg()->set_configvalue("show-read-articles", "no");
@@ -651,21 +632,50 @@ TEST_CASE("OP_TOGGLESHOWREAD switches the value of show-read-articles", "[itemli
 	}
 }
 
-TEST_CASE("process_op(OP_PIPE_TO)", "[itemlist_formaction]") {
-	//NOTIMPL
-}
+TEST_CASE("OP_PIPE_TO pipes an article's content to an external command", "[itemlist_formaction]") {
+	controller c;
+	newsbeuter::view v(&c);
+	TestHelpers::TempFile articleFile;
+	configcontainer * cfg = c.get_cfg();
+	cache rsscache(":memory:", cfg);
 
-TEST_CASE("process_op(OP_SEARCH)", "[itemlist_formaction]") {
-	//NOTIMPL
-}
+	std::vector<std::string> op_args;
+	op_args.push_back("tee > " + articleFile.getPath());
 
-TEST_CASE("process_op(OP_EDIT_URLS)", "[itemlist_formaction]") {
-	//NOTIMPL
+	std::string test_url = "http://test_url";
+	std::string test_title = "Article Title";
+	std::string test_author = "Article Author";
+	std::string test_description = "Article Description";
+	time_t test_pubDate = 42;
+	char test_pubDate_str[128];
+	strftime(test_pubDate_str, sizeof(test_pubDate_str), "%a, %d %b %Y %H:%M:%S %z", localtime(&test_pubDate));
+
+	v.set_config_container(cfg);
+	c.set_view(&v);
+
+	std::shared_ptr<rss_feed> feed = std::make_shared<rss_feed>(&rsscache);
+
+	std::shared_ptr<rss_item> item = std::make_shared<rss_item>(&rsscache);
+	item->set_link(test_url);
+	item->set_title(test_title);
+	item->set_author(test_author);
+	item->set_pubDate(test_pubDate);
+	item->set_description(test_description);
+
+	itemlist_formaction itemlist(&v, itemlist_str);
+
+	feed->add_item(item);
+	itemlist.set_feed(feed);
+
+	REQUIRE_NOTHROW(itemlist.process_op(OP_PIPE_TO, true, &op_args));
+
+	TestHelpers::AssertArticleFileContent(articleFile.getPath(), test_title, test_author, test_pubDate_str, test_url, test_description);
 }
 
 TEST_CASE("process_op(OP_SELECTFILTER)", "[itemlist_formaction]") {
 	//NOTIMPL
 }
+
 
 TEST_CASE("process_op(OP_SETFILTER)", "[itemlist_formaction]") {
 	//NOTIMPL
