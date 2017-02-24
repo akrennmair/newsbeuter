@@ -445,13 +445,15 @@ std::string utils::retrieve_url(
 		curl_easy_setopt(easyhandle, CURLOPT_USERPWD, authinfo.c_str());
 	}
 
-	curl_easy_perform(easyhandle);
+	CURLcode errorcode = curl_easy_perform(easyhandle);
 	curl_easy_cleanup(easyhandle);
 
 	if (postdata != nullptr) {
-		LOG(level::DEBUG, "utils::retrieve_url(%s)[%s]: %s", url, postdata, buf);
+		LOG(level::DEBUG, "utils::retrieve_url(%s)[%s]: (code %i): %s",
+				url, postdata, errorcode, buf);
 	} else {
-		LOG(level::DEBUG, "utils::retrieve_url(%s)[-]: %s", url, buf);
+		LOG(level::DEBUG, "utils::retrieve_url(%s)[-]: (code %i): %s",
+				url, errorcode, buf);
 	}
 
 	return buf;
