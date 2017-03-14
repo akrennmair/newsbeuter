@@ -750,6 +750,8 @@ std::string itemlist_formaction::item2formatted_line(
 
 	fmt.register_fmt('L', item.first->length());
 
+  tmp_itemlist_format = fmt.do_format(tmp_itemlist_format,width);
+
 	if (rxman) {
 		int id;
 		if ((id = rxman->article_matches(item.first.get())) != -1) {
@@ -763,7 +765,7 @@ std::string itemlist_formaction::item2formatted_line(
 			"<unread>%s</>", tmp_itemlist_format);
 	}
 
-	return fmt.do_format(tmp_itemlist_format, width);
+	return tmp_itemlist_format;
 }
 
 void itemlist_formaction::init() {
