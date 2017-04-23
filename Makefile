@@ -11,11 +11,11 @@ CPPCHECK_JOBS?=5
 CXX?=c++
 
 # compiler and linker flags
-DEFINES=-DLOCALEDIR=\"$(localedir)\"
+DEFINES=-ULOCALEDIR -DLOCALEDIR=\"$(localedir)\"
 
 ifneq ($(wildcard .git/.),)
 GIT_HASH:=$(shell git describe --abbrev=4 --dirty --always --tags)
-DEFINES+=-DGIT_HASH=\"$(GIT_HASH)\"
+DEFINES+=-UGIT_HASH -DGIT_HASH=\"$(GIT_HASH)\"
 endif
 
 WARNFLAGS=-Werror -Wall -Wextra -Wunreachable-code
