@@ -239,8 +239,8 @@ install-mo: mo-files
 		lang=`echo $$mofile | sed 's/\.mo$$//'`; \
 		dir=$(DESTDIR)$(localedir)/$$lang/LC_MESSAGES; \
 		$(MKDIR) $$dir ; \
-		$(INSTALL) -m 644 $$mof $$dir/$(PACKAGE).mo ; \
-		echo "Installing $$mofile as $$dir/$(PACKAGE).mo" ; \
+		$(INSTALL) -m 644 $$mof $$dir/$(NEWSBEUTER).mo ; \
+		echo "Installing $$mofile as $$dir/$(NEWSBEUTER).mo" ; \
 	done
 
 uninstall-mo:
@@ -248,8 +248,8 @@ uninstall-mo:
 		mofile=`basename $$mof` ; \
 		lang=`echo $$mofile | sed 's/\.mo$$//'`; \
 		dir=$(DESTDIR)$(localedir)/$$lang/LC_MESSAGES; \
-		$(RM) -f $$dir/$(PACKAGE).mo ; \
-		echo "Uninstalling $$dir/$(PACKAGE).mo" ; \
+		$(RM) -f $$dir/$(NEWSBEUTER).mo ; \
+		echo "Uninstalling $$dir/$(NEWSBEUTER).mo" ; \
 	done
 
 # tests and coverage reports
