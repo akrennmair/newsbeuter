@@ -891,8 +891,6 @@ void controller::reload_all(bool unattended) {
 	for (auto feed : feeds) {
 		v->prepare_query_feed(feed);
 	}
-	v->force_redraw();
-
 	sort_feeds();
 	update_feedlist();
 
