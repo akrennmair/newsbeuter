@@ -86,34 +86,44 @@ void view::update_bindings() {
 }
 
 void view::set_bindings(std::shared_ptr<formaction> fa) {
-	std::string upkey("** ");
-	upkey.append(keys->getkey(OP_SK_UP, fa->id()));
-	std::string downkey("** ");
-	downkey.append(keys->getkey(OP_SK_DOWN, fa->id()));
+	auto prepare_bind = [&](operation op, const std::string& context)
+	{
+		std::string result("**");
+		std::vector<std::string> binds = keys->getkeys(op, context);
+
+		std::string::size_type length = result.length();
+		length += binds.size() - 1; // for spaces in between
+		for (const auto& bind : binds) {
+			length += bind.length();
+		}
+
+		result.reserve(length);
+
+		for (const auto& bind : binds) {
+			result += " " + bind;
+		}
+
+		return result;
+	};
+
+	std::string upkey = prepare_bind(OP_SK_UP, fa->id());
 	fa->get_form()->set("bind_up", upkey);
+
+	std::string downkey = prepare_bind(OP_SK_DOWN, fa->id());
 	fa->get_form()->set("bind_down", downkey);
 
-	std::string pgupkey;
-	std::string pgdownkey;
-	if (fa->id() == "article" || fa->id() == "help") {
-		pgupkey.append("** b ");
-		pgdownkey.append("** SPACE ");
-	} else {
-		pgupkey.append("** ");
-		pgdownkey.append("** ");
-	}
-
-	pgupkey.append(keys->getkey(OP_SK_PGUP, fa->id()));
-	pgdownkey.append(keys->getkey(OP_SK_PGDOWN, fa->id()));
-
+	std::string pgupkey = prepare_bind(OP_SK_PGUP, fa->id());
+	LOG(level::DEBUG, "bind_page_up = %s", pgupkey);
 	fa->get_form()->set("bind_page_up", pgupkey);
+
+	std::string pgdownkey = prepare_bind(OP_SK_PGDOWN, fa->id());
+	LOG(level::DEBUG, "bind_page_down = %s", pgdownkey);
 	fa->get_form()->set("bind_page_down", pgdownkey);
 
-	std::string homekey("** ");
-	homekey.append(keys->getkey(OP_SK_HOME, fa->id()));
-	std::string endkey("** ");
-	endkey.append(keys->getkey(OP_SK_END, fa->id()));
+	std::string homekey = prepare_bind(OP_SK_HOME, fa->id());
 	fa->get_form()->set("bind_home", homekey);
+
+	std::string endkey = prepare_bind(OP_SK_END, fa->id());
 	fa->get_form()->set("bind_end", endkey);
 }
 

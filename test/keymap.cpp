@@ -61,6 +61,15 @@ TEST_CASE("getkey()", "[keymap]") {
 	}
 }
 
+TEST_CASE("getkeys()", "[keymap]") {
+	keymap k(KM_NEWSBEUTER);
+
+	SECTION("Returns all bindings for a given key") {
+		std::vector<std::string> expected = { "ENTER" };
+		REQUIRE(k.getkeys(OP_OPEN, "all") == expected);
+	}
+}
+
 TEST_CASE("get_key()", "[keymap]") {
 	keymap k(KM_NEWSBEUTER);
 

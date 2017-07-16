@@ -121,7 +121,10 @@ in uppercase. The following identifiers for keys are supported:
 - DOWN (down cursor)
 - ESC (Esc key)
 
-The "Tab" key can't be bound due to technical limitations of STFL.
+The "Tab" key can't be bound due to technical limitations of STFL. Until 2.10,
+the "b" key was always bound to "Page Up" in article view and help dialogs, and
+SPACE was always bound to "Page Down" in those same dialogs; since 2.10, these
+binds can be removed or redefined by the user.
 
 Example Configuration
 ~~~~~~~~~~~~~~~~~~~~~

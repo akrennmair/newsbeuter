@@ -463,6 +463,11 @@ keymap::keymap(unsigned flags) {
 			}
 		}
 	}
+
+	for (const auto& context: { "article", "help" }) {
+		keymap_[context]["b"] = OP_SK_PGUP;
+		keymap_[context]["SPACE"] = OP_SK_PGDOWN;
+	}
 }
 
 void keymap::get_keymap_descriptions(std::vector<keymap_desc>& descs, unsigned short flags) {
@@ -680,22 +685,37 @@ void keymap::handle_action(const std::string& action, const std::vector<std::str
 		throw confighandlerexception(action_handler_status::INVALID_PARAMS);
 }
 
-std::string keymap::getkey(operation op, const std::string& context) {
+std::vector<std::string> keymap::getkeys(
+		operation op, const std::string& context)
+{
+	std::vector<std::string> result;
+
 	if (context == "all") {
 		for (unsigned int i=0; contexts[i]!=nullptr; i++) {
 			std::string ctx(contexts[i]);
 			for (auto keymap : keymap_[ctx]) {
-				if (keymap.second == op)
-					return keymap.first;
+				if (keymap.second == op) {
+					result.push_back(keymap.first);
+				}
 			}
 		}
 	} else {
 		for (auto keymap : keymap_[context]) {
-			if (keymap.second == op)
-				return keymap.first;
+			if (keymap.second == op) {
+				result.push_back(keymap.first);
+			}
 		}
 	}
-	return "<none>";
+
+	if (result.empty()) {
+		return { "<none>" };
+	} else {
+		return result;
+	}
+}
+
+std::string keymap::getkey(operation op, const std::string& context) {
+	return getkeys(op, context).front();
 }
 
 std::vector<macrocmd> keymap::get_macro(const std::string& key) {
