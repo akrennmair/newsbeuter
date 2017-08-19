@@ -360,13 +360,13 @@ bool view::open_in_browser(const std::string& url) {
 	}
 	stfl::reset();
 	int browser_exit_code = utils::run_interactively(cmdline, "view::open_in_browser");
-	if (browser_exit_code == 0) {
-		LOG(level::DEBUG, "Starting the browser failed with error code %d - command was %s\n", browser_exit_code, cmdline);
+	if (browser_exit_code != 0) {
+		LOG(level::DEBUG, "utils::run_interactively: "
+			"Starting the browser failed with error code %d - command was %s", browser_exit_code, cmdline);
 	}
 	pop_current_formaction();
 
-	if (browser_exit_code) return false;
-	else return true;
+	return browser_exit_code == 0;
 }
 
 void view::update_visible_feeds(std::vector<std::shared_ptr<rss_feed>> feeds) {
