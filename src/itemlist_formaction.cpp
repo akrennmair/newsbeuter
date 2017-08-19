@@ -84,19 +84,16 @@ void itemlist_formaction::process_operation(operation op, bool automatic, std::v
 		LOG(level::INFO, "itemlist_formaction: opening item at pos `%s'", itemposname);
 		if (itemposname.length() > 0 && visible_items.size() != 0) {
 			if (itempos < visible_items.size()) {
-				// store if open_in_browser() succeded
+
 				bool browser_success = v->open_in_browser(visible_items[itempos].first->link());
-				// do only mark as unread if open_in_browser() succeded
-				if (browser_success) {
-					visible_items[itempos].first->set_unread(false);
-					v->get_ctrl()->mark_article_read(visible_items[itempos].first->guid(), true);
-				}
+				if (!browser_success)
+					break;
+
+				visible_items[itempos].first->set_unread(false);
+				v->get_ctrl()->mark_article_read(visible_items[itempos].first->guid(), true);
+
 				if (!v->get_cfg()->get_configvalue_as_bool("openbrowser-and-mark-jumps-to-next-unread")) {
-					/* do only scroll if 
-					 *  - XXX TODO explain first condition
-					 *  - open_in_browser() succeded
-					 */
-					if (itempos < visible_items.size()-1 && browser_success) {
+					if (itempos < visible_items.size()-1) {
 						f->set("itempos", strprintf::fmt("%u", itempos + 1));
 					}
 				} else {

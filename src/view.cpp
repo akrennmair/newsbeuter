@@ -359,15 +359,13 @@ bool view::open_in_browser(const std::string& url) {
 		cmdline.append("'");
 	}
 	stfl::reset();
-	// store the shell return value
-	int status_browser = utils::run_interactively(cmdline, "view::open_in_browser");
-	// the browser returned a value unequal to zero
-	if (status_browser) {
-		std::clog << strprintf::fmt(_("Starting the browser failed with error code %d"), status_browser) << std::endl;
+	int browser_exit_code = utils::run_interactively(cmdline, "view::open_in_browser");
+	if (browser_exit_code == 0) {
+		LOG(level::DEBUG, "Starting the browser failed with error code %d - command was %s\n", browser_exit_code, cmdline);
 	}
 	pop_current_formaction();
 
-	if (status_browser) return false;
+	if (browser_exit_code) return false;
 	else return true;
 }
 
