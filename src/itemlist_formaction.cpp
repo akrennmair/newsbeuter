@@ -87,7 +87,7 @@ void itemlist_formaction::process_operation(operation op, bool automatic, std::v
 
 				bool browser_success = v->open_in_browser(visible_items[itempos].first->link());
 				if (!browser_success) {
-					v->show_error(_("browser failed to open the link"));
+					v->show_error(_("Browser failed to open the link!"));
 					break;
 				}
 
