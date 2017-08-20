@@ -86,8 +86,10 @@ void itemlist_formaction::process_operation(operation op, bool automatic, std::v
 			if (itempos < visible_items.size()) {
 
 				bool browser_success = v->open_in_browser(visible_items[itempos].first->link());
-				if (!browser_success)
+				if (!browser_success) {
+					v->show_error(_("browser failed to open the link"));
 					break;
+				}
 
 				visible_items[itempos].first->set_unread(false);
 				v->get_ctrl()->mark_article_read(visible_items[itempos].first->guid(), true);
