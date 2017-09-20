@@ -1,3 +1,6 @@
+**ABANDONED**! An actively maintained fork is available in [newsboat repo](https://github.com/newsboat/newsboat)
+========
+
 Newsbeuter [![Build Status](https://travis-ci.org/akrennmair/newsbeuter.svg?branch=master)](https://travis-ci.org/akrennmair/newsbeuter) [![Coverage Status](https://coveralls.io/repos/github/akrennmair/newsbeuter/badge.svg?branch=master)](https://coveralls.io/github/akrennmair/newsbeuter?branch=master)
 =====================
 by Andreas Krennmair <ak@newsbeuter.org>
