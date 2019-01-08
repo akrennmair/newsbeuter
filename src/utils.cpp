@@ -1107,7 +1107,7 @@ int utils::run_interactively(
 }
 
 std::string utils::getcwd() {
-	char cwdtmp[MAXPATHLEN];
+	char cwdtmp[MAXPATHLEN+1];
 
 	if (::getcwd(cwdtmp, sizeof(cwdtmp)) == nullptr) {
 		strncpy(cwdtmp, strerror(errno), MAXPATHLEN);
